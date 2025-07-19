@@ -18,8 +18,8 @@
     "lint": "eslint --fix .",
     "lint:check": "eslint --fix-dry-run .",
     "depcheck": "depcheck",
-    "release": "GITHUB_TOKEN=$(gh auth token) ./node_modules/.bin/release-it .",
-    "release:check": "npm run lint:check && GITHUB_TOKEN=$(gh auth token) ./node_modules/.bin/release-it . --dry-run"
+    "release": "./node_modules/.bin/release-it .",
+    "release:check": "npm run lint:check && ./node_modules/.bin/release-it . --dry-run"
   },
   "keywords": [
     "mcp",

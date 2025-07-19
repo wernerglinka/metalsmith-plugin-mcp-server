@@ -8,10 +8,7 @@
     "push": true
   },
   "github": {
-    "release": true,
-    "releaseName": "v${version}",
-    "draft": false,
-    "autoGenerate": true
+    "release": false
   },
   "npm": {
     "publish": true,
@@ -19,6 +16,6 @@
   },
   "hooks": {
     "before:init": ["npm test", "npm run lint"],
-    "after:release": "echo Successfully released ${name} v${version} to ${repo.repository}."
+    "after:release": "echo Successfully released ${name} v${version} to ${repo.repository}. Create GitHub release manually at: https://github.com/wernerglinka/metalsmith-plugin-mcp-server/releases/new?tag=v${version}"
   }
 }
