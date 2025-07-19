@@ -1,0 +1,68 @@
+{
+  "name": "metalsmith-plugin-mcp-server",
+  "version": "0.1.0",
+  "description": "MCP server for scaffolding and validating high-quality Metalsmith plugins",
+  "type": "module",
+  "exports": "./src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "mocha test/**/*.test.js",
+    "test:mcp": "node scripts/test-all.js",
+    "test:scaffold": "node scripts/test-scaffold.js",
+    "test:validate": "node scripts/test-validate.js",
+    "test:configs": "node scripts/test-configs.js",
+    "test:unit": "mocha test/**/*.test.js -t 5000",
+    "coverage": "c8 --include=src/**/*.js --reporter=lcov --reporter=text-summary mocha test/**/*.test.js -t 15000",
+    "format": "prettier --write \"**/*.{yml,md,js,json}\"",
+    "format:check": "prettier --list-different \"**/*.{yml,md,js,json}\"",
+    "lint": "eslint --fix .",
+    "lint:check": "eslint --fix-dry-run .",
+    "depcheck": "depcheck",
+    "release": "GITHUB_TOKEN=$(gh auth token) ./node_modules/.bin/release-it .",
+    "release:check": "npm run lint:check && GITHUB_TOKEN=$(gh auth token) ./node_modules/.bin/release-it . --dry-run"
+  },
+  "keywords": [
+    "mcp",
+    "mcp-server",
+    "metalsmith",
+    "metalsmith-plugin",
+    "scaffolding",
+    "code-generation",
+    "plugin-development",
+    "claude",
+    "ai-development"
+  ],
+  "author": "Werner Glinka <werner@glinka.co>",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "chalk": "^5.3.0",
+    "glob": "^11.0.0",
+    "js-yaml": "^4.1.0",
+    "validate-npm-package-name": "^6.0.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "c8": "^10.1.0",
+    "chai": "^5.1.0",
+    "depcheck": "^1.4.7",
+    "eslint": "^9.0.0",
+    "globals": "^15.0.0",
+    "metalsmith": "^2.6.0",
+    "mocha": "^10.8.0",
+    "prettier": "^3.4.0",
+    "release-it": "^19.0.2",
+    "sinon": "^19.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wernerglinka/metalsmith-plugin-mcp-server.git"
+  },
+  "bugs": {
+    "url": "https://github.com/wernerglinka/metalsmith-plugin-mcp-server/issues"
+  },
+  "homepage": "https://github.com/wernerglinka/metalsmith-plugin-mcp-server#readme"
+}

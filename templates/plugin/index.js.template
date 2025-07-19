@@ -1,0 +1,172 @@
+{{#if hasAsyncProcessing}}import { processAsync } from './processors/async.js';{{/if}}
+{{#if hasBackgroundProcessing}}import { createWorkerPool } from './workers/pool.js';{{/if}}
+{{#if hasMetadataGeneration}}import { generateMetadata } from './metadata/generator.js';{{/if}}
+import { normalizeOptions, validateFiles, deepMerge } from './utils/config.js';
+
+/**
+ * Default options
+ * @type {Object}
+ */
+const defaults = {
+  pattern: '**/*',
+  ignore: [],
+{{#if hasAsyncProcessing}}  async: false,
+  batchSize: 10,{{/if}}
+{{#if hasBackgroundProcessing}}  workers: 4,
+  concurrent: true,{{/if}}
+{{#if hasMetadataGeneration}}  metadata: true,
+  metadataKey: '_{{pluginName.replace('metalsmith-', '')}}',{{/if}}
+};
+
+/**
+ * {{description}}
+ *
+ * @param {Object} options - Plugin options
+ * @param {string|string[]} options.pattern - Files to process
+ * @param {string|string[]} options.ignore - Files to ignore
+{{#if hasAsyncProcessing}} * @param {boolean} options.async - Enable async processing
+ * @param {number} options.batchSize - Batch size for processing{{/if}}
+{{#if hasBackgroundProcessing}} * @param {number} options.workers - Number of worker threads
+ * @param {boolean} options.concurrent - Enable concurrent processing{{/if}}
+{{#if hasMetadataGeneration}} * @param {boolean} options.metadata - Generate metadata
+ * @param {string} options.metadataKey - Metadata key{{/if}}
+ * @returns {Function} Metalsmith plugin
+ */
+export default function {{functionName}}(options = {}) {
+  const config = deepMerge(defaults, options);
+  
+  return async function (files, metalsmith, done) {
+    const debug = metalsmith.debug('{{pluginName}}');
+    debug('Starting {{pluginName}} with options:', config);
+    
+    try {
+      // Normalize and validate options
+      const normalizedOptions = normalizeOptions(config);
+      
+      // Get files to process
+      const filesToProcess = validateFiles(files, normalizedOptions, metalsmith);
+      
+      if (filesToProcess.length === 0) {
+        debug('No files to process');
+        return done();
+      }
+      
+      debug(`Processing ${filesToProcess.length} files`);
+      
+{{#if hasBackgroundProcessing}}
+      // Initialize worker pool if concurrent processing is enabled
+      let workerPool = null;
+      if (normalizedOptions.concurrent) {
+        workerPool = await createWorkerPool(normalizedOptions.workers);
+      }
+      
+      try {
+{{/if}}
+        // Process files
+        await Promise.all(
+          filesToProcess.map(async (filename) => {
+            try {
+              const file = files[filename];
+              debug(`Processing file: ${filename}`);
+              
+{{#if pluginType === 'processor'}}
+              // Process file content
+              const processedContent = await processFile(file, filename, normalizedOptions);
+              file.contents = Buffer.from(processedContent);
+{{/if}}
+              
+{{#if pluginType === 'transformer'}}
+              // Transform file
+              const transformed = await transformFile(file, filename, normalizedOptions);
+              Object.assign(file, transformed);
+{{/if}}
+              
+{{#if pluginType === 'validator'}}
+              // Validate file
+              const isValid = await validateFile(file, filename, normalizedOptions);
+              if (!isValid) {
+                throw new Error(`Validation failed for ${filename}`);
+              }
+{{/if}}
+              
+{{#if hasAsyncProcessing}}
+              // Apply async processing if enabled
+              if (normalizedOptions.async) {
+                await processAsync(file, filename, normalizedOptions);
+              }
+{{/if}}
+              
+{{#if hasMetadataGeneration}}
+              // Generate metadata if enabled
+              if (normalizedOptions.metadata) {
+                const metadata = await generateMetadata(file, filename, normalizedOptions);
+                file[normalizedOptions.metadataKey] = metadata;
+              }
+{{/if}}
+              
+              debug(`Successfully processed: ${filename}`);
+            } catch (error) {
+              debug(`Error processing ${filename}:`, error);
+              throw error;
+            }
+          })
+        );
+{{#if hasBackgroundProcessing}}
+      } finally {
+        // Clean up worker pool
+        if (workerPool) {
+          await workerPool.terminate();
+        }
+      }
+{{/if}}
+      
+      debug('{{pluginName}} completed successfully');
+      done();
+    } catch (error) {
+      debug('{{pluginName}} failed:', error);
+      done(error);
+    }
+  };
+}
+
+{{#if pluginType === 'processor'}}
+/**
+ * Process file content
+ * @param {Object} file - Metalsmith file object
+ * @param {string} filename - File name
+ * @param {Object} options - Processing options
+ * @returns {Promise<string>} Processed content
+ */
+async function processFile(file, filename, options) {
+  // TODO: Implement file processing logic
+  return file.contents.toString();
+}
+{{/if}}
+
+{{#if pluginType === 'transformer'}}
+/**
+ * Transform file
+ * @param {Object} file - Metalsmith file object
+ * @param {string} filename - File name
+ * @param {Object} options - Transformation options
+ * @returns {Promise<Object>} Transformed file properties
+ */
+async function transformFile(file, filename, options) {
+  // TODO: Implement file transformation logic
+  return {};
+}
+{{/if}}
+
+{{#if pluginType === 'validator'}}
+/**
+ * Validate file
+ * @param {Object} file - Metalsmith file object
+ * @param {string} filename - File name
+ * @param {Object} options - Validation options
+ * @returns {Promise<boolean>} Validation result
+ */
+async function validateFile(file, filename, options) {
+  // TODO: Implement file validation logic
+  return true;
+}
+{{/if}}

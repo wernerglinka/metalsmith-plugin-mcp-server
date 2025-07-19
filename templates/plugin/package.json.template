@@ -1,0 +1,57 @@
+{
+  "name": "{{pluginName}}",
+  "version": "0.1.0",
+  "description": "{{description}}",
+  "keywords": [
+    "metalsmith",
+    "metalsmith-plugin"{{#if features}},
+    "{{features}}"{{/if}}
+  ],
+  "homepage": "https://github.com/metalsmith/{{pluginName}}#readme",
+  "bugs": {
+    "url": "https://github.com/metalsmith/{{pluginName}}/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/metalsmith/{{pluginName}}.git"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "Your Name",
+    "email": "your.email@example.com"
+  },
+  "type": "module",
+  "exports": "./src/index.js",
+  "files": [
+    "src"
+  ],
+  "scripts": {
+    "format": "prettier --write '**/*.{js,json,md}'",
+    "lint": "eslint src test",
+    "lint:fix": "eslint src test --fix",
+    "test": "mocha test",
+    "test:coverage": "c8 npm test",
+    "coverage": "c8 report --reporter=text-lcov | coveralls",
+    "release": "release-it"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "c8": "^10.0.0",
+    "chai": "^5.0.0",
+    "coveralls": "^3.1.0",
+    "eslint": "^9.0.0",
+    "globals": "^15.0.0",
+    "metalsmith": "^2.6.0",
+    "mocha": "^10.0.0",
+    "prettier": "^3.0.0",
+    "release-it": "^17.0.0",
+    "sinon": "^19.0.0"
+  },
+  "peerDependencies": {
+    "metalsmith": "^2.5.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

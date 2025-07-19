@@ -1,0 +1,195 @@
+import { expect } from 'chai';
+import Metalsmith from 'metalsmith';
+import {{functionName}} from '../src/index.js';
+import { promises as fs } from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+describe('{{pluginName}}', function () {
+  let metalsmith;
+
+  beforeEach(function () {
+    metalsmith = Metalsmith(path.join(__dirname, 'fixtures', 'basic'));
+  });
+
+  it('should export a function', function () {
+    expect({{functionName}}).to.be.a('function');
+  });
+
+  it('should return a metalsmith plugin', function () {
+    const plugin = {{functionName}}();
+    expect(plugin).to.be.a('function');
+    expect(plugin).to.have.length(3);
+  });
+
+  describe('basic functionality', function () {
+    it('should process files with default options', function (done) {
+      metalsmith
+        .use({{functionName}}())
+        .build(function (err, files) {
+          if (err) return done(err);
+          
+          expect(files).to.be.an('object');
+          expect(Object.keys(files)).to.have.length.above(0);
+          done();
+        });
+    });
+
+    it('should handle empty file set', function (done) {
+      metalsmith = Metalsmith(path.join(__dirname, 'fixtures', 'empty'));
+      
+      metalsmith
+        .use({{functionName}}())
+        .build(function (err, files) {
+          if (err) return done(err);
+          
+          expect(files).to.be.an('object');
+          done();
+        });
+    });
+  });
+
+  describe('options', function () {
+    it('should accept pattern option', function (done) {
+      metalsmith
+        .use({{functionName}}({
+          pattern: '**/*.html'
+        }))
+        .build(function (err, files) {
+          if (err) return done(err);
+          
+          const htmlFiles = Object.keys(files).filter(f => f.endsWith('.html'));
+          expect(htmlFiles).to.have.length.above(0);
+          done();
+        });
+    });
+
+    it('should accept ignore option', function (done) {
+      metalsmith
+        .use({{functionName}}({
+          ignore: ['**/ignore/**']
+        }))
+        .build(function (err, files) {
+          if (err) return done(err);
+          
+          const ignoredFiles = Object.keys(files).filter(f => f.includes('ignore/'));
+          expect(ignoredFiles).to.have.length(0);
+          done();
+        });
+    });
+
+    it('should accept array patterns', function (done) {
+      metalsmith
+        .use({{functionName}}({
+          pattern: ['**/*.html', '**/*.md']
+        }))
+        .build(function (err, files) {
+          if (err) return done(err);
+          
+          const matchedFiles = Object.keys(files).filter(f => 
+            f.endsWith('.html') || f.endsWith('.md')
+          );
+          expect(matchedFiles).to.have.length.above(0);
+          done();
+        });
+    });
+  });
+
+{{#if hasProgressiveLoading}}
+  describe('progressive loading', function () {
+    it('should process files with progressive loading enabled', function (done) {
+      metalsmith
+        .use({{functionName}}({
+          progressive: true,
+          quality: 80
+        }))
+        .build(function (err, files) {
+          if (err) return done(err);
+          
+          // TODO: Add assertions for progressive loading
+          done();
+        });
+    });
+  });
+{{/if}}
+
+{{#if hasBackgroundProcessing}}
+  describe('background processing', function () {
+    it('should process files concurrently', function (done) {
+      metalsmith
+        .use({{functionName}}({
+          concurrent: true,
+          workers: 2
+        }))
+        .build(function (err, files) {
+          if (err) return done(err);
+          
+          // TODO: Add assertions for concurrent processing
+          done();
+        });
+    });
+  });
+{{/if}}
+
+{{#if hasMetadataGeneration}}
+  describe('metadata generation', function () {
+    it('should generate metadata for processed files', function (done) {
+      const metadataKey = '_test';
+      
+      metalsmith
+        .use({{functionName}}({
+          metadata: true,
+          metadataKey: metadataKey
+        }))
+        .build(function (err, files) {
+          if (err) return done(err);
+          
+          const filesWithMetadata = Object.values(files).filter(f => f[metadataKey]);
+          expect(filesWithMetadata).to.have.length.above(0);
+          done();
+        });
+    });
+  });
+{{/if}}
+
+  describe('error handling', function () {
+    it('should handle invalid options gracefully', function (done) {
+      metalsmith
+        .use({{functionName}}({
+          pattern: null
+        }))
+        .build(function (err) {
+          expect(err).to.be.an('error');
+          done();
+        });
+    });
+
+    it('should handle file processing errors', function (done) {
+      // TODO: Add test for file processing errors
+      done();
+    });
+  });
+
+  describe('integration', function () {
+    it('should work with other metalsmith plugins', function (done) {
+      metalsmith
+        .use(function (files, ms, done) {
+          // Simulate another plugin
+          Object.keys(files).forEach(file => {
+            files[file].processed = true;
+          });
+          done();
+        })
+        .use({{functionName}}())
+        .build(function (err, files) {
+          if (err) return done(err);
+          
+          const processedFiles = Object.values(files).filter(f => f.processed);
+          expect(processedFiles).to.have.length.above(0);
+          done();
+        });
+    });
+  });
+});

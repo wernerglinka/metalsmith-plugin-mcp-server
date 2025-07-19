@@ -1,0 +1,144 @@
+# {{pluginName}}
+
+[![Version](https://img.shields.io/npm/v/{{pluginName}}.svg)](https://npmjs.com/package/{{pluginName}})
+[![Downloads](https://img.shields.io/npm/dm/{{pluginName}}.svg)](https://npmjs.com/package/{{pluginName}})
+[![Build Status](https://github.com/metalsmith/{{pluginName}}/actions/workflows/test.yml/badge.svg)](https://github.com/metalsmith/{{pluginName}}/actions)
+[![Coverage Status](https://coveralls.io/repos/github/metalsmith/{{pluginName}}/badge.svg?branch=main)](https://coveralls.io/github/metalsmith/{{pluginName}}?branch=main)
+[![License](https://img.shields.io/npm/l/{{pluginName}}.svg)](LICENSE)
+
+> {{description}}
+
+## Installation
+
+```bash
+npm install {{pluginName}}
+```
+
+## Usage
+
+```js
+import Metalsmith from 'metalsmith';
+import {{functionName}} from '{{pluginName}}';
+
+Metalsmith(__dirname)
+  .use({{functionName}}({
+    // options
+  }))
+  .build((err) => {
+    if (err) throw err;
+  });
+```
+
+## Options
+
+### `pattern` (optional)
+
+Type: `string | string[]`  
+Default: `'**/*'`
+
+Pattern to match files. Uses [minimatch](https://github.com/isaacs/minimatch) patterns.
+
+### `ignore` (optional)
+
+Type: `string | string[]`  
+Default: `[]`
+
+Patterns to ignore files.
+
+## Examples
+
+### Basic Usage
+
+```js
+import Metalsmith from 'metalsmith';
+import {{functionName}} from '{{pluginName}}';
+
+Metalsmith(__dirname)
+  .source('./src')
+  .destination('./build')
+  .use({{functionName}}())
+  .build((err) => {
+    if (err) throw err;
+    console.log('Build complete!');
+  });
+```
+
+### With Options
+
+```js
+import Metalsmith from 'metalsmith';
+import {{functionName}} from '{{pluginName}}';
+
+Metalsmith(__dirname)
+  .source('./src')
+  .destination('./build')
+  .use({{functionName}}({
+    pattern: ['**/*.html', '**/*.md'],
+    ignore: ['drafts/**/*']
+  }))
+  .build((err) => {
+    if (err) throw err;
+  });
+```
+
+{{#if hasAsyncProcessing}}
+### Async Processing
+
+This plugin supports asynchronous processing for improved performance:
+
+```js
+import Metalsmith from 'metalsmith';
+import {{functionName}} from '{{pluginName}}';
+
+Metalsmith(__dirname)
+  .use({{functionName}}({
+    async: true,
+    batchSize: 5
+  }))
+  .build((err) => {
+    if (err) throw err;
+  });
+```
+{{/if}}
+
+## API
+
+### `{{functionName}}(options?)`
+
+Creates a new instance of the plugin with the given options.
+
+#### Parameters
+
+- `options` (Object, optional): Configuration options
+
+#### Returns
+
+- Metalsmith plugin function
+
+## Testing
+
+```bash
+# Run tests
+npm test
+
+# Run tests with coverage
+npm run test:coverage
+
+# Run linting
+npm run lint
+
+# Format code
+npm run format
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## License
+
+MIT © [Your Name](https://github.com/yourusername)
