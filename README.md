@@ -2,6 +2,12 @@
 
 > MCP server for scaffolding and validating high-quality Metalsmith plugins
 
+[![metalsmith:plugin][metalsmith-badge]][metalsmith-url]
+[![npm: version][npm-badge]][npm-url]
+[![license: MIT][license-badge]][license-url]
+[![test coverage][coverage-badge]][coverage-url]
+[![ESM][modules-badge]][npm-url]
+
 This MCP (Model Context Protocol) server provides tools for creating and maintaining Metalsmith plugins following enhanced quality standards. It encapsulates years of best practices from the Metalsmith ecosystem, particularly inspired by the exceptional quality demonstrated in plugins like `metalsmith-optimize-images`.
 
 ## Installation
@@ -181,3 +187,13 @@ MIT © Werner Glinka
 ---
 
 _"Build with confidence knowing your generated code follows patterns you can understand, maintain, and explain to any developer."_
+
+[npm-badge]: https://img.shields.io/npm/v/metalsmith-plugin-mcp-server.svg
+[npm-url]: https://www.npmjs.com/package/metalsmith-plugin-mcp-server
+[metalsmith-badge]: https://img.shields.io/badge/metalsmith-plugin-green.svg?longCache=true
+[metalsmith-url]: https://metalsmith.io
+[license-badge]: https://img.shields.io/github/license/wernerglinka/metalsmith-plugin-mcp-server
+[license-url]: LICENSE
+[coverage-badge]: https://img.shields.io/badge/test%20coverage-95%25-brightgreen
+[coverage-url]: https://github.com/wernerglinka/metalsmith-plugin-mcp-server/actions/workflows/test.yml
+[modules-badge]: https://img.shields.io/badge/modules-ESM-blue
