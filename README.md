@@ -1,4 +1,4 @@
-# Metalsmith MCP Server
+# Metalsmith Plugin MCP Server
 
 > MCP server for scaffolding and validating high-quality Metalsmith plugins
 

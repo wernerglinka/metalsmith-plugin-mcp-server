@@ -19,7 +19,8 @@
     "lint:check": "eslint --fix-dry-run .",
     "depcheck": "depcheck",
     "release": "./node_modules/.bin/release-it .",
-    "release:check": "npm run lint:check && ./node_modules/.bin/release-it . --dry-run"
+    "release:check": "npm run lint:check && ./node_modules/.bin/release-it . --dry-run",
+    "commit": "node scripts/commit.js"
   },
   "keywords": [
     "mcp",
