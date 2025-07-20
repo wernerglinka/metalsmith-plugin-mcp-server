@@ -5,17 +5,21 @@
     "requireBranch": "main",
     "tag": true,
     "tagName": "v${version}",
-    "push": true
+    "push": true,
+    "changelog": "npx auto-changelog -u --commit-limit false --ignore-commit-pattern '^((dev|chore|ci):|Release)' --stdout"
   },
   "github": {
-    "release": false
+    "release": true,
+    "releaseName": "v${version}",
+    "releaseNotes": null
   },
   "npm": {
-    "publish": true,
+    "publish": false,
     "publishPath": "."
   },
   "hooks": {
     "before:init": ["npm test", "npm run lint"],
-    "after:release": "echo Successfully released ${name} v${version} to ${repo.repository}. Create GitHub release manually at: https://github.com/wernerglinka/metalsmith-plugin-mcp-server/releases/new?tag=v${version}"
+    "after:bump": "npx auto-changelog -p --commit-limit false --ignore-commit-pattern '^((dev|chore|ci):|Release)' && git add CHANGELOG.md",
+    "after:release": "echo Successfully released ${name} v${version} to ${repo.repository}."
   }
 }
