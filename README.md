@@ -82,33 +82,66 @@ await mcp.call("generate-configs", {
 
 ## Usage
 
-### Setting Up Claude or Other AI Assistants
+### Setting Up the MCP Server
 
-1. **Install the MCP Server**:
+1. **Create a Local MCP Server Installation**:
 
    ```bash
-   npm install -g metalsmith-plugin-mcp-server
+   # Create a dedicated folder for the MCP server
+   mkdir ~/metalsmith-mcp-tools
+   cd ~/metalsmith-mcp-tools
+
+   # Initialize npm project and install the MCP server
+   npm init -y
+   npm install metalsmith-plugin-mcp-server
    ```
 
 2. **Configure Your AI Assistant**:
 
-   For Claude Desktop, add to your Claude configuration file:
+   **For Claude Desktop**, add to your configuration file at `~/Library/Application Support/Claude/claude_desktop_config.json`:
 
    ```json
    {
      "mcpServers": {
-       "metalsmith-plugin": {
-         "command": "metalsmith-mcp-server"
+       "metalsmith-plugin-mcp-server": {
+         "command": "node",
+         "args": [
+           "/Users/yourusername/metalsmith-mcp-tools/node_modules/metalsmith-plugin-mcp-server/src/index.js"
+         ],
+         "cwd": "/Users/yourusername/metalsmith-mcp-tools"
        }
      }
    }
    ```
 
-3. **Verify Installation**:
+   **For Claude Code**, the MCP server will be available when you start Claude Code from any directory.
 
-   Ask your AI assistant:
+   **Note**: Replace `/Users/yourusername/metalsmith-mcp-tools` with the actual path where you installed the server. If using NVM, use the full Node.js path like `/Users/yourusername/.nvm/versions/node/v20.17.0/bin/node`.
 
-   > "Do you have access to the Metalsmith Plugin MCP Server?"
+3. **Restart Your AI Assistant**:
+   - Claude Desktop: Restart the application
+   - Claude Code: Restart or reload your development environment
+
+### Using the MCP Server for Plugin Development
+
+Now you can create Metalsmith plugins in any directory and use AI assistance:
+
+```bash
+# Create a new plugin project anywhere
+mkdir ~/my-projects/metalsmith-awesome-plugin
+cd ~/my-projects/metalsmith-awesome-plugin
+
+# Start Claude Code or use Claude Desktop
+# The MCP server is now available globally
+```
+
+**Verify Installation** by asking your AI assistant:
+
+> "Do you have access to the Metalsmith Plugin MCP Server?"
+
+**Example Development Workflow**:
+
+> "Create a new Metalsmith plugin called 'metalsmith-image-optimizer' that compresses images and generates responsive variants."
 
 ### Example Prompts
 

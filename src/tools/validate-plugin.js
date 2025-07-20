@@ -226,19 +226,28 @@ async function checkPackageJson(pluginPath, results) {
     );
 
     // Required fields
-    const requiredFields = [
-      "name",
-      "version",
-      "description",
-      "main",
-      "license",
-    ];
+    const requiredFields = ["name", "version", "description", "license"];
     for (const field of requiredFields) {
       if (packageJson[field]) {
         results.passed.push(`✓ package.json has ${field}`);
       } else {
         results.failed.push(`✗ package.json missing ${field}`);
       }
+    }
+
+    // Check for entry point (main or exports)
+    if (packageJson.main || packageJson.exports) {
+      if (packageJson.exports) {
+        results.passed.push(
+          "✓ package.json has exports field (modern ES modules)",
+        );
+      } else {
+        results.passed.push("✓ package.json has main field");
+      }
+    } else {
+      results.failed.push(
+        "✗ package.json missing entry point (main or exports)",
+      );
     }
 
     // Check name convention

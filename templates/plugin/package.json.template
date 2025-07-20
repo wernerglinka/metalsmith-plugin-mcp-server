@@ -4,8 +4,8 @@
   "description": "{{description}}",
   "keywords": [
     "metalsmith",
-    "metalsmith-plugin"{{#if features}},
-    "{{features}}"{{/if}}
+    "metalsmith-plugin"{{#if features.length}},
+    {{#each features}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}{{/if}}
   ],
   "homepage": "https://github.com/metalsmith/{{pluginName}}#readme",
   "bugs": {
@@ -29,10 +29,15 @@
     "format": "prettier --write '**/*.{js,json,md}'",
     "lint": "eslint src test",
     "lint:fix": "eslint src test --fix",
-    "test": "mocha test",
+    "test": "mocha test/**/*.test.js",
     "test:coverage": "c8 npm test",
     "coverage": "c8 report --reporter=text-lcov | coveralls",
     "release": "release-it"
+  },
+  "mocha": {
+    "timeout": 10000,
+    "recursive": true,
+    "spec": "test/**/*.test.js"
   },
   "dependencies": {},
   "devDependencies": {

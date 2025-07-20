@@ -155,12 +155,21 @@ export async function pluginScaffoldTool(args) {
             `  cd ${name}`,
             "  npm install",
             "  npm test",
+            "  npm run lint",
             "",
             "Available scripts:",
             "  npm test         - Run tests",
             "  npm run coverage - Run tests with coverage",
             "  npm run lint     - Lint code",
             "  npm run format   - Format code",
+            "  npm run release  - Create a new release",
+            "",
+            "Development workflow:",
+            "  1. Make your changes in src/index.js",
+            "  2. Add tests in test/index.test.js",
+            "  3. Run npm test to verify functionality",
+            "  4. Run npm run lint to check code style",
+            "  5. Run npm run format to auto-format code",
             "",
             "Happy coding! 🚀",
           ].join("\n"),
@@ -238,6 +247,9 @@ async function copyTemplates(pluginPath, type, data) {
     path.join(pluginPath, "test/index.test.js"),
     data,
   );
+
+  // Copy test fixtures
+  await copyTestFixtures(templatesDir, pluginPath, data);
 }
 
 /**
@@ -255,6 +267,50 @@ async function copyTypeSpecificTemplates(sourceDir, targetDir, data) {
     );
 
     await copyTemplate(sourcePath, targetPath, data);
+  }
+}
+
+/**
+ * Copy test fixture files
+ */
+async function copyTestFixtures(templatesDir, targetDir, data) {
+  const fixturesDir = path.join(templatesDir, "fixtures");
+
+  try {
+    const fixtureCategories = await fs.readdir(fixturesDir);
+
+    for (const category of fixtureCategories) {
+      const categoryPath = path.join(fixturesDir, category);
+      const stats = await fs.stat(categoryPath);
+
+      if (stats.isDirectory()) {
+        const targetCategoryPath = path.join(
+          targetDir,
+          "test/fixtures",
+          category,
+        );
+        await fs.mkdir(targetCategoryPath, { recursive: true });
+
+        // Copy files from this fixture category
+        const files = await fs.readdir(categoryPath);
+        for (const file of files) {
+          const sourcePath = path.join(categoryPath, file);
+          const targetPath = path.join(
+            targetCategoryPath,
+            file.replace(".template", ""),
+          );
+
+          if (file.endsWith(".template")) {
+            await copyTemplate(sourcePath, targetPath, data);
+          } else {
+            await fs.copyFile(sourcePath, targetPath);
+          }
+        }
+      }
+    }
+  } catch (error) {
+    // Fixtures are optional, don't fail if they don't exist
+    console.error("Warning: Could not copy test fixtures:", error.message);
   }
 }
 

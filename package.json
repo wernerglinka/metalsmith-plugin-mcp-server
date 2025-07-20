@@ -4,6 +4,9 @@
   "description": "MCP server for scaffolding and validating high-quality Metalsmith plugins",
   "type": "module",
   "exports": "./src/index.js",
+  "bin": {
+    "metalsmith-plugin-mcp-server": "./src/index.js"
+  },
   "scripts": {
     "start": "node src/index.js",
     "test": "mocha test/**/*.test.js",
