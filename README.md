@@ -217,6 +217,7 @@ npm run release
 ```
 
 The release automatically:
+
 - Syncs with remote (to handle CI commits like coverage badge updates)
 - Runs tests and linting
 - Generates changelog from commit history
