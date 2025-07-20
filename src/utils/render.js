@@ -25,7 +25,9 @@ function registerHelpers() {
 
   // Helper to convert string to camelCase
   Handlebars.registerHelper("camelCase", (str) => {
-    if (typeof str !== "string") return str;
+    if (typeof str !== "string") {
+      return str;
+    }
     return str
       .split("-")
       .map((word, index) =>
@@ -36,20 +38,28 @@ function registerHelpers() {
 
   // Helper to remove prefix from string
   Handlebars.registerHelper("removePrefix", (str, prefix) => {
-    if (typeof str !== "string" || typeof prefix !== "string") return str;
+    if (typeof str !== "string" || typeof prefix !== "string") {
+      return str;
+    }
     return str.startsWith(prefix) ? str.slice(prefix.length) : str;
   });
 
   // Helper to convert array to comma-separated string
   Handlebars.registerHelper("join", (arr, separator = ", ") => {
-    if (!Array.isArray(arr)) return "";
+    if (!Array.isArray(arr)) {
+      return "";
+    }
     return arr.join(separator);
   });
 
   // Helper to get array length
   Handlebars.registerHelper("length", (arr) => {
-    if (Array.isArray(arr)) return arr.length;
-    if (typeof arr === "string") return arr.length;
+    if (Array.isArray(arr)) {
+      return arr.length;
+    }
+    if (typeof arr === "string") {
+      return arr.length;
+    }
     return 0;
   });
 }
@@ -60,7 +70,7 @@ registerHelpers();
 // Configure Handlebars to preserve undefined variables
 Handlebars.registerHelper("helperMissing", function (/* arguments, options */) {
   const options = arguments[arguments.length - 1];
-  return new Handlebars.SafeString("{{" + options.name + "}}");
+  return new Handlebars.SafeString(`{{${options.name}}}`);
 });
 
 /**
@@ -128,7 +138,7 @@ export function render(template, data) {
     // Override helperMissing to preserve undefined variables
     instance.registerHelper("helperMissing", function () {
       const options = arguments[arguments.length - 1];
-      return new instance.SafeString("{{" + options.name + "}}");
+      return new instance.SafeString(`{{${options.name}}}`);
     });
 
     const compiledTemplate = instance.compile(template);
@@ -156,13 +166,13 @@ export function renderConditionals(template, data) {
     instance.registerHelper("helperMissing", function () {
       const options = arguments[arguments.length - 1];
       // For conditionals test, we want to preserve the {{variable}} syntax
-      return new instance.SafeString("{{" + options.name + "}}");
+      return new instance.SafeString(`{{${options.name}}}`);
     });
 
     // Don't process arrays or enhance data for conditional-only rendering
     const compiledTemplate = instance.compile(template);
     return compiledTemplate(data);
-  } catch (error) {
+  } catch {
     // Fallback to the full render if there's an error
     return render(template, data);
   }

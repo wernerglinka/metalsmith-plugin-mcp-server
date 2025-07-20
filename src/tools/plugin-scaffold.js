@@ -148,15 +148,15 @@ export async function pluginScaffoldTool(args) {
       await copyLicenseFile(pluginPath, license, templateData);
     } else {
       // Add a warning comment about UNLICENSED
-      console.log(
+      console.warn(
         chalk.yellow("\n⚠️  Note: UNLICENSED means 'All Rights Reserved'"),
       );
-      console.log(
+      console.warn(
         chalk.yellow(
           "   No one can use, copy, or distribute your code without explicit permission.",
         ),
       );
-      console.log(
+      console.warn(
         chalk.yellow(
           "   Consider using an open source license like MIT for Metalsmith plugins.\n",
         ),

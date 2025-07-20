@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Format, add, commit with message prompt, and push
+ * Lint, format, add, commit with message prompt, and push
  */
 
 import { spawn } from "child_process";
@@ -36,6 +36,9 @@ function promptCommitMessage() {
 
 async function main() {
   try {
+    console.log("🔍 Linting code...");
+    await runCommand("npm", ["run", "lint"]);
+
     console.log("🎨 Formatting code...");
     await runCommand("npm", ["run", "format"]);
 
