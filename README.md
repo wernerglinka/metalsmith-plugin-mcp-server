@@ -5,6 +5,7 @@
 [![npm: version][npm-badge]][npm-url]
 [![license: MIT][license-badge]][license-url]
 [![test coverage][coverage-badge]][coverage-url]
+[![AI-assisted development][ai-assist-badge]][ai-assist-url]
 
 This MCP (Model Context Protocol) server provides tools for creating and maintaining Metalsmith plugins following enhanced quality standards. It encapsulates years of best practices from the Metalsmith ecosystem, particularly inspired by the exceptional quality demonstrated in plugins like `metalsmith-optimize-images`.
 
@@ -176,7 +177,6 @@ npm run format
 
 - [Metalsmith Documentation](https://metalsmith.io)
 - [MCP Protocol Specification](https://modelcontextprotocol.io)
-- [Enhanced Plugin Standards](https://github.com/metalsmith/metalsmith-optimize-images)
 
 ## License
 
@@ -192,3 +192,5 @@ _"Build with confidence knowing your generated code follows patterns you can und
 [license-url]: LICENSE
 [coverage-badge]: https://img.shields.io/badge/test%20coverage-95%25-brightgreen
 [coverage-url]: https://github.com/wernerglinka/metalsmith-plugin-mcp-server/actions/workflows/test.yml
+[ai-assist-badge]: https://img.shields.io/badge/AI%20assist-CLAUDE-blue
+[ai-assist-url]: ./CONTRIBUTING.md#ai-assistance-in-this-project
