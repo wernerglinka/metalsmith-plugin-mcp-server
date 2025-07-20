@@ -12,10 +12,10 @@ This MCP (Model Context Protocol) server provides tools for creating and maintai
 ## Installation
 
 ```bash
-npm install -g @metalsmith/mcp-server
+npm install -g metalsmith-plugin-mcp-server
 ```
 
-## Usage
+## Features
 
 The MCP server provides three main tools:
 
@@ -80,18 +80,61 @@ await mcp.call("generate-configs", {
 });
 ```
 
+## Usage
+
+### Setting Up Claude or Other AI Assistants
+
+1. **Install the MCP Server**:
+   ```bash
+   npm install -g metalsmith-plugin-mcp-server
+   ```
+
+2. **Configure Your AI Assistant**:
+   
+   For Claude Desktop, add to your Claude configuration file:
+   ```json
+   {
+     "mcpServers": {
+       "metalsmith-plugin": {
+         "command": "metalsmith-mcp-server"
+       }
+     }
+   }
+   ```
+
+3. **Verify Installation**:
+   
+   Ask your AI assistant:
+   > "Do you have access to the Metalsmith Plugin MCP Server?"
+
+### Example Prompts
+
+Here are prompts that will trigger the MCP server's capabilities:
+
+**Creating a New Plugin**:
+> "Create a new Metalsmith plugin called metalsmith-json-feed that generates JSON feeds from markdown files. Include async processing and comprehensive tests."
+
+**Validating an Existing Plugin**:
+> "Check my metalsmith-sass plugin against the MCP server's enhanced quality standards and suggest improvements."
+
+**Upgrading Configuration**:
+> "Update my Metalsmith plugin to use ESLint 9 flat config and modern testing patterns."
+
+**Complex Plugin Development**:
+> "Help me build a Metalsmith plugin that optimizes SVG files, supports batch processing, and integrates with the plugin chain properly."
+
+The AI assistant will automatically use the MCP server tools to scaffold, validate, and configure your Metalsmith plugins according to best practices.
+
 ## Philosophy
 
 This MCP server embodies a philosophy of **fundamentals over frameworks**:
 
 - **Sustainable Development**: Focus on HTML, CSS, and Node.js skills that transfer everywhere
-- **Sophisticated Simplicity**: Sometimes the most sophisticated choice is recognizing when you don't need sophistication
-- **Quality Over Quantity**: Better to have 50-100 serious adopters building excellent plugins than thousands creating mediocre ones
 - **Educational Impact**: Teach patterns that last decades, not quarters
 
 ## Enhanced Standards
 
-The server implements standards that go beyond the official Metalsmith boilerplate:
+The server implements standards inspired by [@metalsmith/core-plugin](https://github.com/metalsmith/core-plugin), building upon and extending these proven patterns:
 
 ### Code Quality
 
@@ -106,6 +149,7 @@ The server implements standards that go beyond the official Metalsmith boilerpla
 - **Deep configuration merging** for flexible defaults
 - **Token-based filename patterns** for dynamic paths
 - **Comprehensive error handling** with helpful messages
+- **Use native Metalsmith methods wherever possible**
 
 ### Documentation
 
