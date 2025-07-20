@@ -41,7 +41,13 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
  */
 export async function pluginScaffoldTool(args) {
   // Extract arguments with defaults (ES6 destructuring with default values)
-  const { name, type = "processor", features = [], outputPath = ".", license = "MIT" } = args;
+  const {
+    name,
+    type = "processor",
+    features = [],
+    outputPath = ".",
+    license = "MIT",
+  } = args;
 
   // Validate plugin name using npm's official validation
   const validation = validateNpmPackageName(name);
@@ -142,9 +148,19 @@ export async function pluginScaffoldTool(args) {
       await copyLicenseFile(pluginPath, license, templateData);
     } else {
       // Add a warning comment about UNLICENSED
-      console.log(chalk.yellow("\n⚠️  Note: UNLICENSED means 'All Rights Reserved'"));
-      console.log(chalk.yellow("   No one can use, copy, or distribute your code without explicit permission."));
-      console.log(chalk.yellow("   Consider using an open source license like MIT for Metalsmith plugins.\n"));
+      console.log(
+        chalk.yellow("\n⚠️  Note: UNLICENSED means 'All Rights Reserved'"),
+      );
+      console.log(
+        chalk.yellow(
+          "   No one can use, copy, or distribute your code without explicit permission.",
+        ),
+      );
+      console.log(
+        chalk.yellow(
+          "   Consider using an open source license like MIT for Metalsmith plugins.\n",
+        ),
+      );
     }
 
     // Generate modern configuration files (ESLint flat config, etc.)
@@ -333,11 +349,14 @@ async function copyLicenseFile(pluginPath, license, data) {
   const licensesDir = path.join(__dirname, "../../templates/licenses");
   const licenseTemplate = path.join(licensesDir, `${license}.template`);
   const targetPath = path.join(pluginPath, "LICENSE");
-  
+
   try {
     await copyTemplate(licenseTemplate, targetPath, data);
   } catch (error) {
-    console.error(`Warning: Could not copy ${license} license template:`, error.message);
+    console.error(
+      `Warning: Could not copy ${license} license template:`,
+      error.message,
+    );
   }
 }
 

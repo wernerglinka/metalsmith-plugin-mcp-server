@@ -116,7 +116,7 @@ await mcp.call("generate-configs", {
 
    **For Claude Code**, the MCP server will be available when you start Claude Code from any directory.
 
-   **Note**: Replace `/Users/yourusername/metalsmith-mcp-tools` with the actual path where you installed the server. If using NVM, use the full Node.js path like `/Users/yourusername/.nvm/versions/node/v20.17.0/bin/node`.
+   **Note**: Replace `/Users/<your-user-name>/metalsmith-mcp-tools` with the actual path where you installed the server. If using NVM, use the full Node.js path like `/Users/yourusername/.nvm/versions/node/v20.17.0/bin/node`.
 
 3. **Restart Your AI Assistant**:
    - Claude Desktop: Restart the application

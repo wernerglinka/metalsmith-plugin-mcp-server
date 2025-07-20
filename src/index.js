@@ -102,7 +102,8 @@ const TOOLS = [
         license: {
           type: "string",
           enum: ["MIT", "Apache-2.0", "ISC", "BSD-3-Clause", "UNLICENSED"],
-          description: "License for the plugin (MIT is most common in JS ecosystem, UNLICENSED for proprietary)",
+          description:
+            "License for the plugin (MIT is most common in JS ecosystem, UNLICENSED for proprietary)",
           default: "MIT",
         },
       },
