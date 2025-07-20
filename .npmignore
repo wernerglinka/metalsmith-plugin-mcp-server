@@ -1,27 +1,40 @@
-# Test files
-test/
-*.test.js
-
 # Development files
-examples/
-mcp-server-context.md
+test/
+scripts/
+eslint.config.js
+.prettierrc
+.editorconfig
 
-# Coverage
-coverage/
-.nyc_output/
+# Documentation (except README.md which is in files array)
+CONTRIBUTING.md
+TESTING.md
+QUICKSTART.md
 
-# IDE
+# Git and CI files
+.git/
+.github/
+.gitignore
+
+# IDE files
 .vscode/
 .idea/
-
-# Temporary files
-tmp/
-temp/
-*.tmp
-
-# Logs
-*.log
+*.sublime-*
 
 # OS files
 .DS_Store
 Thumbs.db
+
+# Coverage reports
+coverage/
+.nyc_output/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Temporary files
+*.tmp
+*.temp
+tmp/
+temp/
+.cache/
