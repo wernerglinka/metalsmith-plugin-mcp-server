@@ -22,6 +22,7 @@ Before contributing, please take time to understand the Metalsmith Plugin MCP Se
 ### Understanding the Project Scope
 
 The Metalsmith Plugin MCP Server aims to:
+
 - Provide a seamless interface between AI assistants and Metalsmith plugin development
 - Enable AI-powered plugin creation, testing, and modification
 - Help developers build plugins that follow Metalsmith's conventions
@@ -53,6 +54,7 @@ To set up your development environment:
 ### Finding Issues
 
 Look for issues labeled:
+
 - `good first issue` - Great for newcomers
 - `help wanted` - We need community assistance
 - `documentation` - Help improve our docs
@@ -63,6 +65,7 @@ If you're new to open source, start small with documentation improvements or sim
 ### Creating Issues
 
 When creating an issue:
+
 - Search existing issues first to avoid duplicates
 - Use clear, descriptive titles
 - Provide detailed descriptions with examples
@@ -100,6 +103,7 @@ Project maintainers are responsible for clarifying standards and are expected to
 ## Development Workflow
 
 1. **Fork and Branch**: Create a new branch for your feature or fix:
+
    ```bash
    git checkout -b feature/your-feature-name
    ```
@@ -109,9 +113,10 @@ Project maintainers are responsible for clarifying standards and are expected to
 3. **Write Tests**: Add tests for new functionality and ensure existing tests pass.
 
 4. **Commit**: Write clear, concise commit messages:
+
    ```
    feat: add Metalsmith configuration validation
-   
+
    - Add schema validation for metalsmith.json
    - Include helpful error messages
    - Update documentation
@@ -143,6 +148,7 @@ We strive to use inclusive language throughout our project:
 ### Accessibility Considerations
 
 When contributing:
+
 - Ensure documentation is screen reader friendly
 - Use semantic markup in documentation
 - Provide alt text for images
@@ -161,6 +167,7 @@ Follow our established code style:
 - **Modular design** with dependency injection
 
 Example:
+
 ```javascript
 /**
  * Processes Metalsmith files with given plugins
@@ -169,9 +176,12 @@ Example:
  * @returns {Object} Processed files object
  */
 const processFiles = (files, plugins) => {
-  return plugins.reduce((processedFiles, plugin) => {
-    return plugin(processedFiles);
-  }, { ...files });
+  return plugins.reduce(
+    (processedFiles, plugin) => {
+      return plugin(processedFiles);
+    },
+    { ...files },
+  );
 };
 ```
 
@@ -185,6 +195,7 @@ All contributions must include appropriate tests:
 - Keep tests focused and readable
 
 Run tests with:
+
 ```bash
 npm test
 ```
@@ -213,6 +224,7 @@ By contributing to this project, you agree that your contributions will be licen
 ### Third-Party Code
 
 If you include code from other sources:
+
 - Ensure it's compatible with our MIT License
 - Provide proper attribution
 - Document the source in your PR
@@ -224,6 +236,7 @@ This project uses Claude (by Anthropic) to assist with code generation, refactor
 ### How We Use AI
 
 AI assistance is primarily used for:
+
 - Generating boilerplate code and repetitive patterns
 - Refactoring existing code to match our functional programming standards
 - Creating comprehensive JSDoc documentation
@@ -231,6 +244,7 @@ AI assistance is primarily used for:
 - Code reviews and identifying potential improvements
 
 AI is **not** used for:
+
 - Core architecture decisions
 - Security-critical implementations without thorough review
 - Business logic without human validation
@@ -238,6 +252,7 @@ AI is **not** used for:
 ### Our AI Coding Standards
 
 All AI-generated code must adhere to our project preferences:
+
 - **Languages**: JavaScript with JSDoc annotations (no TypeScript)
 - **Paradigm**: Functional programming with pure functions and explicit returns
 - **Architecture**: Modular design with dependency injection and separation of concerns
@@ -247,6 +262,7 @@ All AI-generated code must adhere to our project preferences:
 ### For Contributors Using AI
 
 If you use AI assistance for contributions:
+
 1. Always review and understand generated code before committing
 2. Test thoroughly - AI-generated code requires the same quality standards
 3. Document in your PR if significant portions were AI-assisted
@@ -262,6 +278,7 @@ comprehensive JSDoc documentation. Avoid mutations and side effects."
 ### Quality Assurance
 
 All code, whether human or AI-assisted, goes through:
+
 - Code review by maintainers
 - Automated testing via our CI pipeline
 - Manual testing for edge cases

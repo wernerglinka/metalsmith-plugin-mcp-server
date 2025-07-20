@@ -85,13 +85,15 @@ await mcp.call("generate-configs", {
 ### Setting Up Claude or Other AI Assistants
 
 1. **Install the MCP Server**:
+
    ```bash
    npm install -g metalsmith-plugin-mcp-server
    ```
 
 2. **Configure Your AI Assistant**:
-   
+
    For Claude Desktop, add to your Claude configuration file:
+
    ```json
    {
      "mcpServers": {
@@ -103,8 +105,9 @@ await mcp.call("generate-configs", {
    ```
 
 3. **Verify Installation**:
-   
+
    Ask your AI assistant:
+
    > "Do you have access to the Metalsmith Plugin MCP Server?"
 
 ### Example Prompts
@@ -112,15 +115,19 @@ await mcp.call("generate-configs", {
 Here are prompts that will trigger the MCP server's capabilities:
 
 **Creating a New Plugin**:
+
 > "Create a new Metalsmith plugin called metalsmith-json-feed that generates JSON feeds from markdown files. Include async processing and comprehensive tests."
 
 **Validating an Existing Plugin**:
+
 > "Check my metalsmith-sass plugin against the MCP server's enhanced quality standards and suggest improvements."
 
 **Upgrading Configuration**:
+
 > "Update my Metalsmith plugin to use ESLint 9 flat config and modern testing patterns."
 
 **Complex Plugin Development**:
+
 > "Help me build a Metalsmith plugin that optimizes SVG files, supports batch processing, and integrates with the plugin chain properly."
 
 The AI assistant will automatically use the MCP server tools to scaffold, validate, and configure your Metalsmith plugins according to best practices.

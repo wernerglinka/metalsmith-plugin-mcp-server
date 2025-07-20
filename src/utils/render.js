@@ -26,11 +26,11 @@ export function renderTemplate(template, data) {
       const value = data[key];
 
       // Handle different data types appropriately
-      if (typeof value === 'boolean') {
+      if (typeof value === "boolean") {
         return value.toString(); // Convert true/false to 'true'/'false'
       }
       if (Array.isArray(value)) {
-        return value.join(', '); // Join arrays with commas
+        return value.join(", "); // Join arrays with commas
       }
       return value; // Return strings and numbers as-is
     }
@@ -59,7 +59,7 @@ export function renderConditionals(template, data) {
       if (data[condition]) {
         return content; // Include content if condition is truthy
       }
-      return ''; // Remove block if condition is falsy
+      return ""; // Remove block if condition is falsy
     },
   );
 }
