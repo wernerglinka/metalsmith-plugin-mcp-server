@@ -241,7 +241,7 @@ _"Build with confidence knowing your generated code follows patterns you can und
 [npm-url]: https://www.npmjs.com/package/metalsmith-plugin-mcp-server
 [license-badge]: https://img.shields.io/github/license/wernerglinka/metalsmith-plugin-mcp-server
 [license-url]: LICENSE
-[coverage-badge]: https://img.shields.io/badge/test%20coverage-95%25-brightgreen
+[coverage-badge]: https://img.shields.io/badge/test%20coverage-100.0%25-brightgreen
 [coverage-url]: https://github.com/wernerglinka/metalsmith-plugin-mcp-server/actions/workflows/test.yml
 [ai-assist-badge]: https://img.shields.io/badge/AI%20assist-CLAUDE-blue
 [ai-assist-url]: ./CONTRIBUTING.md#ai-assistance-in-this-project
