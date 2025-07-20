@@ -4,8 +4,8 @@
   "description": "{{description}}",
   "keywords": [
     "metalsmith",
-    "metalsmith-plugin"{{#if features}},
-    {{#each features}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}{{/if}}
+    "metalsmith-plugin"{{#if features}}{{#each features}},
+    "{{this}}"{{/each}}{{/if}}
   ],
   "homepage": "https://github.com/metalsmith/{{pluginName}}#readme",
   "bugs": {

@@ -62,6 +62,14 @@ function registerHelpers() {
     }
     return 0;
   });
+
+  // Helper to display arrays as comma-separated strings (for variable interpolation)
+  Handlebars.registerHelper("arrayDisplay", (arr) => {
+    if (Array.isArray(arr)) {
+      return arr.join(", ");
+    }
+    return arr;
+  });
 }
 
 // Register helpers on module load
@@ -82,11 +90,14 @@ Handlebars.registerHelper("helperMissing", function (/* arguments, options */) {
  */
 export function render(template, data) {
   try {
-    // Pre-process data to handle arrays (convert to comma-separated strings)
+    // Process arrays for display but keep originals for iteration
     const processedData = {};
     for (const key in data) {
       if (Array.isArray(data[key])) {
-        processedData[key] = data[key].join(", ");
+        // Keep original array
+        processedData[key] = data[key];
+        // Also create a display version
+        processedData[`${key}Display`] = data[key].join(", ");
       } else {
         processedData[key] = data[key];
       }
@@ -134,6 +145,15 @@ export function render(template, data) {
         instance.registerHelper(name, Handlebars.helpers[name]);
       }
     });
+
+    // Override escapeExpression to handle arrays
+    const originalEscape = instance.Utils.escapeExpression;
+    instance.Utils.escapeExpression = function (value) {
+      if (Array.isArray(value)) {
+        return value.join(", ");
+      }
+      return originalEscape(value);
+    };
 
     // Override helperMissing to preserve undefined variables
     instance.registerHelper("helperMissing", function () {
