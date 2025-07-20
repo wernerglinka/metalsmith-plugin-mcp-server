@@ -1,6 +1,6 @@
-import { promises as fs } from 'fs';
-import path from 'path';
-import chalk from 'chalk';
+import { promises as fs } from "fs";
+import path from "path";
+import chalk from "chalk";
 
 /**
  * Generate configuration files following enhanced standards
@@ -11,8 +11,8 @@ import chalk from 'chalk';
  */
 export async function generateConfigsTool(args) {
   const {
-    outputPath = '.',
-    configs = ['eslint', 'prettier', 'editorconfig', 'gitignore'],
+    outputPath = ".",
+    configs = ["eslint", "prettier", "editorconfig", "gitignore"],
   } = args;
 
   const generated = [];
@@ -26,33 +26,33 @@ export async function generateConfigsTool(args) {
     for (const config of configs) {
       try {
         switch (config) {
-        case 'eslint':
-          await generateEslintConfig(outputPath);
-          generated.push('eslint.config.js');
-          break;
+          case "eslint":
+            await generateEslintConfig(outputPath);
+            generated.push("eslint.config.js");
+            break;
 
-        case 'prettier':
-          await generatePrettierConfig(outputPath);
-          generated.push('prettier.config.js');
-          break;
+          case "prettier":
+            await generatePrettierConfig(outputPath);
+            generated.push("prettier.config.js");
+            break;
 
-        case 'editorconfig':
-          await generateEditorConfig(outputPath);
-          generated.push('.editorconfig');
-          break;
+          case "editorconfig":
+            await generateEditorConfig(outputPath);
+            generated.push(".editorconfig");
+            break;
 
-        case 'gitignore':
-          await generateGitignore(outputPath);
-          generated.push('.gitignore');
-          break;
+          case "gitignore":
+            await generateGitignore(outputPath);
+            generated.push(".gitignore");
+            break;
 
-        case 'release-it':
-          await generateReleaseItConfig(outputPath);
-          generated.push('.release-it.json');
-          break;
+          case "release-it":
+            await generateReleaseItConfig(outputPath);
+            generated.push(".release-it.json");
+            break;
 
-        default:
-          errors.push(`Unknown config type: ${config}`);
+          default:
+            errors.push(`Unknown config type: ${config}`);
         }
       } catch (error) {
         errors.push(`Failed to generate ${config}: ${error.message}`);
@@ -60,30 +60,30 @@ export async function generateConfigsTool(args) {
     }
 
     // Generate report
-    const report = [chalk.bold('📝 Configuration Generation Report'), ''];
+    const report = [chalk.bold("📝 Configuration Generation Report"), ""];
 
     if (generated.length > 0) {
-      report.push(chalk.green.bold('Generated files:'));
+      report.push(chalk.green.bold("Generated files:"));
       generated.forEach((file) => report.push(chalk.green(`  ✓ ${file}`)));
     }
 
     if (errors.length > 0) {
-      report.push('');
-      report.push(chalk.red.bold('Errors:'));
+      report.push("");
+      report.push(chalk.red.bold("Errors:"));
       errors.forEach((error) => report.push(chalk.red(`  ✗ ${error}`)));
     }
 
-    report.push('');
-    report.push('Next steps:');
-    report.push('  1. Review the generated configuration files');
-    report.push('  2. Adjust settings to match your project needs');
-    report.push('  3. Run npm install to add any required dependencies');
+    report.push("");
+    report.push("Next steps:");
+    report.push("  1. Review the generated configuration files");
+    report.push("  2. Adjust settings to match your project needs");
+    report.push("  3. Run npm install to add any required dependencies");
 
     return {
       content: [
         {
-          type: 'text',
-          text: report.join('\n'),
+          type: "text",
+          text: report.join("\n"),
         },
       ],
     };
@@ -91,7 +91,7 @@ export async function generateConfigsTool(args) {
     return {
       content: [
         {
-          type: 'text',
+          type: "text",
           text: `Failed to generate configs: ${error.message}`,
         },
       ],
@@ -104,14 +104,14 @@ export async function generateConfigsTool(args) {
  * Generate modern ESLint flat config
  */
 async function generateEslintConfig(outputPath) {
-  const configPath = path.join(outputPath, 'eslint.config.js');
+  const configPath = path.join(outputPath, "eslint.config.js");
 
   // Check if already exists
   try {
     await fs.access(configPath);
-    throw new Error('eslint.config.js already exists');
+    throw new Error("eslint.config.js already exists");
   } catch (error) {
-    if (error.code !== 'ENOENT') {
+    if (error.code !== "ENOENT") {
       throw error;
     }
   }
@@ -193,13 +193,13 @@ export default [
  * Generate Prettier config
  */
 async function generatePrettierConfig(outputPath) {
-  const configPath = path.join(outputPath, 'prettier.config.js');
+  const configPath = path.join(outputPath, "prettier.config.js");
 
   try {
     await fs.access(configPath);
-    throw new Error('prettier.config.js already exists');
+    throw new Error("prettier.config.js already exists");
   } catch (error) {
-    if (error.code !== 'ENOENT') {
+    if (error.code !== "ENOENT") {
       throw error;
     }
   }
@@ -255,13 +255,13 @@ async function generatePrettierConfig(outputPath) {
  * Generate .editorconfig
  */
 async function generateEditorConfig(outputPath) {
-  const configPath = path.join(outputPath, '.editorconfig');
+  const configPath = path.join(outputPath, ".editorconfig");
 
   try {
     await fs.access(configPath);
-    throw new Error('.editorconfig already exists');
+    throw new Error(".editorconfig already exists");
   } catch (error) {
-    if (error.code !== 'ENOENT') {
+    if (error.code !== "ENOENT") {
       throw error;
     }
   }
@@ -309,13 +309,13 @@ indent_style = tab
  * Generate .gitignore
  */
 async function generateGitignore(outputPath) {
-  const configPath = path.join(outputPath, '.gitignore');
+  const configPath = path.join(outputPath, ".gitignore");
 
   try {
     await fs.access(configPath);
-    throw new Error('.gitignore already exists');
+    throw new Error(".gitignore already exists");
   } catch (error) {
-    if (error.code !== 'ENOENT') {
+    if (error.code !== "ENOENT") {
       throw error;
     }
   }
@@ -382,40 +382,40 @@ test-results/
  * Generate release-it config
  */
 async function generateReleaseItConfig(outputPath) {
-  const configPath = path.join(outputPath, '.release-it.json');
+  const configPath = path.join(outputPath, ".release-it.json");
 
   try {
     await fs.access(configPath);
-    throw new Error('.release-it.json already exists');
+    throw new Error(".release-it.json already exists");
   } catch (error) {
-    if (error.code !== 'ENOENT') {
+    if (error.code !== "ENOENT") {
       throw error;
     }
   }
 
   const config = {
     git: {
-      commitMessage: 'chore: release v${version}',
+      commitMessage: "chore: release v${version}",
       requireCleanWorkingDir: true,
-      requireBranch: 'main',
+      requireBranch: "main",
       tag: true,
-      tagName: 'v${version}',
+      tagName: "v${version}",
       push: true,
     },
     github: {
       release: true,
-      releaseName: 'v${version}',
+      releaseName: "v${version}",
       draft: false,
       autoGenerate: true,
     },
     npm: {
       publish: true,
-      publishPath: '.',
+      publishPath: ".",
     },
     hooks: {
-      'before:init': ['npm test', 'npm run lint'],
-      'after:release':
-        'echo Successfully released ${name} v${version} to ${repo.repository}.',
+      "before:init": ["npm test", "npm run lint"],
+      "after:release":
+        "echo Successfully released ${name} v${version} to ${repo.repository}.",
     },
   };
 

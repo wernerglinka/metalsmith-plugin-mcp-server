@@ -17,17 +17,17 @@
  */
 
 // Import MCP SDK components
-import { Server } from '@modelcontextprotocol/sdk/server/index.js'; // Main MCP server class
-import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'; // Transport for stdio communication
+import { Server } from "@modelcontextprotocol/sdk/server/index.js"; // Main MCP server class
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"; // Transport for stdio communication
 import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
-} from '@modelcontextprotocol/sdk/types.js'; // Request type schemas
+} from "@modelcontextprotocol/sdk/types.js"; // Request type schemas
 
 // Import our custom tool implementations
-import { pluginScaffoldTool } from './tools/plugin-scaffold.js';
-import { validatePluginTool } from './tools/validate-plugin.js';
-import { generateConfigsTool } from './tools/generate-configs.js';
+import { pluginScaffoldTool } from "./tools/plugin-scaffold.js";
+import { validatePluginTool } from "./tools/validate-plugin.js";
+import { generateConfigsTool } from "./tools/generate-configs.js";
 
 /**
  * Create the MCP server instance
@@ -41,8 +41,8 @@ import { generateConfigsTool } from './tools/generate-configs.js';
  */
 const server = new Server(
   {
-    name: '@metalsmith/mcp-server', // Server identifier
-    version: '0.1.0', // Server version
+    name: "@metalsmith/mcp-server", // Server identifier
+    version: "0.1.0", // Server version
   },
   {
     capabilities: {
@@ -65,99 +65,99 @@ const server = new Server(
  */
 const TOOLS = [
   {
-    name: 'plugin-scaffold',
+    name: "plugin-scaffold",
     description:
-      'Generate a complete Metalsmith plugin structure with enhanced standards',
+      "Generate a complete Metalsmith plugin structure with enhanced standards",
     inputSchema: {
-      type: 'object', // The input must be an object (not string, array, etc.)
+      type: "object", // The input must be an object (not string, array, etc.)
       properties: {
         name: {
-          type: 'string',
-          description: 'Plugin name (e.g., metalsmith-feature-name)',
+          type: "string",
+          description: "Plugin name (e.g., metalsmith-feature-name)",
         },
         type: {
-          type: 'string',
-          enum: ['processor', 'transformer', 'validator'], // Only these values are allowed
-          description: 'Type of plugin to generate',
-          default: 'processor', // If not provided, use this value
+          type: "string",
+          enum: ["processor", "transformer", "validator"], // Only these values are allowed
+          description: "Type of plugin to generate",
+          default: "processor", // If not provided, use this value
         },
         features: {
-          type: 'array', // An array of strings
+          type: "array", // An array of strings
           items: {
-            type: 'string',
+            type: "string",
             enum: [
-              'async-processing',
-              'background-processing',
-              'metadata-generation',
+              "async-processing",
+              "background-processing",
+              "metadata-generation",
             ],
           },
-          description: 'Additional features to include',
+          description: "Additional features to include",
           default: [], // Empty array if not provided
         },
         outputPath: {
-          type: 'string',
-          description: 'Path where the plugin will be created',
-          default: '.', // Current directory if not specified
+          type: "string",
+          description: "Path where the plugin will be created",
+          default: ".", // Current directory if not specified
         },
       },
-      required: ['name'], // Only 'name' is required, others have defaults
+      required: ["name"], // Only 'name' is required, others have defaults
     },
   },
   {
-    name: 'validate-plugin',
-    description: 'Check an existing plugin against quality standards',
+    name: "validate-plugin",
+    description: "Check an existing plugin against quality standards",
     inputSchema: {
-      type: 'object',
+      type: "object",
       properties: {
         path: {
-          type: 'string',
-          description: 'Path to the plugin directory',
+          type: "string",
+          description: "Path to the plugin directory",
         },
         checks: {
-          type: 'array',
+          type: "array",
           items: {
-            type: 'string',
+            type: "string",
             enum: [
-              'structure',
-              'tests',
-              'docs',
-              'package-json',
-              'eslint',
-              'coverage',
+              "structure",
+              "tests",
+              "docs",
+              "package-json",
+              "eslint",
+              "coverage",
             ],
           },
-          description: 'Specific checks to perform',
-          default: ['structure', 'tests', 'docs', 'package-json'],
+          description: "Specific checks to perform",
+          default: ["structure", "tests", "docs", "package-json"],
         },
       },
-      required: ['path'],
+      required: ["path"],
     },
   },
   {
-    name: 'generate-configs',
-    description: 'Generate configuration files following enhanced standards',
+    name: "generate-configs",
+    description: "Generate configuration files following enhanced standards",
     inputSchema: {
-      type: 'object',
+      type: "object",
       properties: {
         outputPath: {
-          type: 'string',
-          description: 'Path where configs will be created',
-          default: '.',
+          type: "string",
+          description: "Path where configs will be created",
+          default: ".",
         },
         configs: {
-          type: 'array',
+          type: "array",
           items: {
-            type: 'string',
+            type: "string",
             enum: [
-              'eslint',
-              'prettier',
-              'editorconfig',
-              'gitignore',
-              'release-it',
+              "eslint",
+              "prettier",
+              "editorconfig",
+              "gitignore",
+              "release-it",
             ],
           },
-          description: 'Configuration files to generate',
-          default: ['eslint', 'prettier', 'editorconfig', 'gitignore'],
+          description: "Configuration files to generate",
+          default: ["eslint", "prettier", "editorconfig", "gitignore"],
         },
       },
       required: [],
@@ -199,25 +199,25 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   try {
     // Route to the appropriate tool implementation based on the tool name
     switch (name) {
-    case 'plugin-scaffold':
-      return await pluginScaffoldTool(args); // Generate new plugin
+      case "plugin-scaffold":
+        return await pluginScaffoldTool(args); // Generate new plugin
 
-    case 'validate-plugin':
-      return await validatePluginTool(args); // Check existing plugin
+      case "validate-plugin":
+        return await validatePluginTool(args); // Check existing plugin
 
-    case 'generate-configs':
-      return await generateConfigsTool(args); // Create config files
+      case "generate-configs":
+        return await generateConfigsTool(args); // Create config files
 
-    default:
-      // This shouldn't happen if Claude only calls tools we advertised
-      throw new Error(`Unknown tool: ${name}`);
+      default:
+        // This shouldn't happen if Claude only calls tools we advertised
+        throw new Error(`Unknown tool: ${name}`);
     }
   } catch (error) {
     // If any tool throws an error, we catch it and return a standardized error response
     return {
       content: [
         {
-          type: 'text', // Content type (could also be 'image', etc.)
+          type: "text", // Content type (could also be 'image', etc.)
           text: `Error executing tool ${name}: ${error.message}`,
         },
       ],
@@ -246,11 +246,11 @@ async function main() {
 
   // Log to stderr so it doesn't interfere with the MCP protocol messages
   // Claude reads from stdout, so we must never write non-protocol data there
-  console.error('Metalsmith MCP Server started');
+  console.error("Metalsmith MCP Server started");
 }
 
 // Start the server and handle any startup errors
 main().catch((error) => {
-  console.error('Fatal error:', error);
+  console.error("Fatal error:", error);
   process.exit(1); // Exit with error code if startup fails
 });
