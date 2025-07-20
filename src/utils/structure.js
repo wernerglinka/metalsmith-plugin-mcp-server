@@ -19,30 +19,30 @@ export function generatePluginStructure(type, features) {
 
   // Add type-specific directories
   switch (type) {
-    case "processor":
-      baseStructure.src.processors = {};
-      break;
-    case "transformer":
-      baseStructure.src.transformers = {};
-      break;
-    case "validator":
-      baseStructure.src.validators = {};
-      break;
+  case 'processor':
+    baseStructure.src.processors = {};
+    break;
+  case 'transformer':
+    baseStructure.src.transformers = {};
+    break;
+  case 'validator':
+    baseStructure.src.validators = {};
+    break;
   }
 
   // Add feature-specific directories
-  if (features.includes("async-processing")) {
+  if (features.includes('async-processing')) {
     baseStructure.src.processors = {
       ...baseStructure.src.processors,
       async: {},
     };
   }
 
-  if (features.includes("background-processing")) {
+  if (features.includes('background-processing')) {
     baseStructure.src.workers = {};
   }
 
-  if (features.includes("metadata-generation")) {
+  if (features.includes('metadata-generation')) {
     baseStructure.src.metadata = {};
   }
 

@@ -13,15 +13,15 @@
  * metalsmith-optimize-images, ensuring consistency and maintainability.
  */
 
-import { promises as fs } from "fs"; // File system operations (async/await style)
-import path from "path"; // Path manipulation utilities
-import { fileURLToPath } from "url"; // Convert import.meta.url to file path
-import validateNpmPackageName from "validate-npm-package-name"; // Validate npm package names
-import chalk from "chalk"; // Colored terminal output
+import { promises as fs } from 'fs'; // File system operations (async/await style)
+import path from 'path'; // Path manipulation utilities
+import { fileURLToPath } from 'url'; // Convert import.meta.url to file path
+import validateNpmPackageName from 'validate-npm-package-name'; // Validate npm package names
+import chalk from 'chalk'; // Colored terminal output
 
 // Our utility functions for template processing
-import { copyTemplate } from "../utils/template.js";
-import { generatePluginStructure } from "../utils/structure.js";
+import { copyTemplate } from '../utils/template.js';
+import { generatePluginStructure } from '../utils/structure.js';
 
 // Get the directory containing this file (needed for finding templates)
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -41,7 +41,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
  */
 export async function pluginScaffoldTool(args) {
   // Extract arguments with defaults (ES6 destructuring with default values)
-  const { name, type = "processor", features = [], outputPath = "." } = args;
+  const { name, type = 'processor', features = [], outputPath = '.' } = args;
 
   // Validate plugin name using npm's official validation
   const validation = validateNpmPackageName(name);
@@ -56,8 +56,8 @@ export async function pluginScaffoldTool(args) {
     return {
       content: [
         {
-          type: "text",
-          text: `Invalid plugin name "${name}":\n${errors.join("\n")}`,
+          type: 'text',
+          text: `Invalid plugin name "${name}":\n${errors.join('\n')}`,
         },
       ],
       isError: true, // This tells Claude the operation failed
@@ -65,11 +65,11 @@ export async function pluginScaffoldTool(args) {
   }
 
   // Ensure name follows Metalsmith convention (all plugins should start with 'metalsmith-')
-  if (!name.startsWith("metalsmith-")) {
+  if (!name.startsWith('metalsmith-')) {
     return {
       content: [
         {
-          type: "text",
+          type: 'text',
           text: 'Plugin name must start with "metalsmith-"',
         },
       ],
@@ -89,7 +89,7 @@ export async function pluginScaffoldTool(args) {
       return {
         content: [
           {
-            type: "text",
+            type: 'text',
             text: `Directory ${pluginPath} already exists. Please remove it or choose a different name.`,
           },
         ],
@@ -113,15 +113,15 @@ export async function pluginScaffoldTool(args) {
       pluginName: name, // Full plugin name
       pluginType: type, // processor/transformer/validator
       features, // Array of selected features
-      functionName: toCamelCase(name.replace("metalsmith-", "")), // camelCase function name
-      className: toPascalCase(name.replace("metalsmith-", "")), // PascalCase class name
-      description: `A Metalsmith plugin for ${name.replace("metalsmith-", "").replace(/-/g, " ")}`,
+      functionName: toCamelCase(name.replace('metalsmith-', '')), // camelCase function name
+      className: toPascalCase(name.replace('metalsmith-', '')), // PascalCase class name
+      description: `A Metalsmith plugin for ${name.replace('metalsmith-', '').replace(/-/g, ' ')}`,
       year: new Date().getFullYear(), // Current year for copyright
 
       // Feature flags for conditional template rendering
-      hasAsyncProcessing: features.includes("async-processing"),
-      hasBackgroundProcessing: features.includes("background-processing"),
-      hasMetadataGeneration: features.includes("metadata-generation"),
+      hasAsyncProcessing: features.includes('async-processing'),
+      hasBackgroundProcessing: features.includes('background-processing'),
+      hasMetadataGeneration: features.includes('metadata-generation'),
     };
 
     /*
@@ -144,26 +144,26 @@ export async function pluginScaffoldTool(args) {
     return {
       content: [
         {
-          type: "text",
+          type: 'text',
           text: [
             chalk.green(`✓ Successfully created ${name}`),
-            "",
-            "Plugin structure:",
+            '',
+            'Plugin structure:',
             await getDirectoryTree(pluginPath),
-            "",
-            "Next steps:",
+            '',
+            'Next steps:',
             `  cd ${name}`,
-            "  npm install",
-            "  npm test",
-            "",
-            "Available scripts:",
-            "  npm test         - Run tests",
-            "  npm run coverage - Run tests with coverage",
-            "  npm run lint     - Lint code",
-            "  npm run format   - Format code",
-            "",
-            "Happy coding! 🚀",
-          ].join("\n"),
+            '  npm install',
+            '  npm test',
+            '',
+            'Available scripts:',
+            '  npm test         - Run tests',
+            '  npm run coverage - Run tests with coverage',
+            '  npm run lint     - Lint code',
+            '  npm run format   - Format code',
+            '',
+            'Happy coding! 🚀',
+          ].join('\n'),
         },
       ],
     };
@@ -178,7 +178,7 @@ export async function pluginScaffoldTool(args) {
     return {
       content: [
         {
-          type: "text",
+          type: 'text',
           text: `Failed to scaffold plugin: ${error.message}`,
         },
       ],
@@ -194,7 +194,7 @@ async function createDirectoryStructure(basePath, structure) {
   for (const [name, content] of Object.entries(structure)) {
     const fullPath = path.join(basePath, name);
 
-    if (typeof content === "object" && content !== null) {
+    if (typeof content === 'object' && content !== null) {
       await fs.mkdir(fullPath, { recursive: true });
       await createDirectoryStructure(fullPath, content);
     }
@@ -205,37 +205,37 @@ async function createDirectoryStructure(basePath, structure) {
  * Copy and render template files
  */
 async function copyTemplates(pluginPath, type, data) {
-  const templatesDir = path.join(__dirname, "../../templates/plugin");
+  const templatesDir = path.join(__dirname, '../../templates/plugin');
 
   // Copy common templates
   await copyTemplate(
-    path.join(templatesDir, "package.json.template"),
-    path.join(pluginPath, "package.json"),
+    path.join(templatesDir, 'package.json.template'),
+    path.join(pluginPath, 'package.json'),
     data,
   );
 
   await copyTemplate(
-    path.join(templatesDir, "README.md.template"),
-    path.join(pluginPath, "README.md"),
+    path.join(templatesDir, 'README.md.template'),
+    path.join(pluginPath, 'README.md'),
     data,
   );
 
   await copyTemplate(
-    path.join(templatesDir, "index.js.template"),
-    path.join(pluginPath, "src/index.js"),
+    path.join(templatesDir, 'index.js.template'),
+    path.join(pluginPath, 'src/index.js'),
     data,
   );
 
   // Copy type-specific templates
-  const typeTemplatesDir = path.join(templatesDir, "types", type);
+  const typeTemplatesDir = path.join(templatesDir, 'types', type);
   if (await fs.stat(typeTemplatesDir).catch(() => false)) {
     await copyTypeSpecificTemplates(typeTemplatesDir, pluginPath, data);
   }
 
   // Copy test templates
   await copyTemplate(
-    path.join(templatesDir, "test.js.template"),
-    path.join(pluginPath, "test/index.test.js"),
+    path.join(templatesDir, 'test.js.template'),
+    path.join(pluginPath, 'test/index.test.js'),
     data,
   );
 }
@@ -250,8 +250,8 @@ async function copyTypeSpecificTemplates(sourceDir, targetDir, data) {
     const sourcePath = path.join(sourceDir, file);
     const targetPath = path.join(
       targetDir,
-      "src",
-      file.replace(".template", ""),
+      'src',
+      file.replace('.template', ''),
     );
 
     await copyTemplate(sourcePath, targetPath, data);
@@ -262,15 +262,15 @@ async function copyTypeSpecificTemplates(sourceDir, targetDir, data) {
  * Generate configuration files
  */
 async function generateConfigs(pluginPath) {
-  const configsDir = path.join(__dirname, "../../templates/configs");
+  const configsDir = path.join(__dirname, '../../templates/configs');
 
   // Copy configuration files
   const configs = [
-    ["eslint.config.js.template", "eslint.config.js"],
-    ["prettier.config.js.template", "prettier.config.js"],
-    [".editorconfig.template", ".editorconfig"],
-    [".gitignore.template", ".gitignore"],
-    ["release-it.json.template", ".release-it.json"],
+    ['eslint.config.js.template', 'eslint.config.js'],
+    ['prettier.config.js.template', 'prettier.config.js'],
+    ['.editorconfig.template', '.editorconfig'],
+    ['.gitignore.template', '.gitignore'],
+    ['release-it.json.template', '.release-it.json'],
   ];
 
   for (const [source, target] of configs) {
@@ -285,24 +285,24 @@ async function generateConfigs(pluginPath) {
  * Initialize git repository
  */
 async function initGitRepo(pluginPath) {
-  const { exec } = await import("child_process");
-  const { promisify } = await import("util");
+  const { exec } = await import('child_process');
+  const { promisify } = await import('util');
   const execAsync = promisify(exec);
 
   try {
-    await execAsync("git init", { cwd: pluginPath });
-    await execAsync("git add .", { cwd: pluginPath });
+    await execAsync('git init', { cwd: pluginPath });
+    await execAsync('git add .', { cwd: pluginPath });
     await execAsync('git commit -m "Initial commit"', { cwd: pluginPath });
   } catch (error) {
     // Git init is optional, don't fail if it doesn't work
-    console.error("Failed to initialize git repository:", error.message);
+    console.error('Failed to initialize git repository:', error.message);
   }
 }
 
 /**
  * Get directory tree for display
  */
-async function getDirectoryTree(dirPath, prefix = "") {
+async function getDirectoryTree(dirPath, prefix = '') {
   const items = await fs.readdir(dirPath);
   const tree = [];
 
@@ -310,20 +310,20 @@ async function getDirectoryTree(dirPath, prefix = "") {
     const itemPath = path.join(dirPath, item);
     const stats = await fs.stat(itemPath);
     const isLast = index === items.length - 1;
-    const connector = isLast ? "└── " : "├── ";
+    const connector = isLast ? '└── ' : '├── ';
 
     tree.push(prefix + connector + item);
 
-    if (stats.isDirectory() && !["node_modules", ".git"].includes(item)) {
+    if (stats.isDirectory() && !['node_modules', '.git'].includes(item)) {
       const subTree = await getDirectoryTree(
         itemPath,
-        prefix + (isLast ? "    " : "│   "),
+        prefix + (isLast ? '    ' : '│   '),
       );
       tree.push(...subTree);
     }
   }
 
-  return tree.join("\n");
+  return tree.join('\n');
 }
 
 /**
@@ -331,11 +331,11 @@ async function getDirectoryTree(dirPath, prefix = "") {
  */
 function toCamelCase(str) {
   return str
-    .split("-")
+    .split('-')
     .map((word, index) =>
       index === 0 ? word : word.charAt(0).toUpperCase() + word.slice(1),
     )
-    .join("");
+    .join('');
 }
 
 /**
@@ -343,7 +343,7 @@ function toCamelCase(str) {
  */
 function toPascalCase(str) {
   return str
-    .split("-")
+    .split('-')
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join("");
+    .join('');
 }

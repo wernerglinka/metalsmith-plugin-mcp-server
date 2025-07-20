@@ -5,27 +5,27 @@
  * This generates configuration files and shows the results
  */
 
-import { spawn } from "child_process";
-import { promises as fs } from "fs";
-import path from "path";
+import { spawn } from 'child_process';
+import { promises as fs } from 'fs';
+import path from 'path';
 
 const testRequest = {
-  jsonrpc: "2.0",
+  jsonrpc: '2.0',
   id: 1,
-  method: "tools/call",
+  method: 'tools/call',
   params: {
-    name: "generate-configs",
+    name: 'generate-configs',
     arguments: {
-      outputPath: "./test-configs",
-      configs: ["eslint", "prettier", "gitignore"],
+      outputPath: './test-configs',
+      configs: ['eslint', 'prettier', 'gitignore'],
     },
   },
 };
 
-console.log("⚙️  Testing generate-configs tool...\n");
+console.log('⚙️  Testing generate-configs tool...\n');
 
-const server = spawn("node", ["src/index.js"], {
-  stdio: ["pipe", "pipe", "pipe"],
+const server = spawn('node', ['src/index.js'], {
+  stdio: ['pipe', 'pipe', 'pipe'],
 });
 
 // Send the request
@@ -33,30 +33,30 @@ server.stdin.write(`${JSON.stringify(testRequest)}\n`);
 server.stdin.end();
 
 // Collect response
-let output = "";
-server.stdout.on("data", (data) => {
+let output = '';
+server.stdout.on('data', (data) => {
   output += data.toString();
 });
 
-server.stderr.on("data", (data) => {
-  console.error("Server log:", data.toString());
+server.stderr.on('data', (data) => {
+  console.error('Server log:', data.toString());
 });
 
-server.on("close", async (code) => {
+server.on('close', async (code) => {
   try {
     const response = JSON.parse(output);
 
     if (response.error) {
-      console.error("❌ Error:", response.error);
+      console.error('❌ Error:', response.error);
     } else {
-      console.log("✅ Success!");
+      console.log('✅ Success!');
       console.log(response.result.content[0].text);
 
       // Check if config files were actually created
-      const configPath = "./test-configs";
+      const configPath = './test-configs';
       try {
         const files = await fs.readdir(configPath);
-        console.log("\n📄 Configuration files created:");
+        console.log('\n📄 Configuration files created:');
 
         for (const file of files) {
           const filePath = path.join(configPath, file);
@@ -65,17 +65,17 @@ server.on("close", async (code) => {
 
           // Show a preview of the file content
           if (stats.size < 500) {
-            const content = await fs.readFile(filePath, "utf-8");
+            const content = await fs.readFile(filePath, 'utf-8');
             console.log(`    Preview: ${content.slice(0, 100)}...`);
           }
         }
       } catch {
-        console.log("\n❌ Config directory was not created");
+        console.log('\n❌ Config directory was not created');
       }
     }
   } catch (err) {
-    console.error("❌ Failed to parse response:", err);
-    console.log("Raw output:", output);
+    console.error('❌ Failed to parse response:', err);
+    console.log('Raw output:', output);
   }
 
   process.exit(code);

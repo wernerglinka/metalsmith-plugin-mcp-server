@@ -1,7 +1,7 @@
-import { promises as fs } from "fs";
-import path from "path";
-import { glob } from "glob";
-import chalk from "chalk";
+import { promises as fs } from 'fs';
+import path from 'path';
+import { glob } from 'glob';
+import chalk from 'chalk';
 
 /**
  * Validate a Metalsmith plugin against quality standards
@@ -13,7 +13,7 @@ import chalk from "chalk";
 export async function validatePluginTool(args) {
   const {
     path: pluginPath,
-    checks = ["structure", "tests", "docs", "package-json"],
+    checks = ['structure', 'tests', 'docs', 'package-json'],
   } = args;
 
   const results = {
@@ -29,24 +29,24 @@ export async function validatePluginTool(args) {
     // Run selected checks
     for (const check of checks) {
       switch (check) {
-        case "structure":
-          await checkStructure(pluginPath, results);
-          break;
-        case "tests":
-          await checkTests(pluginPath, results);
-          break;
-        case "docs":
-          await checkDocumentation(pluginPath, results);
-          break;
-        case "package-json":
-          await checkPackageJson(pluginPath, results);
-          break;
-        case "eslint":
-          await checkEslint(pluginPath, results);
-          break;
-        case "coverage":
-          await checkCoverage(pluginPath, results);
-          break;
+      case 'structure':
+        await checkStructure(pluginPath, results);
+        break;
+      case 'tests':
+        await checkTests(pluginPath, results);
+        break;
+      case 'docs':
+        await checkDocumentation(pluginPath, results);
+        break;
+      case 'package-json':
+        await checkPackageJson(pluginPath, results);
+        break;
+      case 'eslint':
+        await checkEslint(pluginPath, results);
+        break;
+      case 'coverage':
+        await checkCoverage(pluginPath, results);
+        break;
       }
     }
 
@@ -56,7 +56,7 @@ export async function validatePluginTool(args) {
     return {
       content: [
         {
-          type: "text",
+          type: 'text',
           text: report,
         },
       ],
@@ -65,7 +65,7 @@ export async function validatePluginTool(args) {
     return {
       content: [
         {
-          type: "text",
+          type: 'text',
           text: `Failed to validate plugin: ${error.message}`,
         },
       ],
@@ -78,8 +78,8 @@ export async function validatePluginTool(args) {
  * Check plugin directory structure
  */
 async function checkStructure(pluginPath, results) {
-  const requiredDirs = ["src", "test"];
-  const requiredFiles = ["src/index.js", "README.md", "package.json"];
+  const requiredDirs = ['src', 'test'];
+  const requiredFiles = ['src/index.js', 'README.md', 'package.json'];
 
   // Check directories
   for (const dir of requiredDirs) {
@@ -106,7 +106,7 @@ async function checkStructure(pluginPath, results) {
   }
 
   // Check for recommended structure
-  const recommendedDirs = ["src/utils", "src/processors", "test/fixtures"];
+  const recommendedDirs = ['src/utils', 'src/processors', 'test/fixtures'];
   for (const dir of recommendedDirs) {
     const dirPath = path.join(pluginPath, dir);
     try {
@@ -124,42 +124,42 @@ async function checkStructure(pluginPath, results) {
 async function checkTests(pluginPath, results) {
   try {
     // Check for test files
-    const testFiles = await glob("test/**/*.test.js", { cwd: pluginPath });
+    const testFiles = await glob('test/**/*.test.js', { cwd: pluginPath });
 
     if (testFiles.length > 0) {
       results.passed.push(`✓ Found ${testFiles.length} test file(s)`);
     } else {
-      results.failed.push("✗ No test files found");
+      results.failed.push('✗ No test files found');
     }
 
     // Check for test fixtures
-    const fixtureFiles = await glob("test/fixtures/**/*", { cwd: pluginPath });
+    const fixtureFiles = await glob('test/fixtures/**/*', { cwd: pluginPath });
     if (fixtureFiles.length > 0) {
       results.passed.push(
         `✓ Test fixtures present (${fixtureFiles.length} files)`,
       );
     } else {
-      results.warnings.push("⚠ No test fixtures found");
+      results.warnings.push('⚠ No test fixtures found');
     }
 
     // Check package.json for test script
     const packageJson = JSON.parse(
-      await fs.readFile(path.join(pluginPath, "package.json"), "utf-8"),
+      await fs.readFile(path.join(pluginPath, 'package.json'), 'utf-8'),
     );
 
     if (packageJson.scripts?.test) {
-      results.passed.push("✓ Test script defined in package.json");
+      results.passed.push('✓ Test script defined in package.json');
     } else {
-      results.failed.push("✗ No test script in package.json");
+      results.failed.push('✗ No test script in package.json');
     }
 
     if (
-      packageJson.scripts?.["test:coverage"] ||
+      packageJson.scripts?.['test:coverage'] ||
       packageJson.scripts?.coverage
     ) {
-      results.passed.push("✓ Coverage script defined");
+      results.passed.push('✓ Coverage script defined');
     } else {
-      results.warnings.push("⚠ No coverage script defined");
+      results.warnings.push('⚠ No coverage script defined');
     }
   } catch (error) {
     results.failed.push(`✗ Error checking tests: ${error.message}`);
@@ -171,15 +171,15 @@ async function checkTests(pluginPath, results) {
  */
 async function checkDocumentation(pluginPath, results) {
   try {
-    const readmePath = path.join(pluginPath, "README.md");
-    const readme = await fs.readFile(readmePath, "utf-8");
+    const readmePath = path.join(pluginPath, 'README.md');
+    const readme = await fs.readFile(readmePath, 'utf-8');
 
     // Check README sections
     const requiredSections = [
-      { pattern: /##?\s+Install/i, name: "Installation" },
-      { pattern: /##?\s+Usage/i, name: "Usage" },
-      { pattern: /##?\s+Options/i, name: "Options" },
-      { pattern: /##?\s+Example/i, name: "Examples" },
+      { pattern: /##?\s+Install/i, name: 'Installation' },
+      { pattern: /##?\s+Usage/i, name: 'Usage' },
+      { pattern: /##?\s+Options/i, name: 'Options' },
+      { pattern: /##?\s+Example/i, name: 'Examples' },
     ];
 
     for (const section of requiredSections) {
@@ -191,25 +191,25 @@ async function checkDocumentation(pluginPath, results) {
     }
 
     // Check for badges
-    if (readme.includes("![")) {
-      results.passed.push("✓ README includes badges");
+    if (readme.includes('![')) {
+      results.passed.push('✓ README includes badges');
     } else {
-      results.warnings.push("⚠ README has no badges");
+      results.warnings.push('⚠ README has no badges');
     }
 
     // Check for code examples
-    if (readme.includes("```")) {
-      results.passed.push("✓ README includes code examples");
+    if (readme.includes('```')) {
+      results.passed.push('✓ README includes code examples');
     } else {
-      results.warnings.push("⚠ README has no code examples");
+      results.warnings.push('⚠ README has no code examples');
     }
 
     // Check for license file
     try {
-      await fs.access(path.join(pluginPath, "LICENSE"));
-      results.passed.push("✓ LICENSE file exists");
+      await fs.access(path.join(pluginPath, 'LICENSE'));
+      results.passed.push('✓ LICENSE file exists');
     } catch {
-      results.warnings.push("⚠ No LICENSE file");
+      results.warnings.push('⚠ No LICENSE file');
     }
   } catch (error) {
     results.failed.push(`✗ Error checking documentation: ${error.message}`);
@@ -222,16 +222,16 @@ async function checkDocumentation(pluginPath, results) {
 async function checkPackageJson(pluginPath, results) {
   try {
     const packageJson = JSON.parse(
-      await fs.readFile(path.join(pluginPath, "package.json"), "utf-8"),
+      await fs.readFile(path.join(pluginPath, 'package.json'), 'utf-8'),
     );
 
     // Required fields
     const requiredFields = [
-      "name",
-      "version",
-      "description",
-      "main",
-      "license",
+      'name',
+      'version',
+      'description',
+      'main',
+      'license',
     ];
     for (const field of requiredFields) {
       if (packageJson[field]) {
@@ -242,14 +242,14 @@ async function checkPackageJson(pluginPath, results) {
     }
 
     // Check name convention
-    if (packageJson.name?.startsWith("metalsmith-")) {
-      results.passed.push("✓ Plugin name follows convention");
+    if (packageJson.name?.startsWith('metalsmith-')) {
+      results.passed.push('✓ Plugin name follows convention');
     } else {
       results.failed.push('✗ Plugin name should start with "metalsmith-"');
     }
 
     // Recommended fields
-    const recommendedFields = ["repository", "keywords", "engines", "files"];
+    const recommendedFields = ['repository', 'keywords', 'engines', 'files'];
     for (const field of recommendedFields) {
       if (packageJson[field]) {
         results.passed.push(`✓ package.json has ${field}`);
@@ -261,14 +261,14 @@ async function checkPackageJson(pluginPath, results) {
     }
 
     // Check for proper exports
-    if (packageJson.type === "module" || packageJson.exports) {
-      results.passed.push("✓ Modern module system configured");
+    if (packageJson.type === 'module' || packageJson.exports) {
+      results.passed.push('✓ Modern module system configured');
     } else {
-      results.warnings.push("⚠ Consider using ES modules");
+      results.warnings.push('⚠ Consider using ES modules');
     }
 
     // Check scripts
-    const recommendedScripts = ["lint", "format", "test:coverage"];
+    const recommendedScripts = ['lint', 'format', 'test:coverage'];
     for (const script of recommendedScripts) {
       if (packageJson.scripts?.[script]) {
         results.passed.push(`✓ Script "${script}" defined`);
@@ -285,7 +285,7 @@ async function checkPackageJson(pluginPath, results) {
  * Check ESLint configuration
  */
 async function checkEslint(pluginPath, results) {
-  const eslintFiles = ["eslint.config.js", ".eslintrc.js", ".eslintrc.json"];
+  const eslintFiles = ['eslint.config.js', '.eslintrc.js', '.eslintrc.json'];
   let found = false;
 
   for (const file of eslintFiles) {
@@ -300,13 +300,13 @@ async function checkEslint(pluginPath, results) {
   }
 
   if (!found) {
-    results.warnings.push("⚠ No ESLint configuration found");
+    results.warnings.push('⚠ No ESLint configuration found');
   }
 
   // Check for modern flat config
   try {
-    await fs.access(path.join(pluginPath, "eslint.config.js"));
-    results.passed.push("✓ Using modern ESLint flat config");
+    await fs.access(path.join(pluginPath, 'eslint.config.js'));
+    results.passed.push('✓ Using modern ESLint flat config');
   } catch {
     // Not using flat config
   }
@@ -318,18 +318,18 @@ async function checkEslint(pluginPath, results) {
 async function checkCoverage(pluginPath, results) {
   try {
     // Look for coverage reports
-    const coverageFiles = await glob("coverage/**/*", { cwd: pluginPath });
+    const coverageFiles = await glob('coverage/**/*', { cwd: pluginPath });
 
     if (coverageFiles.length > 0) {
-      results.passed.push("✓ Coverage reports found");
+      results.passed.push('✓ Coverage reports found');
 
       // Try to read coverage summary
       try {
         const summaryPath = path.join(
           pluginPath,
-          "coverage/coverage-summary.json",
+          'coverage/coverage-summary.json',
         );
-        const summary = JSON.parse(await fs.readFile(summaryPath, "utf-8"));
+        const summary = JSON.parse(await fs.readFile(summaryPath, 'utf-8'));
         const total = summary.total;
 
         if (total) {
@@ -346,7 +346,7 @@ async function checkCoverage(pluginPath, results) {
         // Could not read coverage summary
       }
     } else {
-      results.warnings.push("⚠ No coverage reports found");
+      results.warnings.push('⚠ No coverage reports found');
     }
   } catch (error) {
     results.warnings.push(`⚠ Could not check coverage: ${error.message}`);
@@ -357,24 +357,24 @@ async function checkCoverage(pluginPath, results) {
  * Generate validation report
  */
 function generateReport(results) {
-  const lines = [chalk.bold("🔍 Plugin Validation Report"), ""];
+  const lines = [chalk.bold('🔍 Plugin Validation Report'), ''];
 
   if (results.passed.length > 0) {
     lines.push(chalk.green.bold(`Passed (${results.passed.length}):`));
     results.passed.forEach((item) => lines.push(chalk.green(item)));
-    lines.push("");
+    lines.push('');
   }
 
   if (results.warnings.length > 0) {
     lines.push(chalk.yellow.bold(`Warnings (${results.warnings.length}):`));
     results.warnings.forEach((item) => lines.push(chalk.yellow(item)));
-    lines.push("");
+    lines.push('');
   }
 
   if (results.failed.length > 0) {
     lines.push(chalk.red.bold(`Failed (${results.failed.length}):`));
     results.failed.forEach((item) => lines.push(chalk.red(item)));
-    lines.push("");
+    lines.push('');
   }
 
   // Summary
@@ -382,15 +382,15 @@ function generateReport(results) {
     results.passed.length + results.warnings.length + results.failed.length;
   const score = Math.round((results.passed.length / total) * 100);
 
-  lines.push(chalk.bold("Summary:"));
+  lines.push(chalk.bold('Summary:'));
   lines.push(`Total checks: ${total}`);
   lines.push(`Quality score: ${score}%`);
 
   if (results.failed.length === 0) {
-    lines.push(chalk.green.bold("✅ Plugin meets quality standards!"));
+    lines.push(chalk.green.bold('✅ Plugin meets quality standards!'));
   } else {
-    lines.push(chalk.red.bold("❌ Plugin needs improvements"));
+    lines.push(chalk.red.bold('❌ Plugin needs improvements'));
   }
 
-  return lines.join("\n");
+  return lines.join('\n');
 }
