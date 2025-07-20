@@ -208,6 +208,21 @@ The MCP server can be configured through environment variables:
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
+## Release Process
+
+The release process is fully automated. Simply run:
+
+```bash
+npm run release
+```
+
+The release automatically:
+- Syncs with remote (to handle CI commits like coverage badge updates)
+- Runs tests and linting
+- Generates changelog from commit history
+- Creates GitHub release using CLI (no browser needed)
+- Pushes everything including tags
+
 ## Testing
 
 ```bash
