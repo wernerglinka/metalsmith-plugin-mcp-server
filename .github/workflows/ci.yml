@@ -10,12 +10,17 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: write
+
     strategy:
       matrix:
         node-version: [18.x, 20.x, 22.x]
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
@@ -48,10 +53,17 @@ jobs:
       - name: Update coverage badge
         if: matrix.node-version == '20.x' && github.ref == 'refs/heads/main'
         run: |
+          # Install bc calculator
+          sudo apt-get update && sudo apt-get install -y bc
+          
           # Extract coverage percentage from lcov.info
-          COVERAGE=$(grep -o 'LF:\|LH:' coverage/lcov.info | grep -c 'LH:' || echo 0)
-          TOTAL=$(grep -o 'LF:\|LH:' coverage/lcov.info | grep -c 'LF:' || echo 1)
-          PERCENTAGE=$(echo "scale=1; $COVERAGE * 100 / $TOTAL" | bc -l || echo "0")
+          if [ -f coverage/lcov.info ]; then
+            COVERAGE=$(grep -c '^LH:' coverage/lcov.info || echo 0)
+            TOTAL=$(grep -c '^LF:' coverage/lcov.info || echo 1)
+            PERCENTAGE=$(echo "scale=1; $COVERAGE * 100 / $TOTAL" | bc -l 2>/dev/null || echo "0")
+          else
+            PERCENTAGE="0"
+          fi
 
           # Determine badge color
           if (( $(echo "$PERCENTAGE >= 90" | bc -l) )); then
