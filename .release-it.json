@@ -1,4 +1,5 @@
 {
+  // Auto-sync with remote before releases to prevent conflicts from CI commits (e.g., coverage badge updates)
   "git": {
     "commitMessage": "chore: release v${version}",
     "requireCleanWorkingDir": true,
