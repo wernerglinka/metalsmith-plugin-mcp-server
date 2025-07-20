@@ -4,7 +4,7 @@
   "description": "{{description}}",
   "keywords": [
     "metalsmith",
-    "metalsmith-plugin"{{#if features.length}},
+    "metalsmith-plugin"{{#if features}},
     {{#each features}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}{{/if}}
   ],
   "homepage": "https://github.com/metalsmith/{{pluginName}}#readme",
@@ -15,7 +15,7 @@
     "type": "git",
     "url": "git+https://github.com/metalsmith/{{pluginName}}.git"
   },
-  "license": "MIT",
+  "license": "{{license}}",
   "author": {
     "name": "Your Name",
     "email": "your.email@example.com"

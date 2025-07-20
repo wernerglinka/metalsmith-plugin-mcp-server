@@ -99,6 +99,12 @@ const TOOLS = [
           description: "Path where the plugin will be created",
           default: ".", // Current directory if not specified
         },
+        license: {
+          type: "string",
+          enum: ["MIT", "Apache-2.0", "ISC", "BSD-3-Clause", "UNLICENSED"],
+          description: "License for the plugin (MIT is most common in JS ecosystem, UNLICENSED for proprietary)",
+          default: "MIT",
+        },
       },
       required: ["name"], // Only 'name' is required, others have defaults
     },

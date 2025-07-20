@@ -109,7 +109,8 @@ function feature() {
       const template = "{{#if enabled}}Hello {{name}}!{{/if}}";
       const data = { enabled: true, name: "World" };
       const result = renderConditionals(template, data);
-      expect(result).to.equal("Hello {{name}}!"); // Variables not processed yet
+      // Handlebars processes everything, including nested variables
+      expect(result).to.equal("Hello World!");
     });
 
     it("should handle truthy values", function () {
@@ -119,7 +120,8 @@ function feature() {
         "Has value",
       );
       expect(renderConditionals(template, { value: 1 })).to.equal("Has value");
-      expect(renderConditionals(template, { value: [] })).to.equal("Has value");
+      // Handlebars considers empty arrays as falsy
+      expect(renderConditionals(template, { value: [] })).to.equal("");
       expect(renderConditionals(template, { value: {} })).to.equal("Has value");
     });
 

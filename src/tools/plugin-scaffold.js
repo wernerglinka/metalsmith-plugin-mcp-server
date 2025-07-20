@@ -41,7 +41,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
  */
 export async function pluginScaffoldTool(args) {
   // Extract arguments with defaults (ES6 destructuring with default values)
-  const { name, type = "processor", features = [], outputPath = "." } = args;
+  const { name, type = "processor", features = [], outputPath = ".", license = "MIT" } = args;
 
   // Validate plugin name using npm's official validation
   const validation = validateNpmPackageName(name);
@@ -117,6 +117,8 @@ export async function pluginScaffoldTool(args) {
       className: toPascalCase(name.replace("metalsmith-", "")), // PascalCase class name
       description: `A Metalsmith plugin for ${name.replace("metalsmith-", "").replace(/-/g, " ")}`,
       year: new Date().getFullYear(), // Current year for copyright
+      license, // Use the license as-is
+      author: "Your Name", // Default author, can be customized later
 
       // Feature flags for conditional template rendering
       hasAsyncProcessing: features.includes("async-processing"),
@@ -134,6 +136,16 @@ export async function pluginScaffoldTool(args) {
 
     // Copy and render all template files with our data
     await copyTemplates(pluginPath, type, templateData);
+
+    // Copy license file if requested
+    if (license !== "UNLICENSED") {
+      await copyLicenseFile(pluginPath, license, templateData);
+    } else {
+      // Add a warning comment about UNLICENSED
+      console.log(chalk.yellow("\n⚠️  Note: UNLICENSED means 'All Rights Reserved'"));
+      console.log(chalk.yellow("   No one can use, copy, or distribute your code without explicit permission."));
+      console.log(chalk.yellow("   Consider using an open source license like MIT for Metalsmith plugins.\n"));
+    }
 
     // Generate modern configuration files (ESLint flat config, etc.)
     await generateConfigs(pluginPath);
@@ -311,6 +323,21 @@ async function copyTestFixtures(templatesDir, targetDir, data) {
   } catch (error) {
     // Fixtures are optional, don't fail if they don't exist
     console.error("Warning: Could not copy test fixtures:", error.message);
+  }
+}
+
+/**
+ * Copy license file with template rendering
+ */
+async function copyLicenseFile(pluginPath, license, data) {
+  const licensesDir = path.join(__dirname, "../../templates/licenses");
+  const licenseTemplate = path.join(licensesDir, `${license}.template`);
+  const targetPath = path.join(pluginPath, "LICENSE");
+  
+  try {
+    await copyTemplate(licenseTemplate, targetPath, data);
+  } catch (error) {
+    console.error(`Warning: Could not copy ${license} license template:`, error.message);
   }
 }
 

@@ -15,7 +15,7 @@ const defaults = {
 {{#if hasBackgroundProcessing}}  workers: 4,
   concurrent: true,{{/if}}
 {{#if hasMetadataGeneration}}  metadata: true,
-  metadataKey: '_{{pluginName.replace('metalsmith-', '')}}',{{/if}}
+  metadataKey: '_{{pluginNameShort}}',{{/if}}
 };
 
 /**
@@ -69,19 +69,19 @@ export default function {{functionName}}(options = {}) {
               const file = files[filename];
               debug(`Processing file: ${filename}`);
               
-{{#if pluginType === 'processor'}}
+{{#if (eq pluginType 'processor')}}
               // Process file content
               const processedContent = await processFile(file, filename, normalizedOptions);
               file.contents = Buffer.from(processedContent);
 {{/if}}
               
-{{#if pluginType === 'transformer'}}
+{{#if (eq pluginType 'transformer')}}
               // Transform file
               const transformed = await transformFile(file, filename, normalizedOptions);
               Object.assign(file, transformed);
 {{/if}}
               
-{{#if pluginType === 'validator'}}
+{{#if (eq pluginType 'validator')}}
               // Validate file
               const isValid = await validateFile(file, filename, normalizedOptions);
               if (!isValid) {
@@ -129,7 +129,7 @@ export default function {{functionName}}(options = {}) {
   };
 }
 
-{{#if pluginType === 'processor'}}
+{{#if (eq pluginType 'processor')}}
 /**
  * Process file content
  * @param {Object} file - Metalsmith file object
@@ -143,7 +143,7 @@ async function processFile(file, filename, options) {
 }
 {{/if}}
 
-{{#if pluginType === 'transformer'}}
+{{#if (eq pluginType 'transformer')}}
 /**
  * Transform file
  * @param {Object} file - Metalsmith file object
@@ -157,7 +157,7 @@ async function transformFile(file, filename, options) {
 }
 {{/if}}
 
-{{#if pluginType === 'validator'}}
+{{#if (eq pluginType 'validator')}}
 /**
  * Validate file
  * @param {Object} file - Metalsmith file object
