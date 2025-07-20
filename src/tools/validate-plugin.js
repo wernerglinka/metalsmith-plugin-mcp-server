@@ -326,6 +326,9 @@ async function checkEslint(pluginPath, results) {
  */
 async function checkCoverage(pluginPath, results) {
   try {
+    // Check if this is a new plugin (no node_modules = no tests run yet)
+    const isNewPlugin = !(await fs.access(path.join(pluginPath, 'node_modules')).then(() => true).catch(() => false));
+    
     // Look for coverage reports
     const coverageFiles = await glob("coverage/**/*", { cwd: pluginPath });
 
@@ -355,8 +358,28 @@ async function checkCoverage(pluginPath, results) {
         // Could not read coverage summary
       }
     } else {
-      results.warnings.push("⚠ No coverage reports found");
+      if (isNewPlugin) {
+        // Don't penalize new plugins - just provide helpful info
+        results.passed.push("ℹ Coverage reports will be generated after running 'npm run test:coverage'");
+      } else {
+        // Only warn if tests have likely been run
+        results.warnings.push("⚠ No coverage reports found - run 'npm run test:coverage' to generate");
+      }
     }
+    
+    // Check for coverage configuration
+    const coverageConfigExists = await Promise.all([
+      fs.access(path.join(pluginPath, '.c8rc.json')).then(() => true).catch(() => false),
+      fs.access(path.join(pluginPath, '.nycrc')).then(() => true).catch(() => false),
+      fs.access(path.join(pluginPath, '.nycrc.json')).then(() => true).catch(() => false)
+    ]).then(results => results.some(exists => exists));
+    
+    if (coverageConfigExists) {
+      results.passed.push("✓ Coverage configuration found");
+    } else {
+      results.warnings.push("⚠ No coverage configuration found (.c8rc.json recommended)");
+    }
+    
   } catch (error) {
     results.warnings.push(`⚠ Could not check coverage: ${error.message}`);
   }

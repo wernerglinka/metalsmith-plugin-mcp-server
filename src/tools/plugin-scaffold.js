@@ -354,6 +354,7 @@ async function generateConfigs(pluginPath) {
     [".editorconfig.template", ".editorconfig"],
     [".gitignore.template", ".gitignore"],
     ["release-it.json.template", ".release-it.json"],
+    [".c8rc.json.template", ".c8rc.json"],
   ];
 
   for (const [source, target] of configs) {
