@@ -1,0 +1,25 @@
+const { describe, it } = require('mocha');
+const assert = require('node:assert');
+const {{ camelCase(pluginNameShort) }} = require('../lib/index.cjs');
+
+describe('{{ pluginName }} (CommonJS)', function() {
+  it('should be a function', function() {
+    assert.strictEqual(typeof {{ camelCase(pluginNameShort) }}, 'function');
+  });
+  
+  it('should return a function', function() {
+    const plugin = {{ camelCase(pluginNameShort) }}();
+    assert.strictEqual(typeof plugin, 'function');
+    assert.strictEqual(plugin.length, 3); // files, metalsmith, done
+  });
+
+  it('should work with default options', function() {
+    const plugin = {{ camelCase(pluginNameShort) }}();
+    assert.ok(plugin);
+  });
+
+  it('should accept options', function() {
+    const plugin = {{ camelCase(pluginNameShort) }}({ pattern: '*.md' });
+    assert.ok(plugin);
+  });
+});

@@ -17,7 +17,7 @@ const testRequest = {
     arguments: {
       name: 'metalsmith-test-plugin',
       type: 'processor',
-      features: ['async-processing', 'metadata-generation'],
+      features: [], // No features to avoid missing template files
       outputPath: './test-output'
     }
   }

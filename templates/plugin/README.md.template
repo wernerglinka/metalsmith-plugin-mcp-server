@@ -38,7 +38,7 @@ Metalsmith(__dirname)
 Type: `string | string[]`  
 Default: `'**/*'`
 
-Pattern to match files. Uses [minimatch](https://github.com/isaacs/minimatch) patterns.
+Pattern to match files. Uses Metalsmith's native pattern matching.
 
 ### `ignore` (optional)
 
@@ -120,23 +120,26 @@ Creates a new instance of the plugin with the given options.
 ## Testing and Coverage
 
 ```bash
-# Run tests
+# Build the plugin (required before testing)
+npm run build
+
+# Run all tests (ESM and CJS)
 npm test
+
+# Run only ESM tests
+npm run test:esm
+
+# Run only CJS tests
+npm run test:cjs
 
 # Generate coverage report
 npm run test:coverage
 
-# View HTML coverage report (after running coverage)
+# View HTML coverage report
 open coverage/index.html
-
-# Run linting
-npm run lint
-
-# Format code
-npm run format
 ```
 
-This project maintains 80% code coverage across branches, lines, functions, and statements. Coverage reports are generated in the `coverage/` directory.
+This project maintains 80% code coverage across branches, lines, functions, and statements.
 
 ## Contributing
 
