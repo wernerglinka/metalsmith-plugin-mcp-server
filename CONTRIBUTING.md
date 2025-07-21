@@ -165,6 +165,8 @@ Follow our established code style:
 - **No mutations** - create new objects/arrays
 - **Descriptive names** - no abbreviations
 - **Modular design** with dependency injection
+- **Native Metalsmith methods** - prefer `metalsmith.match()` over external libraries
+- **Zero external dependencies** for core plugin functionality
 
 Example:
 
@@ -194,11 +196,43 @@ All contributions must include appropriate tests:
 - Test edge cases and error conditions
 - Keep tests focused and readable
 
-Run tests with:
+### Testing the MCP Server
+
+Run server tests with:
 
 ```bash
 npm test
 ```
+
+### Testing Generated Plugins
+
+Generated plugins use dual module testing. After scaffolding a plugin:
+
+```bash
+cd generated-plugin
+
+# Install dependencies
+npm install
+
+# Build both ESM and CJS versions
+npm run build
+
+# Test both module formats
+npm test  # Runs both test:esm and test:cjs
+
+# Or test individually
+npm run test:esm  # Test ESM build
+npm run test:cjs  # Test CJS build
+```
+
+### Build Process for Generated Plugins
+
+Generated plugins use microbundle for dual module builds:
+
+- Source files in `src/` (ESM)
+- Built files in `lib/` (both `index.js` for ESM and `index.cjs` for CJS)
+- Tests run against built files in `lib/`
+- Always run `npm run build` before testing plugins
 
 ## Documentation
 

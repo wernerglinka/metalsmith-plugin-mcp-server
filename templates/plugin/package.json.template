@@ -21,18 +21,34 @@
     "email": "your.email@example.com"
   },
   "type": "module",
-  "exports": "./src/index.js",
+  "main": "./lib/index.cjs",
+  "module": "./lib/index.js",
+  "exports": {
+    "import": "./lib/index.js",
+    "require": "./lib/index.cjs",
+    "default": "./lib/index.js"
+  },
   "files": [
-    "src"
+    "lib",
+    "README.md"
   ],
   "scripts": {
+    "build": "microbundle --entry src/index.js --output lib/index.js --target node -f esm,cjs --strict --generateTypes=false",
+    "clean": "rm -rf coverage lib",
     "format": "prettier --write '**/*.{js,json,md}'",
+    "format:check": "prettier --check '**/*.{js,json,md}'",
     "lint": "eslint src test",
     "lint:fix": "eslint src test --fix",
-    "test": "mocha test/**/*.test.js",
+    "prepublishOnly": "npm run build",
+    "test": "npm run test:esm && npm run test:cjs",
+    "test:esm": "mocha test/index.test.js",
+    "test:cjs": "mocha test/cjs.test.cjs",
+    "test:watch": "mocha test/**/*.test.js --watch",
     "test:coverage": "c8 npm test",
     "coverage": "c8 report --reporter=text-lcov | coveralls",
-    "release": "release-it"
+    "coverage:html": "c8 report --reporter=html",
+    "prerelease": "npm run lint && npm run test:coverage",
+    "release": "npm run build && release-it"
   },
   "mocha": {
     "timeout": 10000,
@@ -48,6 +64,7 @@
     "eslint": "^9.0.0",
     "globals": "^15.0.0",
     "metalsmith": "^2.6.0",
+    "microbundle": "^0.15.1",
     "mocha": "^10.0.0",
     "prettier": "^3.0.0",
     "release-it": "^17.0.0",

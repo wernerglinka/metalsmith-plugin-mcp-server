@@ -38,36 +38,25 @@ const deepMerge = (target, source) =>
   );
 
 /**
- * Normalize and validate plugin options
- * 
- * Ensures that options are in the expected format for the plugin to process.
- * This includes converting strings to arrays where needed and validating types.
- * 
- * @param {Object} options - Raw options from user
- * @returns {Object} Normalized options ready for use
+ * Normalize plugin options
+ * @param {Object} options - Raw options (already merged with defaults)
+ * @returns {Object} Normalized options
  */
 export function normalizeOptions(options) {
-  // Create a copy to avoid mutating the original options
   const normalized = { ...options };
-
-  // Ensure pattern is always an array for consistent processing
-  // Users can pass either 'src/**/*.md' or ['src/**/*.md', 'content/**/*.md']
+  
+  // Ensure pattern is an array (it's guaranteed to exist from defaults)
   if (typeof normalized.pattern === 'string') {
     normalized.pattern = [normalized.pattern];
   }
-
-  // Ensure ignore is always an array (can be empty)
+  
+  // Ensure ignore is an array (it's guaranteed to exist from defaults)
   if (typeof normalized.ignore === 'string') {
-    normalized.ignore = [normalized.ignore];  // Convert single string to array
+    normalized.ignore = [normalized.ignore];
   } else if (!Array.isArray(normalized.ignore)) {
-    normalized.ignore = [];  // Default to empty array if not provided
+    normalized.ignore = [];
   }
-
-  // Validate that pattern is properly formatted
-  if (!Array.isArray(normalized.pattern)) {
-    throw new Error('Pattern must be a string or array of strings');
-  }
-
+  
   return normalized;
 }
 

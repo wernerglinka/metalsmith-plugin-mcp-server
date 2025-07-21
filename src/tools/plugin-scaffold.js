@@ -108,6 +108,7 @@ export async function pluginScaffoldTool(args) {
     // These variables will be substituted into template files using {{variableName}} syntax
     const templateData = {
       pluginName: name, // Full plugin name
+      pluginNameShort: name.replace('metalsmith-', ''), // Short name without metalsmith prefix
       pluginType: type, // processor/transformer/validator
       features, // Array of selected features
       functionName: toCamelCase(name.replace('metalsmith-', '')), // camelCase function name
@@ -120,7 +121,10 @@ export async function pluginScaffoldTool(args) {
       // Feature flags for conditional template rendering
       hasAsyncProcessing: features.includes('async-processing'),
       hasBackgroundProcessing: features.includes('background-processing'),
-      hasMetadataGeneration: features.includes('metadata-generation')
+      hasMetadataGeneration: features.includes('metadata-generation'),
+
+      // Helper functions for templates
+      camelCase: toCamelCase
     };
 
     /*
@@ -163,11 +167,15 @@ export async function pluginScaffoldTool(args) {
             'Next steps:',
             `  cd ${name}`,
             '  npm install',
-            '  npm test',
+            '  npm run build    # Build ESM and CJS versions',
+            '  npm test         # Run tests for both module formats',
             '  npm run lint',
             '',
             'Available scripts:',
-            '  npm test         - Run tests',
+            '  npm run build    - Build ESM and CJS versions',
+            '  npm test         - Run both ESM and CJS tests',
+            '  npm run test:esm - Run ESM tests only',
+            '  npm run test:cjs - Run CJS tests only',
             '  npm run coverage - Run tests with coverage',
             '  npm run lint     - Lint code',
             '  npm run format   - Format code',
@@ -176,9 +184,11 @@ export async function pluginScaffoldTool(args) {
             'Development workflow:',
             '  1. Make your changes in src/index.js',
             '  2. Add tests in test/index.test.js',
-            '  3. Run npm test to verify functionality',
-            '  4. Run npm run lint to check code style',
-            '  5. Run npm run format to auto-format code',
+            '  3. Run npm run build to create lib/ files',
+            '  4. Run npm test to verify functionality',
+            '  5. Run npm run lint to check code style',
+            '',
+            'Note: Remember to run "npm run build" before testing or publishing!',
             '',
             'Happy coding! 🚀'
           ].join('\n')
@@ -232,6 +242,13 @@ async function copyTemplates(pluginPath, type, data) {
 
   await copyTemplate(path.join(templatesDir, 'index.js.template'), path.join(pluginPath, 'src/index.js'), data);
 
+  // Copy utility files
+  await copyTemplate(
+    path.join(templatesDir, 'utils/config.js.template'),
+    path.join(pluginPath, 'src/utils/config.js'),
+    data
+  );
+
   // Copy type-specific templates
   const typeTemplatesDir = path.join(templatesDir, 'types', type);
   if (await fs.stat(typeTemplatesDir).catch(() => false)) {
@@ -239,7 +256,16 @@ async function copyTemplates(pluginPath, type, data) {
   }
 
   // Copy test templates
-  await copyTemplate(path.join(templatesDir, 'test.js.template'), path.join(pluginPath, 'test/index.test.js'), data);
+  await copyTemplate(
+    path.join(templatesDir, 'index.test.js.template'),
+    path.join(pluginPath, 'test/index.test.js'),
+    data
+  );
+  await copyTemplate(
+    path.join(templatesDir, 'cjs.test.cjs.template'),
+    path.join(pluginPath, 'test/cjs.test.cjs'),
+    data
+  );
 
   // Copy test fixtures
   await copyTestFixtures(templatesDir, pluginPath, data);

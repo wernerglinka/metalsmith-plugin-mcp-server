@@ -34,14 +34,14 @@ await mcp.call('plugin-scaffold', {
 
 This creates a fully-configured plugin with:
 
-- Modern ESM structure
-- Comprehensive test setup (targeting >95% coverage)
+- **Dual Module Support**: Both ESM and CommonJS builds using microbundle
+- **Native Metalsmith Methods**: Uses `metalsmith.match()` instead of external dependencies
+- **Zero External Dependencies**: Self-contained utilities for pattern matching and config merging
+- Comprehensive test setup with both ESM and CJS testing
 - Production-ready documentation
 - ESLint 9.x flat config
 - Prettier formatting
 - Release automation with GitHub integration
-- Local utility functions (minimal npm dependencies)
-- Metalsmith's native file matching
 - Deep configuration merging
 - Robust error handling
 
@@ -206,17 +206,20 @@ The server implements standards inspired by [@metalsmith/core-plugin](https://gi
 ### Code Quality
 
 - **ESLint 9.x flat config** with sophisticated rule sets
-- **Comprehensive testing** with real Metalsmith instances (no mocks)
+- **Dual module support** with automatic ESM/CJS builds via microbundle
+- **Comprehensive testing** with both ESM and CJS test suites
 - **>95% test coverage** with systematic gap testing
 - **Modern ES modules** with proper exports configuration
+- **Zero external dependencies** for core functionality
 
 ### Architecture
 
 - **Modular design** with clear separation of concerns
-- **Deep configuration merging** for flexible defaults
+- **Native Metalsmith integration** using built-in methods like `metalsmith.match()`
+- **Deep configuration merging** for flexible defaults with guaranteed property existence
 - **Token-based filename patterns** for dynamic paths
 - **Comprehensive error handling** with helpful messages
-- **Use native Metalsmith methods wherever possible**
+- **Lightweight builds** with no external runtime dependencies
 
 ### Documentation
 
@@ -284,10 +287,44 @@ The release automatically:
 - Creates GitHub release using CLI (no browser needed)
 - Pushes everything including tags
 
-## Testing
+## Development Workflow
+
+Generated plugins follow a modern dual-module development workflow:
 
 ```bash
-# Run tests
+# Install dependencies
+npm install
+
+# Build both ESM and CJS versions
+npm run build
+
+# Run tests for both module formats
+npm test
+
+# Run only ESM tests
+npm run test:esm
+
+# Run only CJS tests
+npm run test:cjs
+
+# Run tests with coverage
+npm run test:coverage
+
+# Run linting
+npm run lint
+
+# Format code
+npm run format
+```
+
+**Important**: Always run `npm run build` before testing or publishing, as the tests run against the built files in the `lib/` directory.
+
+## Testing
+
+The MCP server itself uses comprehensive testing:
+
+```bash
+# Run all MCP server tests
 npm test
 
 # Run tests with coverage

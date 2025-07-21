@@ -90,15 +90,40 @@ Once connected, you can ask Claude to:
 - **"Generate ESLint and Prettier configs for my project"**
 - **"Create a transformer plugin with metadata generation"**
 
+### Working with Generated Plugins
+
+After Claude creates a plugin, the typical development workflow is:
+
+```bash
+# Navigate to the generated plugin
+cd metalsmith-my-plugin
+
+# Install dependencies
+npm install
+
+# Build both ESM and CJS versions
+npm run build
+
+# Run tests for both module formats
+npm test
+
+# Start developing
+# - Edit files in src/
+# - Add tests in test/
+# - Run npm run build before testing
+# - Both ESM and CJS builds are tested automatically
+```
+
 ## 🎯 Expected Results
 
 ### Plugin Creation
 
-- Complete directory structure (src/, test/, docs)
-- Modern ESM-based code
-- Comprehensive test setup
-- Production-ready documentation
-- Zero external dependencies by default
+- Complete directory structure with dual module support (src/, lib/, test/)
+- Modern ESM source with automatic CJS builds via microbundle
+- Comprehensive test setup for both ESM and CommonJS
+- Production-ready documentation with build instructions
+- Zero external runtime dependencies
+- Native Metalsmith method integration
 
 ### Plugin Validation
 

@@ -1,11 +1,28 @@
-{% if hasAsyncProcessing %}import { processAsync } from './processors/async.js';{% endif %}
-{% if hasBackgroundProcessing %}import { createWorkerPool } from './workers/pool.js';{% endif %}
-{% if hasMetadataGeneration %}import { generateMetadata } from './metadata/generator.js';{% endif %}
-import { normalizeOptions, validateFiles, deepMerge } from './utils/config.js';
+/**
+ * Metalsmith Native Methods
+ * This plugin uses Metalsmith's built-in methods:
+ * - metalsmith.match(patterns, files) for pattern matching
+ * - metalsmith.debug(namespace) for debug logging
+ * - metalsmith.metadata() for accessing global metadata
+ * - metalsmith.path() for path operations
+ * - metalsmith.source() and metalsmith.destination() for directories
+ */
+{% if hasAsyncProcessing %}import { processAsync } from './processors/async.js';
+{% endif %}{% if hasBackgroundProcessing %}import { createWorkerPool } from './workers/pool.js';
+{% endif %}{% if hasMetadataGeneration %}import { generateMetadata } from './metadata/generator.js';
+{% endif %}import { normalizeOptions, validateFiles, deepMerge } from './utils/config.js';
 
 /**
  * Default options
  * @type {Object}
+ * @property {string} pattern - Files to process (always exists after merge)
+ * @property {string[]} ignore - Files to ignore (always exists after merge)
+ * 
+ * IMPORTANT: After deepMerge(defaults, userOptions), all default properties
+ * are guaranteed to exist. User options can override values but cannot remove
+ * properties. This means:
+ * - pattern will NEVER be null or undefined
+ * - ignore will NEVER be null or undefined
  */
 const defaults = {
   pattern: '**/*',

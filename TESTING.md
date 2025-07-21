@@ -122,9 +122,12 @@ When tools run successfully, you should see:
 ### Plugin Scaffold Success
 
 - ✅ New directory created with plugin name
-- ✅ Complete file structure (src/, test/, package.json, README.md, etc.)
+- ✅ Complete file structure with dual module support (src/, test/, package.json, README.md, etc.)
+- ✅ Both ESM and CJS test files created (index.test.js and cjs.test.cjs)
+- ✅ Build configuration with microbundle for dual outputs
 - ✅ All template variables properly substituted
 - ✅ Git repository initialized
+- ✅ Native Metalsmith methods integrated (no external pattern matching dependencies)
 
 ### Plugin Validation Success
 
@@ -164,12 +167,40 @@ node src/index.js 2>server.log &
 tail -f server.log
 ```
 
-## Development Testing
+## Testing Generated Plugins
 
-For development, you can also run the unit tests:
+After generating a plugin, you should test its dual module functionality:
 
 ```bash
-# Run all tests
+cd generated-plugin-name
+
+# Install dependencies
+npm install
+
+# Build both ESM and CJS versions
+npm run build
+
+# This should create lib/index.js (ESM) and lib/index.cjs (CJS)
+ls lib/
+
+# Run tests for both module formats
+npm test
+
+# Run tests individually
+npm run test:esm  # Tests the built ESM version
+npm run test:cjs  # Tests the built CJS version
+
+# Check that both modules can be imported
+node -e "import plugin from './lib/index.js'; console.log('ESM works:', typeof plugin)"
+node -e "const plugin = require('./lib/index.cjs'); console.log('CJS works:', typeof plugin)"
+```
+
+## Development Testing
+
+For development of the MCP server itself, you can run the unit tests:
+
+```bash
+# Run all MCP server tests
 npm test
 
 # Run with coverage
