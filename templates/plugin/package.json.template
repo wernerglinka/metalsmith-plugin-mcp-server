@@ -1,21 +1,21 @@
 {
-  "name": "{{pluginName}}",
+  "name": "{{ pluginName }}",
   "version": "0.1.0",
-  "description": "{{description}}",
+  "description": "{{ description }}",
   "keywords": [
     "metalsmith",
-    "metalsmith-plugin"{{#if features}}{{#each features}},
-    "{{this}}"{{/each}}{{/if}}
+    "metalsmith-plugin"{% if features %}{% for feature in features %},
+    "{{ feature }}"{% endfor %}{% endif %}
   ],
-  "homepage": "https://github.com/metalsmith/{{pluginName}}#readme",
+  "homepage": "https://github.com/metalsmith/{{ pluginName }}#readme",
   "bugs": {
-    "url": "https://github.com/metalsmith/{{pluginName}}/issues"
+    "url": "https://github.com/metalsmith/{{ pluginName }}/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/metalsmith/{{pluginName}}.git"
+    "url": "git+https://github.com/metalsmith/{{ pluginName }}.git"
   },
-  "license": "{{license}}",
+  "license": "{{ license }}",
   "author": {
     "name": "Your Name",
     "email": "your.email@example.com"

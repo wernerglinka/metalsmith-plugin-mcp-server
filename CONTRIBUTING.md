@@ -180,7 +180,7 @@ const processFiles = (files, plugins) => {
     (processedFiles, plugin) => {
       return plugin(processedFiles);
     },
-    { ...files },
+    { ...files }
   );
 };
 ```

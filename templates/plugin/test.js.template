@@ -1,13 +1,13 @@
 import { expect } from 'chai';
 import Metalsmith from 'metalsmith';
-import {{functionName}} from '../src/index.js';
+import {{ functionName }} from '../src/index.js';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-describe('{{pluginName}}', function () {
+describe('{{ pluginName }}', function () {
   let metalsmith;
 
   beforeEach(function () {
@@ -15,11 +15,11 @@ describe('{{pluginName}}', function () {
   });
 
   it('should export a function', function () {
-    expect({{functionName}}).to.be.a('function');
+    expect({{ functionName }}).to.be.a('function');
   });
 
   it('should return a metalsmith plugin', function () {
-    const plugin = {{functionName}}();
+    const plugin = {{ functionName }}();
     expect(plugin).to.be.a('function');
     expect(plugin).to.have.length(3);
   });
@@ -27,7 +27,7 @@ describe('{{pluginName}}', function () {
   describe('basic functionality', function () {
     it('should process files with default options', function (done) {
       metalsmith
-        .use({{functionName}}())
+        .use({{ functionName }}())
         .build(function (err, files) {
           if (err) return done(err);
           
@@ -41,7 +41,7 @@ describe('{{pluginName}}', function () {
       metalsmith = Metalsmith(path.join(__dirname, 'fixtures', 'empty'));
       
       metalsmith
-        .use({{functionName}}())
+        .use({{ functionName }}())
         .build(function (err, files) {
           if (err) return done(err);
           
@@ -54,7 +54,7 @@ describe('{{pluginName}}', function () {
   describe('options', function () {
     it('should accept pattern option', function (done) {
       metalsmith
-        .use({{functionName}}({
+        .use({{ functionName }}({
           pattern: '**/*.html'
         }))
         .build(function (err, files) {
@@ -68,7 +68,7 @@ describe('{{pluginName}}', function () {
 
     it('should accept ignore option', function (done) {
       metalsmith
-        .use({{functionName}}({
+        .use({{ functionName }}({
           ignore: ['**/ignore/**']
         }))
         .build(function (err, files) {
@@ -82,7 +82,7 @@ describe('{{pluginName}}', function () {
 
     it('should accept array patterns', function (done) {
       metalsmith
-        .use({{functionName}}({
+        .use({{ functionName }}({
           pattern: ['**/*.html', '**/*.md']
         }))
         .build(function (err, files) {
@@ -97,11 +97,11 @@ describe('{{pluginName}}', function () {
     });
   });
 
-{{#if hasProgressiveLoading}}
+{% if hasProgressiveLoading %}
   describe('progressive loading', function () {
     it('should process files with progressive loading enabled', function (done) {
       metalsmith
-        .use({{functionName}}({
+        .use({{ functionName }}({
           progressive: true,
           quality: 80
         }))
@@ -113,13 +113,13 @@ describe('{{pluginName}}', function () {
         });
     });
   });
-{{/if}}
+{% endif %}
 
-{{#if hasBackgroundProcessing}}
+{% if hasBackgroundProcessing %}
   describe('background processing', function () {
     it('should process files concurrently', function (done) {
       metalsmith
-        .use({{functionName}}({
+        .use({{ functionName }}({
           concurrent: true,
           workers: 2
         }))
@@ -131,15 +131,15 @@ describe('{{pluginName}}', function () {
         });
     });
   });
-{{/if}}
+{% endif %}
 
-{{#if hasMetadataGeneration}}
+{% if hasMetadataGeneration %}
   describe('metadata generation', function () {
     it('should generate metadata for processed files', function (done) {
       const metadataKey = '_test';
       
       metalsmith
-        .use({{functionName}}({
+        .use({{ functionName }}({
           metadata: true,
           metadataKey: metadataKey
         }))
@@ -152,12 +152,12 @@ describe('{{pluginName}}', function () {
         });
     });
   });
-{{/if}}
+{% endif %}
 
   describe('error handling', function () {
     it('should handle invalid options gracefully', function (done) {
       metalsmith
-        .use({{functionName}}({
+        .use({{ functionName }}({
           pattern: null
         }))
         .build(function (err) {
@@ -182,7 +182,7 @@ describe('{{pluginName}}', function () {
           });
           done();
         })
-        .use({{functionName}}())
+        .use({{ functionName }}())
         .build(function (err, files) {
           if (err) return done(err);
           

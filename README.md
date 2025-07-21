@@ -24,15 +24,11 @@ The MCP server provides three main tools:
 Generate a complete Metalsmith plugin structure with enhanced standards:
 
 ```js
-await mcp.call("plugin-scaffold", {
-  name: "metalsmith-my-feature",
-  type: "processor", // 'processor', 'transformer', or 'validator'
-  features: [
-    "async-processing",
-    "background-processing",
-    "metadata-generation",
-  ],
-  outputPath: "./plugins",
+await mcp.call('plugin-scaffold', {
+  name: 'metalsmith-my-feature',
+  type: 'processor', // 'processor', 'transformer', or 'validator'
+  features: ['async-processing', 'background-processing', 'metadata-generation'],
+  outputPath: './plugins'
 });
 ```
 
@@ -54,9 +50,9 @@ This creates a fully-configured plugin with:
 Check existing plugins against quality standards:
 
 ```js
-await mcp.call("validate-plugin", {
-  path: "./metalsmith-my-plugin",
-  checks: ["structure", "tests", "docs", "package-json", "eslint", "coverage"],
+await mcp.call('validate-plugin', {
+  path: './metalsmith-my-plugin',
+  checks: ['structure', 'tests', 'docs', 'package-json', 'eslint', 'coverage']
 });
 ```
 
@@ -74,9 +70,9 @@ Validation checks include:
 Generate configuration files following enhanced standards:
 
 ```js
-await mcp.call("generate-configs", {
-  outputPath: "./my-plugin",
-  configs: ["eslint", "prettier", "editorconfig", "gitignore", "release-it"],
+await mcp.call('generate-configs', {
+  outputPath: './my-plugin',
+  configs: ['eslint', 'prettier', 'editorconfig', 'gitignore', 'release-it']
 });
 ```
 
@@ -105,9 +101,7 @@ await mcp.call("generate-configs", {
      "mcpServers": {
        "metalsmith-plugin-mcp-server": {
          "command": "node",
-         "args": [
-           "/Users/yourusername/metalsmith-mcp-tools/node_modules/metalsmith-plugin-mcp-server/src/index.js"
-         ],
+         "args": ["/Users/yourusername/metalsmith-mcp-tools/node_modules/metalsmith-plugin-mcp-server/src/index.js"],
          "cwd": "/Users/yourusername/metalsmith-mcp-tools"
        }
      }

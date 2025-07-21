@@ -1,103 +1,53 @@
 /**
  * Template Rendering Utilities
  *
- * Uses Handlebars for proper template processing with full support for
- * conditionals, loops, helpers, and complex expressions.
+ * Uses Nunjucks for proper template processing with full support for
+ * conditionals, loops, filters, and complex expressions.
  */
 
-import Handlebars from "handlebars";
+import nunjucks from 'nunjucks';
 
 /**
- * Register custom Handlebars helpers for plugin template processing
+ * Configure Nunjucks environment with custom filters
  */
-function registerHelpers() {
-  // Helper for equality comparison
-  Handlebars.registerHelper("eq", (a, b) => a === b);
+const env = nunjucks.configure( { autoescape: false, trimBlocks: true } );
 
-  // Helper for inequality comparison
-  Handlebars.registerHelper("neq", (a, b) => a !== b);
+// Add custom filter for camelCase conversion
+env.addFilter( 'camelCase', ( str ) => {
+  if ( typeof str !== 'string' ) {
+    return str;
+  }
+  return str
+    .split( '-' )
+    .map( ( word, index ) => ( index === 0 ? word : word.charAt( 0 ).toUpperCase() + word.slice( 1 ) ) )
+    .join( '' );
+} );
 
-  // Helper to check if array includes value
-  Handlebars.registerHelper(
-    "includes",
-    (arr, val) => Array.isArray(arr) && arr.includes(val),
-  );
-
-  // Helper to convert string to camelCase
-  Handlebars.registerHelper("camelCase", (str) => {
-    if (typeof str !== "string") {
-      return str;
-    }
-    return str
-      .split("-")
-      .map((word, index) =>
-        index === 0 ? word : word.charAt(0).toUpperCase() + word.slice(1),
-      )
-      .join("");
-  });
-
-  // Helper to remove prefix from string
-  Handlebars.registerHelper("removePrefix", (str, prefix) => {
-    if (typeof str !== "string" || typeof prefix !== "string") {
-      return str;
-    }
-    return str.startsWith(prefix) ? str.slice(prefix.length) : str;
-  });
-
-  // Helper to convert array to comma-separated string
-  Handlebars.registerHelper("join", (arr, separator = ", ") => {
-    if (!Array.isArray(arr)) {
-      return "";
-    }
-    return arr.join(separator);
-  });
-
-  // Helper to get array length
-  Handlebars.registerHelper("length", (arr) => {
-    if (Array.isArray(arr)) {
-      return arr.length;
-    }
-    if (typeof arr === "string") {
-      return arr.length;
-    }
-    return 0;
-  });
-
-  // Helper to display arrays as comma-separated strings (for variable interpolation)
-  Handlebars.registerHelper("arrayDisplay", (arr) => {
-    if (Array.isArray(arr)) {
-      return arr.join(", ");
-    }
-    return arr;
-  });
-}
-
-// Register helpers on module load
-registerHelpers();
-
-// Configure Handlebars to preserve undefined variables
-Handlebars.registerHelper("helperMissing", function (/* arguments, options */) {
-  const options = arguments[arguments.length - 1];
-  return new Handlebars.SafeString(`{{${options.name}}}`);
-});
+// Add custom filter to remove prefix from string
+env.addFilter( 'removePrefix', ( str, prefix ) => {
+  if ( typeof str !== 'string' || typeof prefix !== 'string' ) {
+    return str;
+  }
+  return str.startsWith( prefix ) ? str.slice( prefix.length ) : str;
+} );
 
 /**
- * Render template using Handlebars
+ * Render template using Nunjucks
  *
- * @param {string} template - Template string with Handlebars syntax
+ * @param {string} template - Template string with Nunjucks syntax
  * @param {Object} data - Data object containing template variables
  * @returns {string} Rendered template
  */
-export function render(template, data) {
+export function render( template, data ) {
   try {
     // Process arrays for display but keep originals for iteration
     const processedData = {};
-    for (const key in data) {
-      if (Array.isArray(data[key])) {
+    for ( const key in data ) {
+      if ( Array.isArray( data[key] ) ) {
         // Keep original array
         processedData[key] = data[key];
         // Also create a display version
-        processedData[`${key}Display`] = data[key].join(", ");
+        processedData[`${key}Display`] = data[key].join( ', ' );
       } else {
         processedData[key] = data[key];
       }
@@ -107,100 +57,49 @@ export function render(template, data) {
     const enhancedData = {
       ...processedData,
       // Add short plugin name (without metalsmith- prefix)
-      pluginNameShort: data.pluginName
-        ? data.pluginName.replace("metalsmith-", "")
-        : "",
+      pluginNameShort: data.pluginName ? data.pluginName.replace( 'metalsmith-', '' ) : '',
       // Add camelCase function name
       functionName: data.pluginName
         ? data.pluginName
-            .replace("metalsmith-", "")
-            .split("-")
-            .map((word, index) =>
-              index === 0 ? word : word.charAt(0).toUpperCase() + word.slice(1),
-            )
-            .join("")
-        : "",
+          .replace( 'metalsmith-', '' )
+          .split( '-' )
+          .map( ( word, index ) => ( index === 0 ? word : word.charAt( 0 ).toUpperCase() + word.slice( 1 ) ) )
+          .join( '' )
+        : '',
       // Add feature flags as boolean properties
-      ...(data.features
-        ? data.features.reduce((acc, feature) => {
-            acc[
-              `has${feature
-                .split("-")
-                .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-                .join("")}`
-            ] = true;
-            return acc;
-          }, {})
-        : {}),
+      ...( data.features
+        ? data.features.reduce( ( acc, feature ) => {
+          acc[
+            `has${feature
+              .split( '-' )
+              .map( ( word ) => word.charAt( 0 ).toUpperCase() + word.slice( 1 ) )
+              .join( '' )}`
+          ] = true;
+          return acc;
+        }, {} )
+        : {} ),
       // Current year for copyright
       year: new Date().getFullYear(),
     };
 
-    // Create a special Handlebars instance for this render
-    const instance = Handlebars.create();
-
-    // Copy all registered helpers to the new instance
-    Object.keys(Handlebars.helpers).forEach((name) => {
-      if (name !== "helperMissing") {
-        instance.registerHelper(name, Handlebars.helpers[name]);
-      }
-    });
-
-    // Override escapeExpression to handle arrays
-    const originalEscape = instance.Utils.escapeExpression;
-    instance.Utils.escapeExpression = function (value) {
-      if (Array.isArray(value)) {
-        return value.join(", ");
-      }
-      return originalEscape(value);
-    };
-
-    // Override helperMissing to preserve undefined variables
-    instance.registerHelper("helperMissing", function () {
-      const options = arguments[arguments.length - 1];
-      return new instance.SafeString(`{{${options.name}}}`);
-    });
-
-    const compiledTemplate = instance.compile(template);
-    return compiledTemplate(enhancedData);
-  } catch (error) {
-    throw new Error(`Template rendering failed: ${error.message}`);
+    return env.renderString( template, enhancedData );
+  } catch ( error ) {
+    throw new Error( `Template rendering failed: ${error.message}` );
   }
 }
 
 // Legacy function exports for backward compatibility
-export function renderTemplate(template, data) {
-  return render(template, data);
+export function renderTemplate( template, data ) {
+  return render( template, data );
 }
 
-export function renderConditionals(template, data) {
+export function renderConditionals( template, data ) {
   // For test compatibility: only process conditionals, not variables
-  try {
-    const instance = Handlebars.create();
-
-    // Register only the conditional helpers
-    instance.registerHelper("eq", (a, b) => a === b);
-    instance.registerHelper("neq", (a, b) => a !== b);
-
-    // Override helperMissing to preserve variable placeholders
-    instance.registerHelper("helperMissing", function () {
-      const options = arguments[arguments.length - 1];
-      // For conditionals test, we want to preserve the {{variable}} syntax
-      return new instance.SafeString(`{{${options.name}}}`);
-    });
-
-    // Don't process arrays or enhance data for conditional-only rendering
-    const compiledTemplate = instance.compile(template);
-    return compiledTemplate(data);
-  } catch {
-    // Fallback to the full render if there's an error
-    return render(template, data);
-  }
+  // Nunjucks doesn't have a way to disable variable processing,
+  // so we'll just render normally
+  return render( template, data );
 }
 
-export function renderEach(template, data) {
-  return render(template, data);
+export function renderEach( template, data ) {
+  return render( template, data );
 }
-
-// Note: render is already exported above as a function declaration
-// No additional exports needed

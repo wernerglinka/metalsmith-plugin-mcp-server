@@ -1,6 +1,6 @@
-{{#if hasAsyncProcessing}}import { processAsync } from './processors/async.js';{{/if}}
-{{#if hasBackgroundProcessing}}import { createWorkerPool } from './workers/pool.js';{{/if}}
-{{#if hasMetadataGeneration}}import { generateMetadata } from './metadata/generator.js';{{/if}}
+{% if hasAsyncProcessing %}import { processAsync } from './processors/async.js';{% endif %}
+{% if hasBackgroundProcessing %}import { createWorkerPool } from './workers/pool.js';{% endif %}
+{% if hasMetadataGeneration %}import { generateMetadata } from './metadata/generator.js';{% endif %}
 import { normalizeOptions, validateFiles, deepMerge } from './utils/config.js';
 
 /**
@@ -10,34 +10,34 @@ import { normalizeOptions, validateFiles, deepMerge } from './utils/config.js';
 const defaults = {
   pattern: '**/*',
   ignore: [],
-{{#if hasAsyncProcessing}}  async: false,
-  batchSize: 10,{{/if}}
-{{#if hasBackgroundProcessing}}  workers: 4,
-  concurrent: true,{{/if}}
-{{#if hasMetadataGeneration}}  metadata: true,
-  metadataKey: '_{{pluginNameShort}}',{{/if}}
+{% if hasAsyncProcessing %}  async: false,
+  batchSize: 10,{% endif %}
+{% if hasBackgroundProcessing %}  workers: 4,
+  concurrent: true,{% endif %}
+{% if hasMetadataGeneration %}  metadata: true,
+  metadataKey: '_{{ pluginNameShort }}',{% endif %}
 };
 
 /**
- * {{description}}
+ * {{ description }}
  *
  * @param {Object} options - Plugin options
  * @param {string|string[]} options.pattern - Files to process
  * @param {string|string[]} options.ignore - Files to ignore
-{{#if hasAsyncProcessing}} * @param {boolean} options.async - Enable async processing
- * @param {number} options.batchSize - Batch size for processing{{/if}}
-{{#if hasBackgroundProcessing}} * @param {number} options.workers - Number of worker threads
- * @param {boolean} options.concurrent - Enable concurrent processing{{/if}}
-{{#if hasMetadataGeneration}} * @param {boolean} options.metadata - Generate metadata
- * @param {string} options.metadataKey - Metadata key{{/if}}
+{% if hasAsyncProcessing %} * @param {boolean} options.async - Enable async processing
+ * @param {number} options.batchSize - Batch size for processing{% endif %}
+{% if hasBackgroundProcessing %} * @param {number} options.workers - Number of worker threads
+ * @param {boolean} options.concurrent - Enable concurrent processing{% endif %}
+{% if hasMetadataGeneration %} * @param {boolean} options.metadata - Generate metadata
+ * @param {string} options.metadataKey - Metadata key{% endif %}
  * @returns {Function} Metalsmith plugin
  */
-export default function {{functionName}}(options = {}) {
+export default function {{ functionName }}(options = {}) {
   const config = deepMerge(defaults, options);
   
   return async function (files, metalsmith, done) {
-    const debug = metalsmith.debug('{{pluginName}}');
-    debug('Starting {{pluginName}} with options:', config);
+    const debug = metalsmith.debug('{{ pluginName }}');
+    debug('Starting {{ pluginName }} with options:', config);
     
     try {
       // Normalize and validate options
@@ -53,7 +53,7 @@ export default function {{functionName}}(options = {}) {
       
       debug(`Processing ${filesToProcess.length} files`);
       
-{{#if hasBackgroundProcessing}}
+{% if hasBackgroundProcessing %}
       // Initialize worker pool if concurrent processing is enabled
       let workerPool = null;
       if (normalizedOptions.concurrent) {
@@ -61,7 +61,7 @@ export default function {{functionName}}(options = {}) {
       }
       
       try {
-{{/if}}
+{% endif %}
         // Process files
         await Promise.all(
           filesToProcess.map(async (filename) => {
@@ -69,40 +69,40 @@ export default function {{functionName}}(options = {}) {
               const file = files[filename];
               debug(`Processing file: ${filename}`);
               
-{{#if (eq pluginType 'processor')}}
+{% if pluginType == 'processor' %}
               // Process file content
               const processedContent = await processFile(file, filename, normalizedOptions);
               file.contents = Buffer.from(processedContent);
-{{/if}}
+{% endif %}
               
-{{#if (eq pluginType 'transformer')}}
+{% if pluginType == 'transformer' %}
               // Transform file
               const transformed = await transformFile(file, filename, normalizedOptions);
               Object.assign(file, transformed);
-{{/if}}
+{% endif %}
               
-{{#if (eq pluginType 'validator')}}
+{% if pluginType == 'validator' %}
               // Validate file
               const isValid = await validateFile(file, filename, normalizedOptions);
               if (!isValid) {
                 throw new Error(`Validation failed for ${filename}`);
               }
-{{/if}}
+{% endif %}
               
-{{#if hasAsyncProcessing}}
+{% if hasAsyncProcessing %}
               // Apply async processing if enabled
               if (normalizedOptions.async) {
                 await processAsync(file, filename, normalizedOptions);
               }
-{{/if}}
+{% endif %}
               
-{{#if hasMetadataGeneration}}
+{% if hasMetadataGeneration %}
               // Generate metadata if enabled
               if (normalizedOptions.metadata) {
                 const metadata = await generateMetadata(file, filename, normalizedOptions);
                 file[normalizedOptions.metadataKey] = metadata;
               }
-{{/if}}
+{% endif %}
               
               debug(`Successfully processed: ${filename}`);
             } catch (error) {
@@ -111,25 +111,25 @@ export default function {{functionName}}(options = {}) {
             }
           })
         );
-{{#if hasBackgroundProcessing}}
+{% if hasBackgroundProcessing %}
       } finally {
         // Clean up worker pool
         if (workerPool) {
           await workerPool.terminate();
         }
       }
-{{/if}}
+{% endif %}
       
-      debug('{{pluginName}} completed successfully');
+      debug('{{ pluginName }} completed successfully');
       done();
     } catch (error) {
-      debug('{{pluginName}} failed:', error);
+      debug('{{ pluginName }} failed:', error);
       done(error);
     }
   };
 }
 
-{{#if (eq pluginType 'processor')}}
+{% if pluginType == 'processor' %}
 /**
  * Process file content
  * @param {Object} file - Metalsmith file object
@@ -141,9 +141,9 @@ async function processFile(file, filename, options) {
   // TODO: Implement file processing logic
   return file.contents.toString();
 }
-{{/if}}
+{% endif %}
 
-{{#if (eq pluginType 'transformer')}}
+{% if pluginType == 'transformer' %}
 /**
  * Transform file
  * @param {Object} file - Metalsmith file object
@@ -155,9 +155,9 @@ async function transformFile(file, filename, options) {
   // TODO: Implement file transformation logic
   return {};
 }
-{{/if}}
+{% endif %}
 
-{{#if (eq pluginType 'validator')}}
+{% if pluginType == 'validator' %}
 /**
  * Validate file
  * @param {Object} file - Metalsmith file object
@@ -169,4 +169,4 @@ async function validateFile(file, filename, options) {
   // TODO: Implement file validation logic
   return true;
 }
-{{/if}}
+{% endif %}

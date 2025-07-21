@@ -1,6 +1,6 @@
 {
   "name": "metalsmith-plugin-mcp-server",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "MCP server for scaffolding and validating high-quality Metalsmith plugins",
   "type": "module",
   "exports": "./src/index.js",
@@ -51,7 +51,7 @@
     "@modelcontextprotocol/sdk": "^1.0.0",
     "chalk": "^5.3.0",
     "glob": "^11.0.0",
-    "handlebars": "^4.7.8",
+    "nunjucks": "^3.2.4",
     "js-yaml": "^4.1.0",
     "validate-npm-package-name": "^6.0.0"
   },

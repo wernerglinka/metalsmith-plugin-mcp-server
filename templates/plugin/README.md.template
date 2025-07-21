@@ -1,29 +1,29 @@
-# {{pluginName}}
+# {{ pluginName }}
 
-[![Version](https://img.shields.io/npm/v/{{pluginName}}.svg)](https://npmjs.com/package/{{pluginName}})
-[![Downloads](https://img.shields.io/npm/dm/{{pluginName}}.svg)](https://npmjs.com/package/{{pluginName}})
-[![Build Status](https://github.com/metalsmith/{{pluginName}}/actions/workflows/test.yml/badge.svg)](https://github.com/metalsmith/{{pluginName}}/actions)
+[![Version](https://img.shields.io/npm/v/{{ pluginName }}.svg)](https://npmjs.com/package/{{ pluginName }})
+[![Downloads](https://img.shields.io/npm/dm/{{ pluginName }}.svg)](https://npmjs.com/package/{{ pluginName }})
+[![Build Status](https://github.com/metalsmith/{{ pluginName }}/actions/workflows/test.yml/badge.svg)](https://github.com/metalsmith/{{ pluginName }}/actions)
 <!-- Uncomment after setting up CI/CD:
-[![Coverage Status](https://coveralls.io/repos/github/metalsmith/{{pluginName}}/badge.svg?branch=main)](https://coveralls.io/github/metalsmith/{{pluginName}}?branch=main)
+[![Coverage Status](https://coveralls.io/repos/github/metalsmith/{{ pluginName }}/badge.svg?branch=main)](https://coveralls.io/github/metalsmith/{{ pluginName }}?branch=main)
 -->
-[![License](https://img.shields.io/npm/l/{{pluginName}}.svg)](LICENSE)
+[![License](https://img.shields.io/npm/l/{{ pluginName }}.svg)](LICENSE)
 
-> {{description}}
+> {{ description }}
 
 ## Installation
 
 ```bash
-npm install {{pluginName}}
+npm install {{ pluginName }}
 ```
 
 ## Usage
 
 ```js
 import Metalsmith from 'metalsmith';
-import {{functionName}} from '{{pluginName}}';
+import {{ functionName }} from '{{ pluginName }}';
 
 Metalsmith(__dirname)
-  .use({{functionName}}({
+  .use({{ functionName }}({
     // options
   }))
   .build((err) => {
@@ -53,12 +53,12 @@ Patterns to ignore files.
 
 ```js
 import Metalsmith from 'metalsmith';
-import {{functionName}} from '{{pluginName}}';
+import {{ functionName }} from '{{ pluginName }}';
 
 Metalsmith(__dirname)
   .source('./src')
   .destination('./build')
-  .use({{functionName}}())
+  .use({{ functionName }}())
   .build((err) => {
     if (err) throw err;
     console.log('Build complete!');
@@ -69,12 +69,12 @@ Metalsmith(__dirname)
 
 ```js
 import Metalsmith from 'metalsmith';
-import {{functionName}} from '{{pluginName}}';
+import {{ functionName }} from '{{ pluginName }}';
 
 Metalsmith(__dirname)
   .source('./src')
   .destination('./build')
-  .use({{functionName}}({
+  .use({{ functionName }}({
     pattern: ['**/*.html', '**/*.md'],
     ignore: ['drafts/**/*']
   }))
@@ -83,17 +83,17 @@ Metalsmith(__dirname)
   });
 ```
 
-{{#if hasAsyncProcessing}}
+{% if hasAsyncProcessing %}
 ### Async Processing
 
 This plugin supports asynchronous processing for improved performance:
 
 ```js
 import Metalsmith from 'metalsmith';
-import {{functionName}} from '{{pluginName}}';
+import {{ functionName }} from '{{ pluginName }}';
 
 Metalsmith(__dirname)
-  .use({{functionName}}({
+  .use({{ functionName }}({
     async: true,
     batchSize: 5
   }))
@@ -101,11 +101,11 @@ Metalsmith(__dirname)
     if (err) throw err;
   });
 ```
-{{/if}}
+{% endif %}
 
 ## API
 
-### `{{functionName}}(options?)`
+### `{{ functionName }}(options?)`
 
 Creates a new instance of the plugin with the given options.
 

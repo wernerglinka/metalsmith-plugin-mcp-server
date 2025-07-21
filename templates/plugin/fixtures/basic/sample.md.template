@@ -5,7 +5,7 @@ description: A sample markdown file for testing
 
 # Sample Document
 
-This is a sample markdown document used for testing the {{pluginName}} plugin.
+This is a sample markdown document used for testing the {{ pluginName }} plugin.
 
 ## Features
 

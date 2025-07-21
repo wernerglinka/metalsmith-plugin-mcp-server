@@ -10,9 +10,9 @@
  * 3. Write the rendered content to the target location
  */
 
-import { promises as fs } from "fs"; // File system operations
-import path from "path"; // Path manipulation
-import { render } from "./render.js"; // Our template rendering functions
+import { promises as fs } from 'fs'; // File system operations
+import path from 'path'; // Path manipulation
+import { render } from './render.js'; // Our template rendering functions
 
 /**
  * Copy a template file and render it with data
@@ -24,19 +24,19 @@ import { render } from "./render.js"; // Our template rendering functions
  * @param {string} targetPath - Target file path (e.g., 'package.json')
  * @param {Object} data - Template data for variable substitution
  */
-export async function copyTemplate(sourcePath, targetPath, data) {
+export async function copyTemplate( sourcePath, targetPath, data ) {
   // Ensure the target directory exists before writing the file
   // recursive: true creates parent directories if they don't exist
-  await fs.mkdir(path.dirname(targetPath), { recursive: true });
+  await fs.mkdir( path.dirname( targetPath ), { recursive: true } );
 
   // Read the template file content as UTF-8 text
-  const template = await fs.readFile(sourcePath, "utf-8");
+  const template = await fs.readFile( sourcePath, 'utf-8' );
 
   // Replace all placeholders with actual values
-  const rendered = render(template, data);
+  const rendered = render( template, data );
 
   // Write the rendered content to the target location
-  await fs.writeFile(targetPath, rendered);
+  await fs.writeFile( targetPath, rendered );
 }
 
 /**
@@ -47,25 +47,20 @@ export async function copyTemplate(sourcePath, targetPath, data) {
  * @param {Object} options - Options
  * @param {boolean} options.recursive - Copy recursively
  */
-export async function copyTemplateDirectory(
-  sourceDir,
-  targetDir,
-  data,
-  options = {},
-) {
+export async function copyTemplateDirectory( sourceDir, targetDir, data, options = {} ) {
   const { recursive = false } = options;
 
-  const items = await fs.readdir(sourceDir, { withFileTypes: true });
+  const items = await fs.readdir( sourceDir, { withFileTypes: true } );
 
-  for (const item of items) {
-    const sourcePath = path.join(sourceDir, item.name);
-    const targetName = item.name.replace(".template", "");
-    const targetPath = path.join(targetDir, targetName);
+  for ( const item of items ) {
+    const sourcePath = path.join( sourceDir, item.name );
+    const targetName = item.name.replace( '.template', '' );
+    const targetPath = path.join( targetDir, targetName );
 
-    if (item.isDirectory() && recursive) {
-      await copyTemplateDirectory(sourcePath, targetPath, data, options);
-    } else if (item.isFile() && item.name.endsWith(".template")) {
-      await copyTemplate(sourcePath, targetPath, data);
+    if ( item.isDirectory() && recursive ) {
+      await copyTemplateDirectory( sourcePath, targetPath, data, options );
+    } else if ( item.isFile() && item.name.endsWith( '.template' ) ) {
+      await copyTemplate( sourcePath, targetPath, data );
     }
   }
 }
