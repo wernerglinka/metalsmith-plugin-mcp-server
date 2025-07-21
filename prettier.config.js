@@ -5,5 +5,5 @@ export default {
   singleQuote: true,
   bracketSpacing: true,
   arrowParens: 'always',
-  printWidth: 120,
+  printWidth: 120
 };

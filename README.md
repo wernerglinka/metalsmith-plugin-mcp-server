@@ -80,41 +80,74 @@ await mcp.call('generate-configs', {
 
 ### Setting Up the MCP Server
 
-1. **Create a Local MCP Server Installation**:
+#### 1. Create a Local MCP Server Installation:
 
-   ```bash
-   # Create a dedicated folder for the MCP server
-   mkdir ~/metalsmith-mcp-tools
-   cd ~/metalsmith-mcp-tools
+```bash
+# Create a dedicated folder for the MCP server
+mkdir ~/metalsmith-mcp-tools
+cd ~/metalsmith-mcp-tools
 
-   # Initialize npm project and install the MCP server
-   npm init -y
-   npm install metalsmith-plugin-mcp-server
-   ```
+# Initialize npm project and install the MCP server
+npm init -y
+npm install metalsmith-plugin-mcp-server
+```
 
-2. **Configure Your AI Assistant**:
+#### 2. Configure Your AI Assistant:
 
-   **For Claude Desktop**, add to your configuration file at `~/Library/Application Support/Claude/claude_desktop_config.json`:
+**For Claude Desktop**
 
-   ```json
-   {
-     "mcpServers": {
-       "metalsmith-plugin-mcp-server": {
-         "command": "node",
-         "args": ["/Users/yourusername/metalsmith-mcp-tools/node_modules/metalsmith-plugin-mcp-server/src/index.js"],
-         "cwd": "/Users/yourusername/metalsmith-mcp-tools"
-       }
-     }
-   }
-   ```
+Add to your configuration file at `~/Library/Application Support/Claude/claude_desktop_config.json`:
 
-   **For Claude Code**, the MCP server will be available when you start Claude Code from any directory.
+```json
+{
+  "mcpServers": {
+    "metalsmith-plugin-mcp-server": {
+      "command": "node",
+      "args": ["/Users/yourusername/metalsmith-mcp-tools/node_modules/metalsmith-plugin-mcp-server/src/index.js"],
+      "cwd": "/Users/yourusername/metalsmith-mcp-tools"
+    }
+  }
+}
+```
 
-   **Note**: Replace `/Users/<your-user-name>/metalsmith-mcp-tools` with the actual path where you installed the server. If using NVM, use the full Node.js path like `/Users/yourusername/.nvm/versions/node/v20.17.0/bin/node`.
+**For Claude Code**
 
-3. **Restart Your AI Assistant**:
-   - Claude Desktop: Restart the application
-   - Claude Code: Restart or reload your development environment
+After installing the MCP server as above, configure it using Claude Code's MCP management
+commands:
+
+```bash
+# Add the MCP server to Claude Code
+claude mcp add metalsmith-plugin /Users/yourusername/metalsmith-mcp-tools/node_modules/met
+alsmith-plugin-mcp-server/src/index.js
+```
+
+**Verify it was added correctly!**
+
+```bash
+claude mcp list
+```
+
+Important Notes:
+
+- Use the full absolute path to the src/index.js file (not just the directory)
+- Path is case-sensitive - use /Users (uppercase U) on macOS
+- Replace yourusername with your actual username
+- If using NVM, the path might be different - use which node to find your Node.js path
+
+> **Restart Required!**
+> Exit and restart Claude Code for the MCP server to become available.
+
+**Verify Setup:**
+In a new Claude Code session, the following tools should be available:
+
+- **plugin-scaffold** - Generate plugin structures
+- **validate-plugin** - Check plugin quality
+- **generate-configs** - Create configuration files
+
+### Restart Your AI Assistant\*\*:
+
+- Claude Desktop: Restart the application
+- Claude Code: Restart or reload your development environment
 
 ### Using the MCP Server for Plugin Development
 

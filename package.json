@@ -23,7 +23,8 @@
     "depcheck": "depcheck",
     "release": "./node_modules/.bin/release-it .",
     "release:check": "npm run lint:check && ./node_modules/.bin/release-it . --dry-run",
-    "commit": "node scripts/commit.js"
+    "commit": "node scripts/commit.js",
+    "setup-hooks": "node scripts/setup-hooks.js"
   },
   "keywords": [
     "mcp",
