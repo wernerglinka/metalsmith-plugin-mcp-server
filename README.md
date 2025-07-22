@@ -1,11 +1,21 @@
 # Metalsmith Plugin MCP Server
 
-> MCP server for scaffolding and validating high-quality Metalsmith plugins
+MCP server for scaffolding and validating high-quality Metalsmith plugins
 
+[![metalsmith:plugin][metalsmith-badge]][metalsmith-url]
 [![npm: version][npm-badge]][npm-url]
 [![license: MIT][license-badge]][license-url]
 [![test coverage][coverage-badge]][coverage-url]
-[![AI-assisted development][ai-assist-badge]][ai-assist-url]
+[![ESM/CommonJS][modules-badge]][npm-url]
+[![Known Vulnerabilities](https://snyk.io/test/npm/metalsmith-plugin-mcp-server/badge.svg)](https://snyk.io/test/npm/metalsmith-plugin-mcp-server)
+
+## Features
+
+Add final features here...
+
+## Why metalsmith-plugin-mcp-server?
+
+Add final text here...
 
 This MCP (Model Context Protocol) server provides tools for creating and maintaining Metalsmith plugins following enhanced quality standards. It encapsulates years of best practices from the Metalsmith ecosystem, particularly inspired by the exceptional quality demonstrated in plugins like `metalsmith-optimize-images`.
 
@@ -15,7 +25,34 @@ This MCP (Model Context Protocol) server provides tools for creating and maintai
 npm install -g metalsmith-plugin-mcp-server
 ```
 
-## Features
+Or use directly with npx (no installation required):
+
+```bash
+npx metalsmith-plugin-mcp-server --help
+```
+
+## Important Changes in v0.5.0
+
+### Improved Plugin Naming
+
+- **Uses exact names**: No longer automatically adds `metalsmith-` prefix
+- **Naming flexibility**: Create plugins with any valid npm name
+- **Convention warnings**: Shows helpful warnings for non-standard names
+- **User choice respected**: Your naming decisions are preserved
+
+### Required Descriptions
+
+- **Mandatory descriptions**: All plugins must have meaningful descriptions
+- **Better AI interaction**: AI assistants will ask "What should this plugin do?"
+- **No more auto-generated descriptions**: Ensures clear, purposeful plugin documentation
+
+### Enhanced Path Context
+
+- **Clear path reporting**: Shows absolute, relative, and working directory paths
+- **Better navigation**: Easier to understand where files are created
+- **Improved follow-up**: AI assistants can better handle subsequent operations
+
+## MCP Tools
 
 The MCP server provides three main tools:
 
@@ -25,7 +62,8 @@ Generate a complete Metalsmith plugin structure with enhanced standards:
 
 ```js
 await mcp.call('plugin-scaffold', {
-  name: 'metalsmith-my-feature',
+  name: 'my-feature', // Uses exact name provided
+  description: 'Processes and transforms content based on custom rules',
   type: 'processor', // 'processor', 'transformer', or 'validator'
   features: ['async-processing', 'background-processing', 'metadata-generation'],
   outputPath: './plugins'
@@ -228,6 +266,34 @@ The server implements standards inspired by [@metalsmith/core-plugin](https://gi
 - **Troubleshooting guides** for common issues
 - **Migration paths** for version updates
 
+## Options
+
+### Plugin Scaffolding Options
+
+| Option        | Type       | Default         | Description                                                                           |
+| ------------- | ---------- | --------------- | ------------------------------------------------------------------------------------- |
+| `name`        | `string`   | Required        | Plugin name (exact name as provided - no auto-prefix)                                 |
+| `description` | `string`   | Required        | What the plugin does (must be provided)                                               |
+| `type`        | `string`   | `'processor'`   | Plugin type: 'processor', 'transformer', or 'validator'                               |
+| `features`    | `string[]` | `[]`            | Optional features: 'async-processing', 'background-processing', 'metadata-generation' |
+| `outputPath`  | `string`   | `'.'`           | Where to create the plugin directory                                                  |
+| `author`      | `string`   | From config/git | Plugin author                                                                         |
+| `license`     | `string`   | `'MIT'`         | License type: 'MIT', 'Apache-2.0', 'BSD-3-Clause', 'ISC'                              |
+
+### Plugin Validation Options
+
+| Option   | Type       | Default    | Description                                                                                |
+| -------- | ---------- | ---------- | ------------------------------------------------------------------------------------------ |
+| `path`   | `string`   | Required   | Path to the plugin to validate                                                             |
+| `checks` | `string[]` | All checks | Specific checks to run: 'structure', 'tests', 'docs', 'package-json', 'eslint', 'coverage' |
+
+### Configuration Generation Options
+
+| Option       | Type       | Default     | Description                                                                               |
+| ------------ | ---------- | ----------- | ----------------------------------------------------------------------------------------- |
+| `outputPath` | `string`   | Required    | Where to generate config files                                                            |
+| `configs`    | `string[]` | All configs | Config files to generate: 'eslint', 'prettier', 'editorconfig', 'gitignore', 'release-it' |
+
 ## Plugin Types
 
 ### Processor
@@ -242,7 +308,7 @@ Plugins that transform file metadata or structure (e.g., permalinks, collections
 
 Plugins that validate files against rules (e.g., HTML validation, link checking)
 
-## Features
+## Plugin Features
 
 ### Async Processing
 
@@ -258,10 +324,89 @@ Automatically generates and attaches metadata to processed files
 
 ## Configuration
 
+### Environment Variables
+
 The MCP server can be configured through environment variables:
 
 - `METALSMITH_MCP_DEBUG`: Enable debug logging
 - `METALSMITH_MCP_TEMPLATES`: Custom templates directory
+
+### Configuration File
+
+You can create a `.metalsmith-plugin-mcp` file to set default values for plugin creation. The CLI will look for this file in:
+
+1. Current working directory
+2. Your home directory
+
+Example `.metalsmith-plugin-mcp`:
+
+```json
+{
+  "type": "processor",
+  "license": "MIT",
+  "author": "Your Name <your.email@example.com>",
+  "outputPath": "./plugins",
+  "features": ["async-processing"]
+}
+```
+
+Available configuration options:
+
+| Option       | Type       | Default       | Description                              |
+| ------------ | ---------- | ------------- | ---------------------------------------- |
+| `type`       | `string`   | `'processor'` | Default plugin type                      |
+| `license`    | `string`   | `'MIT'`       | Default license                          |
+| `author`     | `string`   | `''`          | Default author name and email            |
+| `outputPath` | `string`   | `'.'`         | Default output directory for new plugins |
+| `features`   | `string[]` | `[]`          | Default features to include              |
+
+## Debug
+
+To enable debug logs, set the DEBUG environment variable:
+
+```bash
+DEBUG=metalsmith-plugin-mcp-server* node your-script.js
+```
+
+Or in your script:
+
+```javascript
+process.env.DEBUG = 'metalsmith-plugin-mcp-server*';
+```
+
+## CLI Usage
+
+### Direct CLI Usage (with npx)
+
+You can use the MCP server directly from the command line without AI assistance:
+
+```bash
+# Show help
+npx metalsmith-plugin-mcp-server --help
+
+# Create a new plugin (name and description are required)
+npx metalsmith-plugin-mcp-server scaffold my-plugin "Processes and transforms content" ./plugins
+
+# Validate an existing plugin
+npx metalsmith-plugin-mcp-server validate ./my-plugin
+
+# Generate configuration files
+npx metalsmith-plugin-mcp-server configs ./my-plugin
+
+# Start the MCP server for AI assistants
+npx metalsmith-plugin-mcp-server server
+```
+
+### AI Assistant Usage
+
+The MCP server is designed to be used with AI assistants like Claude Desktop or Claude Code. Once configured, you can use natural language to interact with it:
+
+```bash
+# In Claude Code or Claude Desktop
+"Create a new Metalsmith plugin called metalsmith-minify-html"
+"Validate my plugin at ./metalsmith-custom-plugin"
+"Generate ESLint and Prettier configs for my plugin"
+```
 
 ## Contributing
 
@@ -344,17 +489,18 @@ npm run format
 
 ## License
 
-MIT © Werner Glinka
+MIT © [Your Name]
 
 ---
 
 _"Build with confidence knowing your generated code follows patterns you can understand, maintain, and explain to any developer."_
 
+[metalsmith-badge]: https://img.shields.io/badge/metalsmith-plugin-green.svg?longCache=true
+[metalsmith-url]: https://metalsmith.io
 [npm-badge]: https://img.shields.io/npm/v/metalsmith-plugin-mcp-server.svg
 [npm-url]: https://www.npmjs.com/package/metalsmith-plugin-mcp-server
 [license-badge]: https://img.shields.io/github/license/wernerglinka/metalsmith-plugin-mcp-server
 [license-url]: LICENSE
 [coverage-badge]: https://img.shields.io/badge/test%20coverage-100.0%25-brightgreen
 [coverage-url]: https://github.com/wernerglinka/metalsmith-plugin-mcp-server/actions/workflows/test.yml
-[ai-assist-badge]: https://img.shields.io/badge/AI%20assist-CLAUDE-blue
-[ai-assist-url]: ./CONTRIBUTING.md#ai-assistance-in-this-project
+[modules-badge]: https://img.shields.io/badge/modules-ESM%2FCJS-blue

@@ -26,6 +26,22 @@ import { pluginScaffoldTool } from './tools/plugin-scaffold.js';
 import { validatePluginTool } from './tools/validate-plugin.js';
 import { generateConfigsTool } from './tools/generate-configs.js';
 
+// Import AI assistant instructions
+import { promises as fs } from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Load AI assistant instructions
+let aiInstructions = '';
+try {
+  aiInstructions = await fs.readFile(path.join(__dirname, 'instructions.md'), 'utf8');
+} catch (error) {
+  console.error('Warning: Could not load AI instructions:', error.message);
+}
+
 /**
  * Create the MCP server instance
  *
@@ -63,13 +79,25 @@ const server = new Server(
 const TOOLS = [
   {
     name: 'plugin-scaffold',
-    description: 'Generate a complete Metalsmith plugin structure with enhanced standards',
+    description: `Generate a complete Metalsmith plugin structure with enhanced standards.
+
+IMPORTANT INSTRUCTIONS FOR AI ASSISTANTS:
+1. ALWAYS use the EXACT plugin name provided by the user - do NOT add 'metalsmith-' prefix automatically
+2. ALWAYS ask the user what the plugin should do - description is REQUIRED
+3. The plugin will be created at outputPath/name/ (not nested further)
+4. Pay attention to path information in the response for follow-up operations
+
+${aiInstructions ? `\n${aiInstructions}` : ''}`,
     inputSchema: {
       type: 'object', // The input must be an object (not string, array, etc.)
       properties: {
         name: {
           type: 'string',
-          description: 'Plugin name (e.g., metalsmith-feature-name)'
+          description: 'Plugin name (use EXACT name provided by user, do not add metalsmith- prefix)'
+        },
+        description: {
+          type: 'string',
+          description: 'REQUIRED: What the plugin does (ask the user if not provided)'
         },
         type: {
           type: 'string',
@@ -98,7 +126,7 @@ const TOOLS = [
           default: 'MIT'
         }
       },
-      required: ['name'] // Only 'name' is required, others have defaults
+      required: ['name', 'description'] // Both name and description are required
     }
   },
   {

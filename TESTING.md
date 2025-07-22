@@ -2,7 +2,61 @@
 
 This guide shows you how to test the MCP server locally before using it with Claude.
 
-## Method 1: Manual MCP Protocol Testing
+> **Important**: Starting with v0.5.0, plugin descriptions are required and plugin names are used exactly as provided (no automatic `metalsmith-` prefix).
+
+## Method 1: CLI Testing (Recommended)
+
+The easiest way to test the MCP server is using the CLI interface:
+
+### Test with npx (no installation required)
+
+```bash
+# Show help and available commands
+npx metalsmith-plugin-mcp-server --help
+
+# Create a test plugin (description is now required)
+npx metalsmith-plugin-mcp-server scaffold test-plugin "A test plugin for validation" ./test-output
+
+# Validate the created plugin
+npx metalsmith-plugin-mcp-server validate ./test-output/test-plugin
+
+# Generate config files
+npx metalsmith-plugin-mcp-server configs ./test-output/test-plugin
+```
+
+### Test with local installation
+
+```bash
+# If you've cloned the repository
+npm install
+npm link
+
+# Now use the CLI (description is required)
+metalsmith-plugin-mcp-server scaffold test-plugin "A test plugin for local testing"
+metalsmith-plugin-mcp-server validate ./test-plugin
+```
+
+### Test with configuration file
+
+Create a `.metalsmith-plugin-mcp` file:
+
+```json
+{
+  "type": "transformer",
+  "license": "MIT",
+  "author": "Test Author <test@example.com>",
+  "outputPath": "./test-plugins"
+}
+```
+
+Then run:
+
+```bash
+# Description is still required even with config file
+npx metalsmith-plugin-mcp-server scaffold configured-plugin "Plugin created with configuration defaults"
+```
+
+## Method 2: Manual MCP Protocol Testing
 
 The MCP server communicates using JSON-RPC over stdio. You can test it manually:
 
@@ -17,7 +71,7 @@ This should return a JSON response showing the three available tools.
 ### 2. Test Plugin Scaffolding
 
 ```bash
-echo '{"jsonrpc": "2.0", "id": 2, "method": "tools/call", "params": {"name": "plugin-scaffold", "arguments": {"name": "metalsmith-test-plugin", "type": "processor", "features": ["async-processing"], "outputPath": "./test-output"}}}' | node src/index.js
+echo '{"jsonrpc": "2.0", "id": 2, "method": "tools/call", "params": {"name": "plugin-scaffold", "arguments": {"name": "test-plugin", "description": "A test plugin for validation purposes", "type": "processor", "features": ["async-processing"], "outputPath": "./test-output"}}}' | node src/index.js
 ```
 
 ### 3. Test Plugin Validation
@@ -62,7 +116,7 @@ npm run test:validate
 npm run test:configs
 ```
 
-## Method 3: Integration with Claude Desktop
+## Method 4: Integration with Claude Desktop
 
 To use this with Claude Desktop, you need to configure it in your MCP settings:
 
@@ -72,6 +126,24 @@ Add this to your Claude Desktop MCP configuration file:
 
 **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
 **Windows**: `%APPDATA%/Claude/claude_desktop_config.json`
+
+**Option A: Using npx (recommended)**
+
+```json
+{
+  "mcpServers": {
+    "metalsmith-plugin-server": {
+      "command": "npx",
+      "args": ["metalsmith-plugin-mcp-server", "server"],
+      "env": {
+        "NODE_ENV": "production"
+      }
+    }
+  }
+}
+```
+
+**Option B: Using local installation**
 
 ```json
 {

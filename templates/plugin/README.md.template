@@ -1,20 +1,27 @@
 # {{ pluginName }}
 
-[![Version](https://img.shields.io/npm/v/{{ pluginName }}.svg)](https://npmjs.com/package/{{ pluginName }})
-[![Downloads](https://img.shields.io/npm/dm/{{ pluginName }}.svg)](https://npmjs.com/package/{{ pluginName }})
-[![Build Status](https://github.com/metalsmith/{{ pluginName }}/actions/workflows/test.yml/badge.svg)](https://github.com/metalsmith/{{ pluginName }}/actions)
-<!-- Uncomment after setting up CI/CD:
-[![Coverage Status](https://coveralls.io/repos/github/metalsmith/{{ pluginName }}/badge.svg?branch=main)](https://coveralls.io/github/metalsmith/{{ pluginName }}?branch=main)
--->
-[![License](https://img.shields.io/npm/l/{{ pluginName }}.svg)](LICENSE)
+[![metalsmith:plugin][metalsmith-badge]][metalsmith-url]
+[![npm: version][npm-badge]][npm-url]
+[![license: MIT][license-badge]][license-url]
+[![test coverage][coverage-badge]][coverage-url]
+[![ESM/CommonJS][modules-badge]][npm-url]
+[![Known Vulnerabilities](https://snyk.io/test/npm/{{ pluginName }}/badge.svg)](https://snyk.io/test/npm/{{ pluginName }})
 
 > {{ description }}
+
+## Features
+
+Add features here...
 
 ## Installation
 
 ```bash
 npm install {{ pluginName }}
 ```
+
+## Requirements
+
+Add requirements here...
 
 ## Usage
 
@@ -33,21 +40,18 @@ Metalsmith(__dirname)
 
 ## Options
 
-### `pattern` (optional)
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `pattern` | `string \| string[]` | `'**/*'` | Pattern to match files. Uses Metalsmith's native pattern matching. |
+| `ignore` | `string \| string[]` | `[]` | Patterns to ignore files. |
 
-Type: `string | string[]`  
-Default: `'**/*'`
+## How It Works
 
-Pattern to match files. Uses Metalsmith's native pattern matching.
-
-### `ignore` (optional)
-
-Type: `string | string[]`  
-Default: `[]`
-
-Patterns to ignore files.
+Add how it works explanation here...
 
 ## Examples
+
+Add examples here...
 
 ### Basic Usage
 
@@ -103,19 +107,23 @@ Metalsmith(__dirname)
 ```
 {% endif %}
 
-## API
+## Debug
 
-### `{{ functionName }}(options?)`
+To enable debug logs, set the DEBUG environment variable:
 
-Creates a new instance of the plugin with the given options.
+```bash
+DEBUG={{ pluginName }}* node your-script.js
+```
 
-#### Parameters
+Or in your script:
 
-- `options` (Object, optional): Configuration options
+```javascript
+process.env.DEBUG = '{{ pluginName }}*';
+```
 
-#### Returns
+## CLI Usage
 
-- Metalsmith plugin function
+Add CLI usage instructions here...
 
 ## Testing and Coverage
 
@@ -152,3 +160,13 @@ This project maintains 80% code coverage across branches, lines, functions, and 
 ## License
 
 MIT © [Your Name](https://github.com/yourusername)
+
+[metalsmith-badge]: https://img.shields.io/badge/metalsmith-plugin-green.svg?longCache=true
+[metalsmith-url]: https://metalsmith.io
+[npm-badge]: https://img.shields.io/npm/v/{{ pluginName }}.svg
+[npm-url]: https://www.npmjs.com/package/{{ pluginName }}
+[license-badge]: https://img.shields.io/github/license/yourusername/{{ pluginName }}
+[license-url]: LICENSE
+[coverage-badge]: https://img.shields.io/badge/test%20coverage-100.0%25-brightgreen
+[coverage-url]: https://github.com/yourusername/{{ pluginName }}/actions/workflows/test.yml
+[modules-badge]: https://img.shields.io/badge/modules-ESM%2FCJS-blue

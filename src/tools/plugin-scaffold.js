@@ -33,15 +33,51 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
  * It validates inputs, creates the directory structure, and generates all files.
  *
  * @param {Object} args - Tool arguments from Claude
- * @param {string} args.name - Plugin name (must start with 'metalsmith-')
- * @param {string} args.type - Plugin type (processor, transformer, validator)
- * @param {string[]} args.features - Additional features to include
- * @param {string} args.outputPath - Output directory path
+ * @param {string} args.name - Plugin name (exact name as provided by user)
+ * @param {string} args.description - Required description of what the plugin does
+ * @param {string} [args.type='processor'] - Plugin type (processor, transformer, validator)
+ * @param {string[]} [args.features=[]] - Additional features to include
+ * @param {string} [args.outputPath='.'] - Output directory path
+ * @param {string} [args.author='Your Name'] - Plugin author
+ * @param {string} [args.license='MIT'] - Plugin license
  * @returns {Promise<Object>} MCP tool response object
  */
 export async function pluginScaffoldTool(args) {
   // Extract arguments with defaults (ES6 destructuring with default values)
-  const { name, type = 'processor', features = [], outputPath = '.', license = 'MIT' } = args;
+  const {
+    name,
+    type = 'processor',
+    features = [],
+    outputPath = '.',
+    license = 'MIT',
+    description,
+    author = 'Your Name'
+  } = args;
+
+  // Validate required parameters
+  if (!name) {
+    return {
+      content: [
+        {
+          type: 'text',
+          text: 'Plugin name is required'
+        }
+      ],
+      isError: true
+    };
+  }
+
+  if (!description || description.trim() === '') {
+    return {
+      content: [
+        {
+          type: 'text',
+          text: 'Plugin description is required. Please provide a meaningful description of what the plugin does.'
+        }
+      ],
+      isError: true
+    };
+  }
 
   // Validate plugin name using npm's official validation
   const validation = validateNpmPackageName(name);
@@ -61,17 +97,10 @@ export async function pluginScaffoldTool(args) {
     };
   }
 
-  // Ensure name follows Metalsmith convention (all plugins should start with 'metalsmith-')
+  // Warn if name doesn't follow Metalsmith convention, but don't enforce it
+  let conventionWarning = '';
   if (!name.startsWith('metalsmith-')) {
-    return {
-      content: [
-        {
-          type: 'text',
-          text: 'Plugin name must start with "metalsmith-"'
-        }
-      ],
-      isError: true
-    };
+    conventionWarning = `⚠️  Warning: Plugin name '${name}' doesn't follow the 'metalsmith-*' naming convention. Consider renaming to 'metalsmith-${name.replace(/^metalsmith-?/, '')}' for better discoverability.\n\n`;
   }
 
   // Construct the full path where the plugin will be created
@@ -113,10 +142,10 @@ export async function pluginScaffoldTool(args) {
       features, // Array of selected features
       functionName: toCamelCase(name.replace('metalsmith-', '')), // camelCase function name
       className: toPascalCase(name.replace('metalsmith-', '')), // PascalCase class name
-      description: `A Metalsmith plugin for ${name.replace('metalsmith-', '').replace(/-/g, ' ')}`,
+      description: description.trim(),
       year: new Date().getFullYear(), // Current year for copyright
       license, // Use the license as-is
-      author: 'Your Name', // Default author, can be customized later
+      author, // Use provided author or default
 
       // Feature flags for conditional template rendering
       hasAsyncProcessing: features.includes('async-processing'),
@@ -159,13 +188,18 @@ export async function pluginScaffoldTool(args) {
         {
           type: 'text',
           text: [
+            conventionWarning,
             chalk.green(`✓ Successfully created ${name}`),
+            '',
+            `Plugin created at: ${path.resolve(pluginPath)}`,
+            `Relative path: ${path.relative(process.cwd(), pluginPath)}`,
+            `Working directory: ${process.cwd()}`,
             '',
             'Plugin structure:',
             await getDirectoryTree(pluginPath),
             '',
             'Next steps:',
-            `  cd ${name}`,
+            `  cd ${path.relative(process.cwd(), pluginPath)}`,
             '  npm install',
             '  npm run build    # Build ESM and CJS versions',
             '  npm test         # Run tests for both module formats',
