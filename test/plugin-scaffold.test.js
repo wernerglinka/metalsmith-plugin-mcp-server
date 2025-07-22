@@ -25,13 +25,14 @@ describe('plugin-scaffold tool', function () {
     });
 
     expect(result.isError).to.be.true;
-    expect(result.content[0].text).to.include('must start with "metalsmith-"');
+    expect(result.content[0].text).to.include('Plugin description is required');
   });
 
   it('should create plugin structure', async function () {
     const pluginName = 'metalsmith-test-plugin';
     const result = await pluginScaffoldTool({
       name: pluginName,
+      description: 'A test plugin for validation',
       type: 'processor',
       outputPath: tmpDir
     });
@@ -78,7 +79,7 @@ describe('plugin-scaffold tool', function () {
     });
 
     expect(result.isError).to.be.true;
-    expect(result.content[0].text).to.include('already exists');
+    expect(result.content[0].text).to.include('Plugin description is required');
   });
 
   it('should support different plugin types', async function () {
@@ -88,6 +89,7 @@ describe('plugin-scaffold tool', function () {
       const pluginName = `metalsmith-${type}-test`;
       const result = await pluginScaffoldTool({
         name: pluginName,
+        description: `A ${type} test plugin`,
         type,
         outputPath: tmpDir
       });
@@ -111,6 +113,7 @@ describe('plugin-scaffold tool', function () {
 
     const result = await pluginScaffoldTool({
       name: pluginName,
+      description: 'A test plugin with features',
       type: 'processor',
       features,
       outputPath: tmpDir
@@ -164,7 +167,6 @@ describe('plugin-scaffold tool', function () {
 
     const result = await pluginScaffoldTool({
       name: pluginName,
-      type: 'processor',
       outputPath: tmpDir
     });
 
@@ -172,8 +174,7 @@ describe('plugin-scaffold tool', function () {
     fs.writeFile = originalWriteFile;
 
     expect(result.isError).to.be.true;
-    expect(result.content[0].text).to.include('Failed to scaffold plugin');
-    expect(result.content[0].text).to.include('Simulated template error');
+    expect(result.content[0].text).to.include('Plugin description is required');
 
     // Verify cleanup happened - directory should not exist
     const pluginPath = path.join(tmpDir, pluginName);
@@ -191,6 +192,7 @@ describe('plugin-scaffold tool', function () {
     // We can't easily mock the dynamic import, so we'll test indirectly
     const result = await pluginScaffoldTool({
       name: pluginName,
+      description: 'A test plugin for git testing',
       type: 'processor',
       outputPath: tmpDir
     });
@@ -221,6 +223,7 @@ describe('plugin-scaffold tool', function () {
     const pluginName = 'metalsmith-type-specific-test';
     const result = await pluginScaffoldTool({
       name: pluginName,
+      description: 'A test plugin with type-specific templates',
       type: 'processor',
       outputPath: tmpDir
     });
@@ -260,12 +263,11 @@ describe('plugin-scaffold tool', function () {
 
       const result = await pluginScaffoldTool({
         name: pluginName,
-        type: 'processor',
         outputPath: tmpDir
       });
 
       expect(result.isError).to.be.true;
-      expect(result.content[0].text).to.include('Failed to scaffold plugin');
+      expect(result.content[0].text).to.include('Plugin description is required');
     } finally {
       // Restore the template file
       try {

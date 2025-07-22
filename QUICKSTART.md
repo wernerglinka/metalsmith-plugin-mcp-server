@@ -1,5 +1,39 @@
 # Quick Start Guide
 
+## 🚀 Quick Start with npx (No Installation Required)
+
+The fastest way to use the MCP server is with npx:
+
+> **New in v0.5.0**: Plugin names are used exactly as provided (no auto-prefixing), and descriptions are required for all new plugins.
+
+```bash
+# Show available commands
+npx metalsmith-plugin-mcp-server --help
+
+# Create a new plugin (description is now required)
+npx metalsmith-plugin-mcp-server scaffold my-plugin "Transforms content using custom processing rules"
+
+# Validate an existing plugin
+npx metalsmith-plugin-mcp-server validate ./my-plugin
+
+# Generate configuration files
+npx metalsmith-plugin-mcp-server configs ./my-plugin
+```
+
+### Configuration File (Optional)
+
+Create a `.metalsmith-plugin-mcp` file in your project or home directory:
+
+```json
+{
+  "type": "processor",
+  "license": "MIT",
+  "author": "Your Name <your.email@example.com>",
+  "outputPath": "./plugins",
+  "features": ["async-processing"]
+}
+```
+
 ## 🚀 Testing the MCP Server Locally
 
 ### 1. Install Dependencies
@@ -52,9 +86,22 @@ echo '{"jsonrpc": "2.0", "id": 2, "method": "tools/call", "params": {"name": "pl
 
 ## 🤖 Using with Claude
 
-### Option 1: Claude Desktop
+### Option 1: Claude Desktop with npx
 
 Add to your Claude Desktop config (`~/Library/Application Support/Claude/claude_desktop_config.json` on macOS):
+
+```json
+{
+  "mcpServers": {
+    "metalsmith-plugin-server": {
+      "command": "npx",
+      "args": ["metalsmith-plugin-mcp-server", "server"]
+    }
+  }
+}
+```
+
+Or if you have it installed locally:
 
 ```json
 {
@@ -74,8 +121,11 @@ Then restart Claude Desktop and ask:
 ### Option 2: Command Line
 
 ```bash
-# Start the server
-node src/index.js &
+# Start the MCP server with npx
+npx metalsmith-plugin-mcp-server server
+
+# Or if installed locally
+node src/index.js
 
 # Use with Claude API/CLI
 # (Implementation depends on your Claude setup)
@@ -85,10 +135,13 @@ node src/index.js &
 
 Once connected, you can ask Claude to:
 
-- **"Create a Metalsmith plugin for processing images"**
+- **"Create a plugin called 'content-processor' that transforms markdown files"**
+- **"Make a plugin named 'image-optimizer' that compresses and resizes images"**
 - **"Validate my existing plugin at ./my-plugin"**
 - **"Generate ESLint and Prettier configs for my project"**
 - **"Create a transformer plugin with metadata generation"**
+
+Note: Claude will now ask you to describe what the plugin should do before creating it.
 
 ### Working with Generated Plugins
 

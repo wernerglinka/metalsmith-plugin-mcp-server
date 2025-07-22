@@ -5,7 +5,7 @@
   "type": "module",
   "exports": "./src/index.js",
   "bin": {
-    "metalsmith-plugin-mcp-server": "./src/index.js"
+    "metalsmith-plugin-mcp-server": "./src/cli.js"
   },
   "scripts": {
     "start": "node src/index.js",
