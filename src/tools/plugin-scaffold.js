@@ -195,8 +195,12 @@ export async function pluginScaffoldTool(args) {
             `Relative path: ${path.relative(process.cwd(), pluginPath)}`,
             `Working directory: ${process.cwd()}`,
             '',
-            'Plugin structure:',
-            await getDirectoryTree(pluginPath),
+            'Plugin structure created with the following key files:',
+            '- src/index.js (main plugin file)',
+            '- test/index.test.js (test suite)',
+            '- package.json (package configuration)',
+            '- README.md (documentation)',
+            '- eslint.config.js (linting rules)',
             '',
             'Next steps:',
             `  cd ${path.relative(process.cwd(), pluginPath)}`,
@@ -408,30 +412,6 @@ async function initGitRepo(pluginPath) {
     // Git init is optional, don't fail if it doesn't work
     console.error('Failed to initialize git repository:', error.message);
   }
-}
-
-/**
- * Get directory tree for display
- */
-async function getDirectoryTree(dirPath, prefix = '') {
-  const items = await fs.readdir(dirPath);
-  const tree = [];
-
-  for (const [index, item] of items.entries()) {
-    const itemPath = path.join(dirPath, item);
-    const stats = await fs.stat(itemPath);
-    const isLast = index === items.length - 1;
-    const connector = isLast ? '└── ' : '├── ';
-
-    tree.push(prefix + connector + item);
-
-    if (stats.isDirectory() && !['node_modules', '.git'].includes(item)) {
-      const subTree = await getDirectoryTree(itemPath, prefix + (isLast ? '    ' : '│   '));
-      tree.push(...subTree);
-    }
-  }
-
-  return tree.join('\n');
 }
 
 /**

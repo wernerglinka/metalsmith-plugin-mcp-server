@@ -13,6 +13,7 @@ import { dirname, join } from 'path';
 import { promises as fs } from 'fs';
 import { homedir } from 'os';
 import chalk from 'chalk';
+import readline from 'readline';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -63,6 +64,28 @@ async function readUserConfig() {
   return { ...DEFAULT_CONFIG, ...userConfig };
 }
 
+/**
+ * Prompt user for input
+ * @param {string} question - The question to ask
+ * @param {string} [defaultValue] - Default value if user presses enter
+ * @returns {Promise<string>} User's input
+ */
+function prompt(question, defaultValue) {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+  });
+
+  return new Promise((resolve) => {
+    const displayQuestion = defaultValue ? `${question} (${styles.info(defaultValue)}): ` : `${question}: `;
+
+    rl.question(displayQuestion, (answer) => {
+      rl.close();
+      resolve(answer.trim() || defaultValue || '');
+    });
+  });
+}
+
 const args = process.argv.slice(2);
 const command = args[0];
 
@@ -81,12 +104,15 @@ function showHelp() {
   console.warn(chalk.bold('Commands:'));
   console.warn('  help                          Show this help message');
   console.warn('  server                        Start the MCP server (for AI assistants)');
-  console.warn('  scaffold <name> <description> [path] Create a new Metalsmith plugin');
-  console.warn('  validate <path>               Validate an existing plugin');
-  console.warn('  configs <path>                Generate configuration files\n');
+  console.warn('  scaffold [name] [description] [path] Create a new Metalsmith plugin');
+  console.warn('  validate [path]               Validate an existing plugin');
+  console.warn('  configs [path]                Generate configuration files\n');
+
+  console.warn(chalk.gray('Note: Commands can be run in guided mode by omitting parameters\n'));
 
   console.warn(chalk.bold('Examples:'));
   console.warn('  npx metalsmith-plugin-mcp-server scaffold my-plugin "Processes my files" ./plugins');
+  console.warn('  npx metalsmith-plugin-mcp-server scaffold                  # Guided mode');
   console.warn('  npx metalsmith-plugin-mcp-server validate ./metalsmith-existing-plugin');
   console.warn('  npx metalsmith-plugin-mcp-server configs ./my-plugin\n');
 
@@ -132,22 +158,33 @@ function startServer() {
  * @returns {Promise<void>}
  */
 async function runScaffold(name, description, outputPath) {
+  // Interactive mode if parameters are missing
   if (!name) {
-    console.error(styles.error('Error: Plugin name is required'));
-    console.warn('Usage: npx metalsmith-plugin-mcp-server scaffold <name> <description> [path]');
-    process.exit(1);
+    console.warn(styles.header('\nScaffold a new Metalsmith plugin\n'));
+    name = await prompt('Plugin name');
+
+    if (!name) {
+      console.error(styles.error('\nError: Plugin name is required'));
+      process.exit(1);
+    }
   }
 
   if (!description) {
-    console.error(styles.error('Error: Plugin description is required'));
-    console.warn('Usage: npx metalsmith-plugin-mcp-server scaffold <name> <description> [path]');
-    console.error('Example: npx metalsmith-plugin-mcp-server scaffold my-plugin "Processes my content"');
-    process.exit(1);
+    description = await prompt('Plugin description');
+
+    if (!description) {
+      console.error(styles.error('\nError: Plugin description is required'));
+      process.exit(1);
+    }
   }
 
   // Load user configuration
   const config = await readUserConfig();
-  outputPath = outputPath || config.outputPath;
+
+  if (!outputPath) {
+    const defaultPath = config.outputPath || '.';
+    outputPath = await prompt('Output path', defaultPath);
+  }
 
   try {
     // Import and run the scaffold tool directly
@@ -162,12 +199,12 @@ async function runScaffold(name, description, outputPath) {
       license: config.license
     });
 
-    console.warn(styles.success('\n✓ Plugin scaffolded successfully!'));
-    console.warn(styles.info(`Location: ${result.path}`));
-    console.warn('\nNext steps:');
-    console.warn(`  cd ${result.path}`);
-    console.warn('  npm install');
-    console.warn('  npm test\n');
+    // The tool returns a content array, extract the text
+    if (result.content && result.content[0] && result.content[0].text) {
+      console.warn(result.content[0].text);
+    } else {
+      console.warn(styles.success('\n✓ Plugin scaffolded successfully!'));
+    }
   } catch (error) {
     console.error(styles.error('Error scaffolding plugin:'), error.message);
     process.exit(1);
@@ -181,10 +218,15 @@ async function runScaffold(name, description, outputPath) {
  * @returns {Promise<void>}
  */
 async function runValidate(path) {
+  // Interactive mode if path is missing
   if (!path) {
-    console.error(chalk.red('Error: Plugin path is required'));
-    console.warn('Usage: npx metalsmith-plugin-mcp-server validate <path>');
-    process.exit(1);
+    console.warn(styles.header('\nValidate a Metalsmith plugin\n'));
+    path = await prompt('Plugin path', '.');
+
+    if (!path) {
+      console.error(styles.error('\nError: Plugin path is required'));
+      process.exit(1);
+    }
   }
 
   try {
@@ -227,10 +269,15 @@ async function runValidate(path) {
  * @returns {Promise<void>}
  */
 async function runGenerateConfigs(outputPath) {
+  // Interactive mode if path is missing
   if (!outputPath) {
-    console.error(chalk.red('Error: Output path is required'));
-    console.warn('Usage: npx metalsmith-plugin-mcp-server configs <path>');
-    process.exit(1);
+    console.warn(styles.header('\nGenerate configuration files\n'));
+    outputPath = await prompt('Output path', '.');
+
+    if (!outputPath) {
+      console.error(styles.error('\nError: Output path is required'));
+      process.exit(1);
+    }
   }
 
   try {
