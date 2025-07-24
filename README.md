@@ -431,8 +431,6 @@ MIT © Werner Glinka
 
 ---
 
-_"Build with confidence knowing your generated code follows patterns you can understand, maintain, and explain to any developer."_
-
 [metalsmith-badge]: https://img.shields.io/badge/metalsmith-plugin-green.svg?longCache=true
 [metalsmith-url]: https://metalsmith.io
 [npm-badge]: https://img.shields.io/npm/v/metalsmith-plugin-mcp-server.svg
