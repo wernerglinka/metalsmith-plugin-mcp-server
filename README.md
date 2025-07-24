@@ -9,15 +9,7 @@ MCP server for scaffolding and validating high-quality Metalsmith plugins
 [![ESM/CommonJS][modules-badge]][npm-url]
 [![Known Vulnerabilities](https://snyk.io/test/npm/metalsmith-plugin-mcp-server/badge.svg)](https://snyk.io/test/npm/metalsmith-plugin-mcp-server)
 
-## Features
-
-Add final features here...
-
-## Why metalsmith-plugin-mcp-server?
-
-Add final text here...
-
-This MCP (Model Context Protocol) server provides tools for creating and maintaining Metalsmith plugins following enhanced quality standards. It encapsulates years of best practices from the Metalsmith ecosystem, particularly inspired by the exceptional quality demonstrated in plugins like `metalsmith-optimize-images`.
+This MCP (Model Context Protocol) server provides tools for creating and maintaining Metalsmith plugins following enhanced quality standards. It encapsulates best practices from the Metalsmith ecosystem, such as `@metalsmith/core-plugin` and contributed plugins like `metalsmith-optimize-images`.
 
 ## Installation
 
@@ -30,27 +22,6 @@ Or use directly with npx (no installation required):
 ```bash
 npx metalsmith-plugin-mcp-server --help
 ```
-
-## Important Changes in v0.5.0
-
-### Improved Plugin Naming
-
-- **Uses exact names**: No longer automatically adds `metalsmith-` prefix
-- **Naming flexibility**: Create plugins with any valid npm name
-- **Convention warnings**: Shows helpful warnings for non-standard names
-- **User choice respected**: Your naming decisions are preserved
-
-### Required Descriptions
-
-- **Mandatory descriptions**: All plugins must have meaningful descriptions
-- **Better AI interaction**: AI assistants will ask "What should this plugin do?"
-- **No more auto-generated descriptions**: Ensures clear, purposeful plugin documentation
-
-### Enhanced Path Context
-
-- **Clear path reporting**: Shows absolute, relative, and working directory paths
-- **Better navigation**: Easier to understand where files are created
-- **Improved follow-up**: AI assistants can better handle subsequent operations
 
 ## MCP Tools
 
@@ -116,6 +87,50 @@ await mcp.call('generate-configs', {
 
 ## Usage
 
+You can use this tool in two ways:
+
+1. **Direct CLI Usage**: Run commands directly in your terminal using npx - perfect for one-off plugin creation or when you prefer manual control
+2. **MCP Server**: Set up the server for AI assistants (Claude Desktop/Code) - ideal for interactive plugin development with AI guidance and natural language requests
+
+### Direct CLI Usage (with npx)
+
+The fastest way to get started is using npx directly:
+
+```bash
+# Show help and available commands
+npx metalsmith-plugin-mcp-server help
+
+# Create a new plugin with guided prompts
+npx metalsmith-plugin-mcp-server scaffold
+
+# Create a new plugin with all parameters (expert mode)
+npx metalsmith-plugin-mcp-server scaffold my-plugin "Processes and transforms content" ./plugins
+
+# Validate an existing plugin
+npx metalsmith-plugin-mcp-server validate ./my-plugin
+
+# Generate configuration files
+npx metalsmith-plugin-mcp-server configs ./my-plugin
+```
+
+#### Guided vs. Expert Mode
+
+**Guided Mode** (recommended for beginners):
+
+```bash
+npx metalsmith-plugin-mcp-server scaffold
+# Will prompt you for:
+# - Plugin name: my-awesome-plugin
+# - Plugin description: Processes markdown files with custom rules
+# - Output path (./): ./plugins
+```
+
+**Expert Mode** (for quick execution):
+
+```bash
+npx metalsmith-plugin-mcp-server scaffold my-awesome-plugin "Processes markdown files" ./plugins
+```
+
 ### Setting Up the MCP Server
 
 #### 1. Create a Local MCP Server Installation:
@@ -155,8 +170,7 @@ commands:
 
 ```bash
 # Add the MCP server to Claude Code
-claude mcp add metalsmith-plugin /Users/yourusername/metalsmith-mcp-tools/node_modules/met
-alsmith-plugin-mcp-server/src/index.js
+claude mcp add metalsmith-plugin /Users/yourusername/metalsmith-mcp-tools/node_modules/metalsmith-plugin-mcp-server/src/index.js
 ```
 
 **Verify it was added correctly!**
@@ -230,42 +244,6 @@ Here are prompts that will trigger the MCP server's capabilities:
 
 The AI assistant will automatically use the MCP server tools to scaffold, validate, and configure your Metalsmith plugins according to best practices.
 
-## Philosophy
-
-This MCP server embodies a philosophy of **fundamentals over frameworks**:
-
-- **Sustainable Development**: Focus on HTML, CSS, and Node.js skills that transfer everywhere
-- **Educational Impact**: Teach patterns that last decades, not quarters
-
-## Enhanced Standards
-
-The server implements standards inspired by [@metalsmith/core-plugin](https://github.com/metalsmith/core-plugin), building upon and extending these proven patterns:
-
-### Code Quality
-
-- **ESLint 9.x flat config** with sophisticated rule sets
-- **Dual module support** with automatic ESM/CJS builds via microbundle
-- **Comprehensive testing** with both ESM and CJS test suites
-- **>95% test coverage** with systematic gap testing
-- **Modern ES modules** with proper exports configuration
-- **Zero external dependencies** for core functionality
-
-### Architecture
-
-- **Modular design** with clear separation of concerns
-- **Native Metalsmith integration** using built-in methods like `metalsmith.match()`
-- **Deep configuration merging** for flexible defaults with guaranteed property existence
-- **Token-based filename patterns** for dynamic paths
-- **Comprehensive error handling** with helpful messages
-- **Lightweight builds** with no external runtime dependencies
-
-### Documentation
-
-- **Production-ready README** with badges and examples
-- **Complete API documentation** with JSDoc comments
-- **Troubleshooting guides** for common issues
-- **Migration paths** for version updates
-
 ## Options
 
 ### Plugin Scaffolding Options
@@ -326,10 +304,7 @@ Automatically generates and attaches metadata to processed files
 
 ### Environment Variables
 
-The MCP server can be configured through environment variables:
-
-- `METALSMITH_MCP_DEBUG`: Enable debug logging
-- `METALSMITH_MCP_TEMPLATES`: Custom templates directory
+Currently, no environment variables are used for configuration. All configuration is handled through the configuration file or command-line arguments.
 
 ### Configuration File
 
@@ -362,51 +337,11 @@ Available configuration options:
 
 ## Debug
 
-To enable debug logs, set the DEBUG environment variable:
+The MCP server currently uses standard console output for logging. For troubleshooting:
 
-```bash
-DEBUG=metalsmith-plugin-mcp-server* node your-script.js
-```
-
-Or in your script:
-
-```javascript
-process.env.DEBUG = 'metalsmith-plugin-mcp-server*';
-```
-
-## CLI Usage
-
-### Direct CLI Usage (with npx)
-
-You can use the MCP server directly from the command line without AI assistance:
-
-```bash
-# Show help
-npx metalsmith-plugin-mcp-server --help
-
-# Create a new plugin (name and description are required)
-npx metalsmith-plugin-mcp-server scaffold my-plugin "Processes and transforms content" ./plugins
-
-# Validate an existing plugin
-npx metalsmith-plugin-mcp-server validate ./my-plugin
-
-# Generate configuration files
-npx metalsmith-plugin-mcp-server configs ./my-plugin
-
-# Start the MCP server for AI assistants
-npx metalsmith-plugin-mcp-server server
-```
-
-### AI Assistant Usage
-
-The MCP server is designed to be used with AI assistants like Claude Desktop or Claude Code. Once configured, you can use natural language to interact with it:
-
-```bash
-# In Claude Code or Claude Desktop
-"Create a new Metalsmith plugin called metalsmith-minify-html"
-"Validate my plugin at ./metalsmith-custom-plugin"
-"Generate ESLint and Prettier configs for my plugin"
-```
+1. **CLI Usage**: All output is shown directly in the terminal
+2. **MCP Server**: Check your AI assistant's connection logs
+3. **Verbose Output**: The server provides detailed success/error messages for all operations
 
 ## Contributing
 
@@ -462,7 +397,10 @@ npm run lint
 npm run format
 ```
 
-**Important**: Always run `npm run build` before testing or publishing, as the tests run against the built files in the `lib/` directory.
+**Important**:
+
+- Always run `npm run build` before testing or publishing, as the tests run against the built files in the `lib/` directory.
+- Remove any empty directories (like `src/processors`, `src/transformers`, `src/validators`) that aren't needed for your specific plugin type after development is complete.
 
 ## Testing
 
