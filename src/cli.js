@@ -237,25 +237,12 @@ async function runValidate(path) {
       checks: ['structure', 'tests', 'docs', 'package-json', 'eslint', 'coverage']
     });
 
-    console.warn(chalk.bold('Validation Results:\n'));
-
-    if (result.errors.length === 0) {
-      console.warn(chalk.green('✓ All checks passed!'));
+    // The tool returns a content array, extract the text
+    if (result.content && result.content[0] && result.content[0].text) {
+      console.warn(result.content[0].text);
     } else {
-      console.warn(chalk.red(`✗ ${result.errors.length} issues found:\n`));
-      result.errors.forEach((error, index) => {
-        console.warn(chalk.red(`${index + 1}. ${error}`));
-      });
+      console.warn(styles.error('No validation results returned'));
     }
-
-    if (result.warnings.length > 0) {
-      console.warn(chalk.yellow(`\n⚠ ${result.warnings.length} warnings:\n`));
-      result.warnings.forEach((warning, index) => {
-        console.warn(chalk.yellow(`${index + 1}. ${warning}`));
-      });
-    }
-
-    console.warn();
   } catch (error) {
     console.error(chalk.red('Error validating plugin:'), error.message);
     process.exit(1);
