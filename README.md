@@ -427,7 +427,7 @@ npm run format
 
 ## License
 
-MIT © [Your Name]
+MIT © Werner Glinka
 
 ---
 
