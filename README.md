@@ -606,7 +606,7 @@ The MCP server currently uses standard console output for logging. For troublesh
 
 ## Release Process
 
-The release process is fully automated. Simply run:
+The release process is fully automated using GitHub CLI. Simply run:
 
 ```bash
 npm run release
@@ -617,8 +617,25 @@ The release automatically:
 - Syncs with remote (to handle CI commits like coverage badge updates)
 - Runs tests and linting
 - Generates changelog from commit history
-- Creates GitHub release using CLI (no browser needed)
+- Creates GitHub release using GitHub CLI (no tokens needed)
 - Pushes everything including tags
+
+### Prerequisites
+
+Make sure GitHub CLI is installed and authenticated:
+
+```bash
+# Install GitHub CLI (if not already installed)
+brew install gh
+
+# Authenticate with GitHub
+gh auth login
+
+# Verify authentication
+gh auth status
+```
+
+The release process will automatically check for GitHub CLI availability and fail gracefully if not found.
 
 ## Development Workflow
 
