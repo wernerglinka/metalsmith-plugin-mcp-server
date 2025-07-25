@@ -1,7 +1,6 @@
 import { promises as fs } from 'fs';
 import { spawn } from 'child_process';
 import path from 'path';
-import { glob } from 'glob';
 import chalk from 'chalk';
 
 /**
@@ -90,7 +89,7 @@ export async function updateDepsTool(args) {
 /**
  * Check if npm-check-updates is available
  */
-async function checkNcuAvailable() {
+function checkNcuAvailable() {
   return new Promise((resolve, reject) => {
     const child = spawn('ncu', ['--version'], { stdio: 'pipe' });
 
@@ -149,7 +148,7 @@ async function findPlugins(targetPath) {
         plugins.push(...subdirs);
       }
     }
-  } catch (error) {
+  } catch {
     throw new Error(`Cannot access path: ${targetPath}`);
   }
 
@@ -186,7 +185,7 @@ async function findPluginSubdirectories(parentPath) {
         }
       }
     }
-  } catch (error) {
+  } catch {
     throw new Error(`Cannot read directory: ${parentPath}`);
   }
 
@@ -196,6 +195,7 @@ async function findPluginSubdirectories(parentPath) {
 /**
  * Update dependencies for a single plugin
  */
+// eslint-disable-next-line require-await
 async function updatePluginDeps(pluginPath, options) {
   const { major, interactive, dryRun } = options;
 
@@ -284,6 +284,7 @@ async function updatePluginDeps(pluginPath, options) {
 /**
  * Run npm install in a plugin directory
  */
+// eslint-disable-next-line require-await
 async function runNpmInstall(pluginPath) {
   return new Promise((resolve) => {
     const child = spawn('npm', ['install'], {
@@ -323,6 +324,7 @@ async function runNpmInstall(pluginPath) {
 /**
  * Run tests in a plugin directory
  */
+// eslint-disable-next-line require-await
 async function runTests(pluginPath) {
   return new Promise((resolve) => {
     const child = spawn('npm', ['test'], {
@@ -365,7 +367,6 @@ async function runTests(pluginPath) {
 function generateUpdateReport(results) {
   const lines = [chalk.bold('📦 Dependency Update Report'), ''];
 
-  const successful = results.filter((r) => r.success);
   const failed = results.filter((r) => !r.success);
   const withUpdates = results.filter((r) => r.hasUpdates);
   const noUpdates = results.filter((r) => r.success && !r.hasUpdates);

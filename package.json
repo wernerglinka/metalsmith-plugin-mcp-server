@@ -52,8 +52,8 @@
     "@modelcontextprotocol/sdk": "^1.17.0",
     "chalk": "^5.4.1",
     "glob": "^11.0.3",
-    "nunjucks": "^3.2.4",
     "js-yaml": "^4.1.0",
+    "nunjucks": "^3.2.4",
     "validate-npm-package-name": "^6.0.2"
   },
   "devDependencies": {

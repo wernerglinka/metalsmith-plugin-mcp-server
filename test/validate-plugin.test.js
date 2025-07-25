@@ -90,7 +90,7 @@ describe('validate-plugin tool', function () {
     });
 
     const text = result.content[0].text;
-    expect(text).to.include('No ESLint configuration found');
+    expect(text).to.include('Consider adding ESLint configuration');
   });
 
   it('should check coverage reports when available', async function () {
@@ -147,7 +147,7 @@ describe('validate-plugin tool', function () {
     });
 
     const text = result.content[0].text;
-    expect(text).to.include('Missing recommended directory');
+    expect(text).to.include('Consider adding directory');
   });
 
   it('should validate package.json name convention', async function () {

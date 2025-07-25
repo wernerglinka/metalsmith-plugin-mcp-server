@@ -82,29 +82,33 @@ describe('plugin-scaffold tool', function () {
     expect(result.content[0].text).to.include('Plugin description is required');
   });
 
-  it('should support different plugin types', async function () {
-    const types = ['processor', 'transformer', 'validator'];
+  it('should create basic plugin structure without types', async function () {
+    const pluginName = 'metalsmith-basic-test';
 
-    for (const type of types) {
-      const pluginName = `metalsmith-${type}-test`;
-      const result = await pluginScaffoldTool({
-        name: pluginName,
-        description: `A ${type} test plugin`,
-        type,
-        outputPath: tmpDir
-      });
+    const result = await pluginScaffoldTool({
+      name: pluginName,
+      description: 'A basic test plugin',
+      outputPath: tmpDir
+    });
 
-      expect(result.isError).to.not.be.true;
+    expect(result.isError).to.not.be.true;
 
-      // Check type-specific directory
-      const pluginPath = path.join(tmpDir, pluginName);
-      const typeDir = path.join(pluginPath, 'src', `${type}s`);
-      const exists = await fs
-        .access(typeDir)
-        .then(() => true)
-        .catch(() => false);
-      expect(exists).to.be.true;
-    }
+    // Check basic directory structure exists
+    const pluginPath = path.join(tmpDir, pluginName);
+    const srcDir = path.join(pluginPath, 'src');
+    const testDir = path.join(pluginPath, 'test');
+
+    const srcExists = await fs
+      .access(srcDir)
+      .then(() => true)
+      .catch(() => false);
+    const testExists = await fs
+      .access(testDir)
+      .then(() => true)
+      .catch(() => false);
+
+    expect(srcExists).to.be.true;
+    expect(testExists).to.be.true;
   });
 
   it('should handle additional features', async function () {
@@ -114,7 +118,6 @@ describe('plugin-scaffold tool', function () {
     const result = await pluginScaffoldTool({
       name: pluginName,
       description: 'A test plugin with features',
-      type: 'processor',
       features,
       outputPath: tmpDir
     });
@@ -193,7 +196,6 @@ describe('plugin-scaffold tool', function () {
     const result = await pluginScaffoldTool({
       name: pluginName,
       description: 'A test plugin for git testing',
-      type: 'processor',
       outputPath: tmpDir
     });
 
@@ -209,45 +211,33 @@ describe('plugin-scaffold tool', function () {
     expect(exists).to.be.true;
   });
 
-  it('should copy type-specific templates when they exist', async function () {
-    // First create a type-specific template directory for testing
-    const typeTemplatesDir = path.join(__dirname, '../templates/plugin/types/processor');
-    await fs.mkdir(typeTemplatesDir, { recursive: true });
-
-    // Create a test type-specific template file
-    await fs.writeFile(
-      path.join(typeTemplatesDir, 'processor-helper.js.template'),
-      '// Type-specific helper for {{pluginName}}\nexport function processFile() {}\n'
-    );
-
-    const pluginName = 'metalsmith-type-specific-test';
+  it('should create feature-specific directories when requested', async function () {
+    const pluginName = 'metalsmith-feature-dirs-test';
     const result = await pluginScaffoldTool({
       name: pluginName,
-      description: 'A test plugin with type-specific templates',
-      type: 'processor',
+      description: 'A test plugin with feature-specific directories',
+      features: ['async-processing', 'background-processing'],
       outputPath: tmpDir
     });
 
     expect(result.isError).to.not.be.true;
 
-    // Check if type-specific file was created
-    const typeSpecificFile = path.join(tmpDir, pluginName, 'src', 'processor-helper.js');
-    const exists = await fs
-      .access(typeSpecificFile)
+    // Check if feature-specific directories were created
+    const pluginPath = path.join(tmpDir, pluginName);
+    const processorsDir = path.join(pluginPath, 'src', 'processors', 'async');
+    const workersDir = path.join(pluginPath, 'src', 'workers');
+
+    const processorsExists = await fs
+      .access(processorsDir)
       .then(() => true)
       .catch(() => false);
-    expect(exists).to.be.true;
+    const workersExists = await fs
+      .access(workersDir)
+      .then(() => true)
+      .catch(() => false);
 
-    if (exists) {
-      const content = await fs.readFile(typeSpecificFile, 'utf-8');
-      expect(content).to.include('metalsmith-type-specific-test');
-    }
-
-    // Clean up the test template
-    await fs.rm(path.join(__dirname, '../templates/plugin/types'), {
-      recursive: true,
-      force: true
-    });
+    expect(processorsExists).to.be.true;
+    expect(workersExists).to.be.true;
   });
 
   it('should handle missing template files gracefully', async function () {

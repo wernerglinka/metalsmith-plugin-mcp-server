@@ -234,9 +234,9 @@ async function analyzeCodeComplexity(pluginPath, results) {
       const testFiles = await glob('test/**/*.{js,cjs,mjs}', { cwd: pluginPath });
       if (testFiles.length > 0) {
         results.recommendations.push(
-          `💡 Consider adding test/fixtures. Run: npx metalsmith-plugin-mcp-server scaffold ${ 
-            pluginPath 
-            } test/fixtures/basic/sample.md basic`
+          `💡 Consider adding test/fixtures. Run: npx metalsmith-plugin-mcp-server scaffold ${
+            pluginPath
+          } test/fixtures/basic/sample.md basic`
         );
       }
     }
@@ -264,7 +264,7 @@ async function analyzeCodeComplexity(pluginPath, results) {
       } else if (analysis.hasProcessors) {
         results.passed.push('✓ Processing logic is well-organized');
       }
-    } catch (error) {
+    } catch {
       results.warnings.push('⚠ Could not analyze main file complexity');
     }
   } catch (error) {
@@ -300,6 +300,7 @@ function analyzeFileComplexity(content) {
 /**
  * Run a command and return result
  */
+// eslint-disable-next-line require-await
 async function runCommand(command, args, cwd) {
   return new Promise((resolve) => {
     const child = spawn(command, args, {
@@ -367,7 +368,7 @@ async function runCommand(command, args, cwd) {
 /**
  * Check test setup and coverage
  */
-async function checkTests(pluginPath, results, functional = false, config) {
+async function checkTests(pluginPath, results, functional = false) {
   try {
     // Check for test files with various patterns
     const testPatterns = [
@@ -403,9 +404,9 @@ async function checkTests(pluginPath, results, functional = false, config) {
       results.passed.push(`✓ Test fixtures present (${fixtureFiles.length} files)`);
     } else {
       results.recommendations.push(
-        `💡 Consider adding test fixtures. Run: npx metalsmith-plugin-mcp-server scaffold ${ 
-          pluginPath 
-          } test/fixtures/basic/sample.md basic`
+        `💡 Consider adding test fixtures. Run: npx metalsmith-plugin-mcp-server scaffold ${
+          pluginPath
+        } test/fixtures/basic/sample.md basic`
       );
     }
 
@@ -431,7 +432,6 @@ async function checkTests(pluginPath, results, functional = false, config) {
     if (packageJson.scripts?.['test:coverage'] || packageJson.scripts?.coverage) {
       if (functional) {
         // Run the coverage command
-        const coverageScript = packageJson.scripts?.['test:coverage'] || packageJson.scripts?.coverage;
         const coverageResult = await runCommand(
           'npm',
           ['run', packageJson.scripts?.['test:coverage'] ? 'test:coverage' : 'coverage'],
@@ -554,9 +554,9 @@ async function checkDocumentation(pluginPath, results, config) {
       results.passed.push('✓ LICENSE file exists');
     } catch {
       results.recommendations.push(
-        `💡 Consider adding a LICENSE file. Generate one with: npx metalsmith-plugin-mcp-server scaffold ${ 
-          pluginPath 
-          } LICENSE <license-type>`
+        `💡 Consider adding a LICENSE file. Generate one with: npx metalsmith-plugin-mcp-server scaffold ${
+          pluginPath
+        } LICENSE <license-type>`
       );
     }
   } catch (error) {
@@ -674,9 +674,9 @@ async function checkEslint(pluginPath, results) {
 
   if (!found) {
     results.recommendations.push(
-      `💡 Consider adding ESLint configuration. Generate with: npx metalsmith-plugin-mcp-server scaffold ${ 
-        pluginPath 
-        } eslint.config.js eslint`
+      `💡 Consider adding ESLint configuration. Generate with: npx metalsmith-plugin-mcp-server scaffold ${
+        pluginPath
+      } eslint.config.js eslint`
     );
   }
 
@@ -692,6 +692,7 @@ async function checkEslint(pluginPath, results) {
 /**
  * Check test coverage
  */
+// eslint-disable-next-line no-unused-vars
 async function checkCoverage(pluginPath, results, functional = false, config) {
   try {
     // Check if this is a new plugin (no node_modules = no tests run yet)
