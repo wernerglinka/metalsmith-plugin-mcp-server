@@ -1,10 +1,9 @@
 /**
- * Generate plugin directory structure based on type and features
- * @param {string} type - Plugin type
+ * Generate plugin directory structure based on features
  * @param {string[]} features - Additional features
  * @returns {Object} Directory structure
  */
-export function generatePluginStructure(type, features) {
+export function generatePluginStructure(features) {
   const baseStructure = {
     src: {
       utils: {}
@@ -16,19 +15,6 @@ export function generatePluginStructure(type, features) {
       }
     }
   };
-
-  // Add type-specific directories
-  switch (type) {
-    case 'processor':
-      baseStructure.src.processors = {};
-      break;
-    case 'transformer':
-      baseStructure.src.transformers = {};
-      break;
-    case 'validator':
-      baseStructure.src.validators = {};
-      break;
-  }
 
   // Add feature-specific directories
   if (features.includes('async-processing')) {

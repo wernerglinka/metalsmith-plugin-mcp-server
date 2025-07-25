@@ -17,8 +17,11 @@ npx metalsmith-plugin-mcp-server --help
 # Create a test plugin (description is now required)
 npx metalsmith-plugin-mcp-server scaffold test-plugin "A test plugin for validation" ./test-output
 
-# Validate the created plugin
+# Validate the created plugin (structure-based)
 npx metalsmith-plugin-mcp-server validate ./test-output/test-plugin
+
+# Test functional validation (runs tests and coverage)
+npx metalsmith-plugin-mcp-server validate ./test-output/test-plugin --functional
 
 # Generate config files
 npx metalsmith-plugin-mcp-server configs ./test-output/test-plugin
@@ -42,7 +45,6 @@ Create a `.metalsmith-plugin-mcp` file:
 
 ```json
 {
-  "type": "transformer",
   "license": "MIT",
   "author": "Test Author <test@example.com>",
   "outputPath": "./test-plugins"
@@ -56,6 +58,77 @@ Then run:
 npx metalsmith-plugin-mcp-server scaffold configured-plugin "Plugin created with configuration defaults"
 ```
 
+## Testing Validation Configuration
+
+You can test custom validation rules by creating a configuration file:
+
+### 1. Create a test plugin with custom validation config
+
+```bash
+# Create a minimal plugin
+mkdir -p test-config-plugin/src
+echo '{"name": "test-plugin", "version": "1.0.0", "license": "MIT"}' > test-config-plugin/package.json
+echo 'export default () => {}' > test-config-plugin/src/index.js
+echo '# Test Plugin\n\n## Usage\n\nThis is how to use it.' > test-config-plugin/README.md
+
+# Create validation config
+cat << 'EOF' > test-config-plugin/.metalsmith-plugin-validation.json
+{
+  "rules": {
+    "structure": {
+      "enabled": true,
+      "requiredDirs": ["src"],
+      "requiredFiles": ["src/index.js"],
+      "recommendedDirs": []
+    },
+    "tests": {
+      "enabled": false
+    },
+    "documentation": {
+      "enabled": true,
+      "requiredSections": ["Usage"],
+      "recommendedSections": ["Installation", "Options"]
+    },
+    "packageJson": {
+      "namePrefix": "",
+      "requiredScripts": [],
+      "recommendedScripts": ["build"]
+    }
+  },
+  "recommendations": {
+    "showCommands": false,
+    "templateSuggestions": false
+  }
+}
+EOF
+
+# Test validation with config
+npx metalsmith-plugin-mcp-server validate test-config-plugin
+
+# Test without config (rename it temporarily)
+mv test-config-plugin/.metalsmith-plugin-validation.json test-config-plugin/.metalsmith-plugin-validation.json.bak
+npx metalsmith-plugin-mcp-server validate test-config-plugin
+
+# Restore config
+mv test-config-plugin/.metalsmith-plugin-validation.json.bak test-config-plugin/.metalsmith-plugin-validation.json
+```
+
+### 2. Understanding Validation Output
+
+The validation output shows:
+
+- ✓ **Passed**: Requirements that are met
+- ✗ **Failed**: Critical issues that must be fixed
+- ⚠ **Warnings**: Quality concerns (e.g., low test coverage)
+- 💡 **Recommendations**: Optional improvements with actionable commands
+
+When config is used:
+
+- Tests can be disabled completely
+- Custom required/recommended sections
+- Different naming conventions
+- Shorter recommendation messages
+
 ## Method 2: Manual MCP Protocol Testing
 
 The MCP server communicates using JSON-RPC over stdio. You can test it manually:
@@ -66,12 +139,12 @@ The MCP server communicates using JSON-RPC over stdio. You can test it manually:
 echo '{"jsonrpc": "2.0", "id": 1, "method": "tools/list"}' | node src/index.js
 ```
 
-This should return a JSON response showing the three available tools.
+This should return a JSON response showing the four available tools.
 
 ### 2. Test Plugin Scaffolding
 
 ```bash
-echo '{"jsonrpc": "2.0", "id": 2, "method": "tools/call", "params": {"name": "plugin-scaffold", "arguments": {"name": "test-plugin", "description": "A test plugin for validation purposes", "type": "processor", "features": ["async-processing"], "outputPath": "./test-output"}}}' | node src/index.js
+echo '{"jsonrpc": "2.0", "id": 2, "method": "tools/call", "params": {"name": "plugin-scaffold", "arguments": {"name": "test-plugin", "description": "A test plugin for validation purposes", "features": ["async-processing"], "outputPath": "./test-output"}}}' | node src/index.js
 ```
 
 ### 3. Test Plugin Validation

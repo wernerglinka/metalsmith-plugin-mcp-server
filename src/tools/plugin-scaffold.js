@@ -35,7 +35,6 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
  * @param {Object} args - Tool arguments from Claude
  * @param {string} args.name - Plugin name (exact name as provided by user)
  * @param {string} args.description - Required description of what the plugin does
- * @param {string} [args.type='processor'] - Plugin type (processor, transformer, validator)
  * @param {string[]} [args.features=[]] - Additional features to include
  * @param {string} [args.outputPath='.'] - Output directory path
  * @param {string} [args.author='Your Name'] - Plugin author
@@ -46,8 +45,7 @@ export async function pluginScaffoldTool(args) {
   // Extract arguments with defaults (ES6 destructuring with default values)
   const {
     name,
-    type = 'processor',
-    features = [],
+    features = ['async-processing'],
     outputPath = '.',
     license = 'MIT',
     description,
@@ -73,6 +71,22 @@ export async function pluginScaffoldTool(args) {
         {
           type: 'text',
           text: 'Plugin description is required. Please provide a meaningful description of what the plugin does.'
+        }
+      ],
+      isError: true
+    };
+  }
+
+  // Validate features
+  const validFeatures = ['async-processing', 'background-processing', 'metadata-generation'];
+  const invalidFeatures = features.filter((feature) => !validFeatures.includes(feature));
+
+  if (invalidFeatures.length > 0) {
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `Invalid features: ${invalidFeatures.join(', ')}\n\nValid features are:\n- async-processing: Adds batch processing and async capabilities\n- background-processing: Adds worker thread support for concurrent processing\n- metadata-generation: Adds metadata extraction and generation features\n\nExample: ["async-processing", "metadata-generation"]`
         }
       ],
       isError: true
@@ -128,9 +142,9 @@ export async function pluginScaffoldTool(args) {
     // Create the main plugin directory (recursive: true creates parent dirs if needed)
     await fs.mkdir(pluginPath, { recursive: true });
 
-    // Generate directory structure based on plugin type and features
+    // Generate directory structure based on plugin features
     // This creates the subdirectories like src/, test/, src/utils/, etc.
-    const structure = generatePluginStructure(type, features);
+    const structure = generatePluginStructure(features);
     await createDirectoryStructure(pluginPath, structure);
 
     // Prepare template data for rendering
@@ -138,7 +152,6 @@ export async function pluginScaffoldTool(args) {
     const templateData = {
       pluginName: name, // Full plugin name
       pluginNameShort: name.replace('metalsmith-', ''), // Short name without metalsmith prefix
-      pluginType: type, // processor/transformer/validator
       features, // Array of selected features
       functionName: toCamelCase(name.replace('metalsmith-', '')), // camelCase function name
       className: toPascalCase(name.replace('metalsmith-', '')), // PascalCase class name
@@ -165,7 +178,7 @@ export async function pluginScaffoldTool(args) {
      */
 
     // Copy and render all template files with our data
-    await copyTemplates(pluginPath, type, templateData);
+    await copyTemplates(pluginPath, templateData);
 
     // Copy license file if requested
     if (license !== 'UNLICENSED') {
@@ -270,7 +283,7 @@ async function createDirectoryStructure(basePath, structure) {
 /**
  * Copy and render template files
  */
-async function copyTemplates(pluginPath, type, data) {
+async function copyTemplates(pluginPath, data) {
   const templatesDir = path.join(__dirname, '../../templates/plugin');
 
   // Copy common templates
@@ -287,12 +300,6 @@ async function copyTemplates(pluginPath, type, data) {
     data
   );
 
-  // Copy type-specific templates
-  const typeTemplatesDir = path.join(templatesDir, 'types', type);
-  if (await fs.stat(typeTemplatesDir).catch(() => false)) {
-    await copyTypeSpecificTemplates(typeTemplatesDir, pluginPath, data);
-  }
-
   // Copy test templates
   await copyTemplate(
     path.join(templatesDir, 'index.test.js.template'),
@@ -307,20 +314,6 @@ async function copyTemplates(pluginPath, type, data) {
 
   // Copy test fixtures
   await copyTestFixtures(templatesDir, pluginPath, data);
-}
-
-/**
- * Copy type-specific template files
- */
-async function copyTypeSpecificTemplates(sourceDir, targetDir, data) {
-  const files = await fs.readdir(sourceDir);
-
-  for (const file of files) {
-    const sourcePath = path.join(sourceDir, file);
-    const targetPath = path.join(targetDir, 'src', file.replace('.template', ''));
-
-    await copyTemplate(sourcePath, targetPath, data);
-  }
 }
 
 /**

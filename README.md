@@ -23,9 +23,17 @@ Or use directly with npx (no installation required):
 npx metalsmith-plugin-mcp-server --help
 ```
 
+### Prerequisites
+
+For dependency updates, you'll also need:
+
+```bash
+npm install -g npm-check-updates
+```
+
 ## MCP Tools
 
-The MCP server provides three main tools:
+The MCP server provides four main tools:
 
 ### 1. Plugin Scaffolding
 
@@ -35,7 +43,6 @@ Generate a complete Metalsmith plugin structure with enhanced standards:
 await mcp.call('plugin-scaffold', {
   name: 'my-feature', // Uses exact name provided
   description: 'Processes and transforms content based on custom rules',
-  type: 'processor', // 'processor', 'transformer', or 'validator'
   features: ['async-processing', 'background-processing', 'metadata-generation'],
   outputPath: './plugins'
 });
@@ -85,6 +92,27 @@ await mcp.call('generate-configs', {
 });
 ```
 
+### 4. Dependency Updates
+
+Update dependencies in Metalsmith plugins using npm-check-updates:
+
+```js
+await mcp.call('update-deps', {
+  path: './plugins', // Single plugin or directory containing multiple plugins
+  major: false, // Only minor/patch updates by default (safer)
+  interactive: false, // Set to true for interactive selection
+  dryRun: false // Set to true to see what would be updated without making changes
+});
+```
+
+Features:
+
+- **Smart Plugin Detection**: Automatically finds Metalsmith plugins by checking for `metalsmith-` prefix
+- **Batch Processing**: Process all plugins in a directory when run from parent folder
+- **Safety First**: Only updates minor/patch versions by default (no breaking changes)
+- **Comprehensive Reporting**: Shows which plugins had updates, failures, and next steps
+- **Prerequisites**: Requires `npm install -g npm-check-updates`
+
 ## Usage
 
 You can use this tool in two ways:
@@ -100,6 +128,9 @@ The fastest way to get started is using npx directly:
 # Show help and available commands
 npx metalsmith-plugin-mcp-server help
 
+# Show current configuration and setup
+npx metalsmith-plugin-mcp-server config
+
 # Create a new plugin with guided prompts
 npx metalsmith-plugin-mcp-server scaffold
 
@@ -111,6 +142,15 @@ npx metalsmith-plugin-mcp-server validate ./my-plugin
 
 # Generate configuration files
 npx metalsmith-plugin-mcp-server configs ./my-plugin
+
+# Update dependencies (requires: npm install -g npm-check-updates)
+npx metalsmith-plugin-mcp-server update-deps ./my-plugin
+
+# Update all plugins in a directory
+npx metalsmith-plugin-mcp-server update-deps ./plugins
+
+# Interactive mode - asks whether to update all or specific plugin
+npx metalsmith-plugin-mcp-server update-deps
 ```
 
 #### Guided vs. Expert Mode
@@ -130,6 +170,115 @@ npx metalsmith-plugin-mcp-server scaffold
 ```bash
 npx metalsmith-plugin-mcp-server scaffold my-awesome-plugin "Processes markdown files" ./plugins
 ```
+
+#### Enhanced Validation Features
+
+The `validate` command now supports functional validation that actually runs your tests and coverage:
+
+**Standard Validation** (structure-based):
+
+```bash
+npx metalsmith-plugin-mcp-server validate ./my-plugin
+```
+
+**Functional Validation** (runs tests and coverage):
+
+```bash
+npx metalsmith-plugin-mcp-server validate ./my-plugin --functional
+```
+
+**Understanding Validation Output:**
+
+- ✓ **Passed**: Requirements that are met
+- ✗ **Failed**: Critical issues that must be fixed
+- ⚠ **Warnings**: Quality concerns (e.g., low test coverage)
+- 💡 **Recommendations**: Optional improvements with actionable commands
+
+**Example Recommendations:**
+
+```
+💡 Consider adding a LICENSE file. Generate one with: npx metalsmith-plugin-mcp-server scaffold ./my-plugin LICENSE MIT
+💡 Consider adding ESLint configuration. Generate with: npx metalsmith-plugin-mcp-server scaffold ./my-plugin eslint.config.js eslint
+💡 Consider adding script: lint. Example: "lint": "eslint src test"
+```
+
+#### Dependency Update Features
+
+The `update-deps` command now supports automatic installation and testing:
+
+```bash
+# Show what can be updated (dry run)
+npx metalsmith-plugin-mcp-server update-deps ./my-plugin
+
+# Update and install dependencies
+npx metalsmith-plugin-mcp-server update-deps ./my-plugin --install
+
+# Update, install, and run tests
+npx metalsmith-plugin-mcp-server update-deps ./my-plugin --install --test
+
+# Process multiple plugins in a directory
+npx metalsmith-plugin-mcp-server update-deps ./plugins --install --test
+```
+
+#### Configuration Management
+
+You can check your current setup at any time:
+
+```bash
+# Show current configuration, file locations, and explanations
+npx metalsmith-plugin-mcp-server config
+```
+
+This command displays:
+
+- **Configuration Sources**: Which config files were found and loaded
+- **Current Configuration**: Your effective settings (merged from all sources)
+- **Feature Explanations**: What each configured feature does
+- **Impact Analysis**: How your settings affect plugin creation
+- **Example Configuration**: Template for creating your own config file
+- **Valid Options**: All supported features and licenses
+
+#### Validation Configuration
+
+You can customize validation rules by creating a `.metalsmith-plugin-validation.json` file in your plugin directory:
+
+```json
+{
+  "rules": {
+    "structure": {
+      "enabled": true,
+      "requiredDirs": ["src", "test"],
+      "requiredFiles": ["src/index.js", "README.md"],
+      "recommendedDirs": ["src/utils", "test/fixtures"]
+    },
+    "tests": {
+      "enabled": true,
+      "coverageThreshold": 85,
+      "requireFixtures": false
+    },
+    "documentation": {
+      "enabled": true,
+      "requiredSections": ["Installation", "Usage"],
+      "recommendedSections": ["Options", "Examples", "API"]
+    },
+    "packageJson": {
+      "namePrefix": "metalsmith-",
+      "requiredScripts": ["test", "build"],
+      "recommendedScripts": ["lint", "format", "test:coverage"]
+    }
+  },
+  "recommendations": {
+    "showCommands": true,
+    "templateSuggestions": true
+  }
+}
+```
+
+The validator will look for configuration files in this order:
+
+1. `.metalsmith-plugin-validation.json`
+2. `.validation.json`
+3. `.validationrc.json`
 
 ### Setting Up the MCP Server
 
@@ -195,6 +344,7 @@ In a new Claude Code session, the following tools should be available:
 - **plugin-scaffold** - Generate plugin structures
 - **validate-plugin** - Check plugin quality
 - **generate-configs** - Create configuration files
+- **update-deps** - Update plugin dependencies
 
 ### Restart Your AI Assistant\*\*:
 
@@ -230,7 +380,11 @@ Here are prompts that will trigger the MCP server's capabilities:
 
 > "Create a new Metalsmith plugin called metalsmith-json-feed that generates JSON feeds from markdown files. Include async processing and comprehensive tests."
 
-**Validating an Existing Plugin**:
+**Plugin Validation and Recommendations**:
+
+> "Does the MCP server have any recommendations for this plugin?"
+
+> "Run the MCP validation on this plugin and implement any recommendations."
 
 > "Check my metalsmith-sass plugin against the MCP server's enhanced quality standards and suggest improvements."
 
@@ -242,21 +396,24 @@ Here are prompts that will trigger the MCP server's capabilities:
 
 > "Help me build a Metalsmith plugin that optimizes SVG files, supports batch processing, and integrates with the plugin chain properly."
 
+**Configuration Management**:
+
+> "Show me my current MCP server configuration and explain how it affects plugin creation."
+
 The AI assistant will automatically use the MCP server tools to scaffold, validate, and configure your Metalsmith plugins according to best practices.
 
 ## Options
 
 ### Plugin Scaffolding Options
 
-| Option        | Type       | Default         | Description                                                                           |
-| ------------- | ---------- | --------------- | ------------------------------------------------------------------------------------- |
-| `name`        | `string`   | Required        | Plugin name (exact name as provided - no auto-prefix)                                 |
-| `description` | `string`   | Required        | What the plugin does (must be provided)                                               |
-| `type`        | `string`   | `'processor'`   | Plugin type: 'processor', 'transformer', or 'validator'                               |
-| `features`    | `string[]` | `[]`            | Optional features: 'async-processing', 'background-processing', 'metadata-generation' |
-| `outputPath`  | `string`   | `'.'`           | Where to create the plugin directory                                                  |
-| `author`      | `string`   | From config/git | Plugin author                                                                         |
-| `license`     | `string`   | `'MIT'`         | License type: 'MIT', 'Apache-2.0', 'BSD-3-Clause', 'ISC'                              |
+| Option        | Type       | Default                | Description                                                                                                    |
+| ------------- | ---------- | ---------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `name`        | `string`   | Required               | Plugin name (exact name as provided - no auto-prefix)                                                          |
+| `description` | `string`   | Required               | What the plugin does (must be provided)                                                                        |
+| `features`    | `string[]` | `['async-processing']` | Optional features (exact strings required): `async-processing`, `background-processing`, `metadata-generation` |
+| `outputPath`  | `string`   | `'.'`                  | Where to create the plugin directory                                                                           |
+| `author`      | `string`   | From config/git        | Plugin author                                                                                                  |
+| `license`     | `string`   | `'MIT'`                | License type: 'MIT', 'Apache-2.0', 'BSD-3-Clause', 'ISC'                                                       |
 
 ### Plugin Validation Options
 
@@ -288,17 +445,115 @@ Plugins that validate files against rules (e.g., HTML validation, link checking)
 
 ## Plugin Features
 
-### Async Processing
+Features control what additional functionality gets generated in your plugin. **Exact strings are required** - the system validates against these specific values.
 
-Adds support for asynchronous file processing with configurable batch sizes
+### Available Features
 
-### Background Processing
+| Feature                   | String (exact)          | Description                                          |
+| ------------------------- | ----------------------- | ---------------------------------------------------- |
+| **Async Processing**      | `async-processing`      | Adds batch processing and async capabilities         |
+| **Background Processing** | `background-processing` | Adds worker thread support for concurrent processing |
+| **Metadata Generation**   | `metadata-generation`   | Adds metadata extraction and generation features     |
 
-Implements worker threads for CPU-intensive operations
+### Usage Examples
 
-### Metadata Generation
+**Basic plugin (no features):**
 
-Automatically generates and attaches metadata to processed files
+```js
+await mcp.call('plugin-scaffold', {
+  name: 'my-simple-plugin',
+  description: 'Processes files with basic functionality',
+  features: []
+});
+```
+
+**Plugin with async processing:**
+
+```js
+await mcp.call('plugin-scaffold', {
+  name: 'my-async-plugin',
+  description: 'Processes files with batch support',
+  features: ['async-processing']
+});
+```
+
+**Plugin with multiple features:**
+
+```js
+await mcp.call('plugin-scaffold', {
+  name: 'my-advanced-plugin',
+  description: 'Full-featured processing plugin',
+  features: ['async-processing', 'background-processing', 'metadata-generation']
+});
+```
+
+### What Each Feature Adds
+
+#### `async-processing`
+
+- **Batch Processing**: Process files in configurable batches
+- **Async/Await Support**: Native promise-based processing
+- **Error Handling**: Comprehensive error handling for async operations
+- **Progress Tracking**: Built-in progress reporting
+
+Generated code includes:
+
+```js
+// Batch processing utilities
+async function processBatch(files, options) {
+  const batchSize = options.batchSize || 10;
+  // ... batch processing logic
+}
+```
+
+#### `background-processing`
+
+- **Worker Threads**: Offload CPU-intensive tasks to worker threads
+- **Concurrent Processing**: Process multiple files simultaneously
+- **Resource Management**: Automatic worker pool management
+- **Thread Communication**: Structured message passing between threads
+
+Generated code includes:
+
+```js
+// Worker thread setup
+import { Worker, isMainThread, parentPort } from 'worker_threads';
+// ... worker thread implementation
+```
+
+#### `metadata-generation`
+
+- **Metadata Extraction**: Extract metadata from processed files
+- **Automatic Enrichment**: Add computed metadata to file objects
+- **Flexible Schema**: Configurable metadata schemas
+- **Caching Support**: Built-in metadata caching
+
+Generated code includes:
+
+```js
+// Metadata generation utilities
+function generateMetadata(file, options) {
+  return {
+    processedAt: new Date().toISOString()
+    // ... metadata generation logic
+  };
+}
+```
+
+### Feature Validation
+
+If you provide invalid feature strings, you'll get a helpful error message:
+
+```
+Invalid features: async, background
+
+Valid features are:
+- async-processing: Adds batch processing and async capabilities
+- background-processing: Adds worker thread support for concurrent processing
+- metadata-generation: Adds metadata extraction and generation features
+
+Example: ["async-processing", "metadata-generation"]
+```
 
 ## Configuration
 
@@ -317,7 +572,6 @@ Example `.metalsmith-plugin-mcp`:
 
 ```json
 {
-  "type": "processor",
   "license": "MIT",
   "author": "Your Name <your.email@example.com>",
   "outputPath": "./plugins",
@@ -327,13 +581,12 @@ Example `.metalsmith-plugin-mcp`:
 
 Available configuration options:
 
-| Option       | Type       | Default       | Description                              |
-| ------------ | ---------- | ------------- | ---------------------------------------- |
-| `type`       | `string`   | `'processor'` | Default plugin type                      |
-| `license`    | `string`   | `'MIT'`       | Default license                          |
-| `author`     | `string`   | `''`          | Default author name and email            |
-| `outputPath` | `string`   | `'.'`         | Default output directory for new plugins |
-| `features`   | `string[]` | `[]`          | Default features to include              |
+| Option       | Type       | Default                | Description                              |
+| ------------ | ---------- | ---------------------- | ---------------------------------------- |
+| `license`    | `string`   | `'MIT'`                | Default license                          |
+| `author`     | `string`   | `''`                   | Default author name and email            |
+| `outputPath` | `string`   | `'.'`                  | Default output directory for new plugins |
+| `features`   | `string[]` | `['async-processing']` | Default features to include              |
 
 ## Debug
 
@@ -400,7 +653,7 @@ npm run format
 **Important**:
 
 - Always run `npm run build` before testing or publishing, as the tests run against the built files in the `lib/` directory.
-- Remove any empty directories (like `src/processors`, `src/transformers`, `src/validators`) that aren't needed for your specific plugin type after development is complete.
+- Remove any empty directories (like `src/utils`) that aren't needed for your specific plugin after development is complete.
 
 ## Testing
 

@@ -7,10 +7,11 @@
  * scaffolding and validating Metalsmith plugins with enhanced standards.
  *
  * MCP is a protocol that allows AI assistants like Claude to interact with
- * external tools and data sources. This server exposes three main tools:
+ * external tools and data sources. This server exposes four main tools:
  * 1. plugin-scaffold: Generate complete plugin structures
  * 2. validate-plugin: Check plugins against quality standards
  * 3. generate-configs: Create configuration files
+ * 4. update-deps: Update dependencies using npm-check-updates
  *
  * The server communicates via stdio (standard input/output) which allows
  * Claude to call our tools and receive structured responses.
@@ -25,6 +26,7 @@ import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprot
 import { pluginScaffoldTool } from './tools/plugin-scaffold.js';
 import { validatePluginTool } from './tools/validate-plugin.js';
 import { generateConfigsTool } from './tools/generate-configs.js';
+import { updateDepsTool } from './tools/update-deps.js';
 
 // Import AI assistant instructions
 import { promises as fs } from 'fs';
@@ -99,20 +101,15 @@ ${aiInstructions ? `\n${aiInstructions}` : ''}`,
           type: 'string',
           description: 'REQUIRED: What the plugin does (ask the user if not provided)'
         },
-        type: {
-          type: 'string',
-          enum: ['processor', 'transformer', 'validator'], // Only these values are allowed
-          description: 'Type of plugin to generate',
-          default: 'processor' // If not provided, use this value
-        },
         features: {
-          type: 'array', // An array of strings
+          type: 'array',
           items: {
             type: 'string',
             enum: ['async-processing', 'background-processing', 'metadata-generation']
           },
-          description: 'Additional features to include',
-          default: [] // Empty array if not provided
+          description:
+            'Additional features to include:\n- async-processing: Adds batch processing and async capabilities\n- background-processing: Adds worker thread support for concurrent processing\n- metadata-generation: Adds metadata extraction and generation features',
+          default: ['async-processing']
         },
         outputPath: {
           type: 'string',
@@ -122,7 +119,8 @@ ${aiInstructions ? `\n${aiInstructions}` : ''}`,
         license: {
           type: 'string',
           enum: ['MIT', 'Apache-2.0', 'ISC', 'BSD-3-Clause', 'UNLICENSED'],
-          description: 'License for the plugin (MIT is most common in JS ecosystem, UNLICENSED for proprietary)',
+          description:
+            'License for the plugin (choose appropriate license for your project, UNLICENSED for proprietary)',
           default: 'MIT'
         }
       },
@@ -175,6 +173,36 @@ ${aiInstructions ? `\n${aiInstructions}` : ''}`,
       },
       required: []
     }
+  },
+  {
+    name: 'update-deps',
+    description: 'Update dependencies in Metalsmith plugin(s) using npm-check-updates',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        path: {
+          type: 'string',
+          description: 'Plugin directory path or parent directory containing plugins',
+          default: '.'
+        },
+        major: {
+          type: 'boolean',
+          description: 'Include major version updates (default: false - only minor/patch)',
+          default: false
+        },
+        interactive: {
+          type: 'boolean',
+          description: 'Run in interactive mode',
+          default: false
+        },
+        dryRun: {
+          type: 'boolean',
+          description: 'Show what would be updated without making changes',
+          default: false
+        }
+      },
+      required: []
+    }
   }
 ];
 
@@ -220,6 +248,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       case 'generate-configs':
         return await generateConfigsTool(args); // Create config files
+
+      case 'update-deps':
+        return await updateDepsTool(args); // Update plugin dependencies
 
       default:
         // This shouldn't happen if Claude only calls tools we advertised

@@ -52,7 +52,6 @@ When calling the plugin-scaffold tool, these parameters are required:
 
 Optional parameters:
 
-- `type`: 'processor', 'transformer', or 'validator' (default: 'processor')
 - `features`: Array of features like ['async-processing', 'metadata-generation']
 - `outputPath`: Where to create the plugin (default: '.')
 - `author`: Plugin author (default: 'Your Name')

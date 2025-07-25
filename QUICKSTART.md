@@ -13,20 +13,57 @@ npx metalsmith-plugin-mcp-server --help
 # Create a new plugin (description is now required)
 npx metalsmith-plugin-mcp-server scaffold my-plugin "Transforms content using custom processing rules"
 
-# Validate an existing plugin
+# Validate an existing plugin (structure-based)
 npx metalsmith-plugin-mcp-server validate ./my-plugin
+
+# Functional validation (runs tests and coverage)
+npx metalsmith-plugin-mcp-server validate ./my-plugin --functional
 
 # Generate configuration files
 npx metalsmith-plugin-mcp-server configs ./my-plugin
+
+# Update dependencies (dry run)
+npx metalsmith-plugin-mcp-server update-deps ./my-plugin
+
+# Update and install dependencies
+npx metalsmith-plugin-mcp-server update-deps ./my-plugin --install
+
+# Update, install, and run tests
+npx metalsmith-plugin-mcp-server update-deps ./my-plugin --install --test
 ```
 
-### Configuration File (Optional)
+### Validation Configuration (Optional)
+
+Customize validation rules by creating a `.metalsmith-plugin-validation.json` file in your plugin directory:
+
+```json
+{
+  "rules": {
+    "tests": {
+      "coverageThreshold": 85
+    },
+    "documentation": {
+      "requiredSections": ["Installation", "Usage"],
+      "recommendedSections": ["Options", "Examples"]
+    },
+    "packageJson": {
+      "namePrefix": "metalsmith-",
+      "recommendedScripts": ["lint", "test:coverage"]
+    }
+  },
+  "recommendations": {
+    "showCommands": true,
+    "templateSuggestions": true
+  }
+}
+```
+
+### User Configuration File (Optional)
 
 Create a `.metalsmith-plugin-mcp` file in your project or home directory:
 
 ```json
 {
-  "type": "processor",
   "license": "MIT",
   "author": "Your Name <your.email@example.com>",
   "outputPath": "./plugins",
@@ -68,6 +105,14 @@ npm run test:validate
 npm run test:configs
 ```
 
+**Update dependencies:**
+
+```bash
+# Note: This requires ncu to be installed globally
+npm install -g npm-check-updates
+npx metalsmith-plugin-mcp-server update-deps ./test-plugins
+```
+
 ## 🔧 Manual Testing
 
 You can also test individual tools manually using the MCP protocol:
@@ -81,7 +126,7 @@ echo '{"jsonrpc": "2.0", "id": 1, "method": "tools/list"}' | node src/index.js
 ### Create a Plugin
 
 ```bash
-echo '{"jsonrpc": "2.0", "id": 2, "method": "tools/call", "params": {"name": "plugin-scaffold", "arguments": {"name": "metalsmith-my-plugin", "type": "processor", "features": ["async-processing"]}}}' | node src/index.js
+echo '{"jsonrpc": "2.0", "id": 2, "method": "tools/call", "params": {"name": "plugin-scaffold", "arguments": {"name": "metalsmith-my-plugin", "features": ["async-processing"]}}}' | node src/index.js
 ```
 
 ## 🤖 Using with Claude

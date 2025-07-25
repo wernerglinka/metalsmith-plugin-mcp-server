@@ -2,7 +2,7 @@
 
 /**
  * Run all MCP server tests
- * This script tests all three tools in sequence
+ * This script tests all four tools in sequence
  */
 
 import { spawn } from 'child_process';
