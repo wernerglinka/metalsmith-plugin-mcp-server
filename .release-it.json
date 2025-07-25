@@ -9,10 +9,7 @@
     "changelog": "npx auto-changelog -u --commit-limit false --ignore-commit-pattern '^((dev|chore|ci):|Release)' --stdout"
   },
   "github": {
-    "release": true,
-    "releaseName": "v${version}",
-    "releaseNotes": null,
-    "web": false
+    "release": false
   },
   "npm": {
     "publish": false,
@@ -20,7 +17,9 @@
   },
   "hooks": {
     "before:init": ["git pull", "npm test", "npm run lint", "npm run format"],
+    "before:git": "gh --version || (echo 'GitHub CLI not found. Install with: brew install gh' && exit 1)",
     "after:bump": "npx auto-changelog -p --commit-limit false --ignore-commit-pattern '^((dev|chore|ci):|Release)' && git add CHANGELOG.md",
+    "after:git:release": "gh release create v${version} --title 'v${version}' --notes-file CHANGELOG.md || echo 'GitHub release creation failed, but git operations succeeded'",
     "after:release": "echo Successfully released ${name} v${version} to ${repo.repository}."
   }
 }
