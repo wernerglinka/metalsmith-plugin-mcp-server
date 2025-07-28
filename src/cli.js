@@ -102,6 +102,7 @@ function showHelp() {
 
   console.warn(chalk.bold('Commands:'));
   console.warn('  help                          Show this help message');
+  console.warn('  version                       Show version information');
   console.warn('  server                        Start the MCP server (for AI assistants)');
   console.warn('  config                        Show current configuration and setup');
   console.warn('  scaffold [name] [description] [path] Create a new Metalsmith plugin');
@@ -112,6 +113,7 @@ function showHelp() {
   console.warn(chalk.gray('Note: Commands can be run in guided mode by omitting parameters\n'));
 
   console.warn(chalk.bold('Examples:'));
+  console.warn('  npx metalsmith-plugin-mcp-server version                   # Show version');
   console.warn('  npx metalsmith-plugin-mcp-server config                    # Show current setup');
   console.warn('  npx metalsmith-plugin-mcp-server scaffold my-plugin "Processes my files" ./plugins');
   console.warn('  npx metalsmith-plugin-mcp-server scaffold                  # Guided mode');
@@ -288,6 +290,26 @@ async function runGenerateConfigs(outputPath) {
     console.warn();
   } catch (error) {
     console.error(chalk.red('Error generating configs:'), error.message);
+    process.exit(1);
+  }
+}
+
+/**
+ * Show version information
+ * Displays the current version of the metalsmith-plugin-mcp-server
+ * @returns {Promise<void>}
+ */
+async function showVersion() {
+  try {
+    const packageJsonPath = join(__dirname, '..', 'package.json');
+    const packageJson = JSON.parse(await fs.readFile(packageJsonPath, 'utf8'));
+
+    console.warn(styles.header(`\n${packageJson.name}`));
+    console.warn(styles.info(`Version: ${packageJson.version}`));
+    console.warn(styles.info(`Description: ${packageJson.description}`));
+    console.warn();
+  } catch (error) {
+    console.error(styles.error('Error reading version information:'), error.message);
     process.exit(1);
   }
 }
@@ -474,6 +496,12 @@ switch (command) {
   case '-h':
   case undefined:
     showHelp();
+    break;
+
+  case 'version':
+  case '--version':
+  case '-v':
+    showVersion();
     break;
 
   case 'server':

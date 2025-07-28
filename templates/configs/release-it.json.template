@@ -5,20 +5,24 @@
     "requireBranch": "main",
     "tag": true,
     "tagName": "v${version}",
-    "push": true
+    "push": true,
+    "changelog": "npx auto-changelog -u --commit-limit false --ignore-commit-pattern '^((dev|chore|ci):|Release)' --stdout"
   },
   "github": {
     "release": true,
     "releaseName": "v${version}",
     "draft": false,
-    "autoGenerate": true
+    "autoGenerate": false,
+    "tokenRef": "GH_TOKEN"
   },
   "npm": {
-    "publish": true,
+    "publish": false,
     "publishPath": "."
   },
   "hooks": {
     "before:init": ["npm test", "npm run lint"],
+    "before:git": ["gh --version || (echo 'GitHub CLI not found. Install with: brew install gh' && exit 1)", "gh auth status || (echo 'GitHub CLI not authenticated. Run: gh auth login' && exit 1)"],
+    "after:bump": "npx auto-changelog -p --commit-limit false --ignore-commit-pattern '^((dev|chore|ci):|Release)' && git add CHANGELOG.md",
     "after:release": "echo Successfully released ${name} v${version} to ${repo.repository}."
   }
 }

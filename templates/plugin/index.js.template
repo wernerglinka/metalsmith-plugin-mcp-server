@@ -36,23 +36,30 @@ const defaults = {
 };
 
 /**
+ * Plugin options
+ * @typedef {Object} Options
+ * @property {string|string[]} pattern - Files to process
+ * @property {string|string[]} ignore - Files to ignore
+{% if hasAsyncProcessing %} * @property {boolean} [async=false] - Enable async processing
+ * @property {number} [batchSize=10] - Batch size for processing{% endif %}
+{% if hasBackgroundProcessing %} * @property {number} [workers=4] - Number of worker threads
+ * @property {boolean} [concurrent=true] - Enable concurrent processing{% endif %}
+{% if hasMetadataGeneration %} * @property {boolean} [metadata=true] - Generate metadata
+ * @property {string} [metadataKey='_{{ pluginNameShort }}'] - Metadata key{% endif %}
+ */
+
+/**
  * {{ description }}
  *
- * @param {Object} options - Plugin options
- * @param {string|string[]} options.pattern - Files to process
- * @param {string|string[]} options.ignore - Files to ignore
-{% if hasAsyncProcessing %} * @param {boolean} options.async - Enable async processing
- * @param {number} options.batchSize - Batch size for processing{% endif %}
-{% if hasBackgroundProcessing %} * @param {number} options.workers - Number of worker threads
- * @param {boolean} options.concurrent - Enable concurrent processing{% endif %}
-{% if hasMetadataGeneration %} * @param {boolean} options.metadata - Generate metadata
- * @param {string} options.metadataKey - Metadata key{% endif %}
- * @returns {Function} Metalsmith plugin
+ * @param {Options} options - Plugin options
+ * @returns {import('metalsmith').Plugin} Metalsmith plugin function
  */
 export default function {{ functionName }}(options = {}) {
+  // Normalize options with defaults
   const config = deepMerge(defaults, options);
   
-  return async function (files, metalsmith, done) {
+  // Return the actual plugin function (two-phase pattern)
+  const metalsmithPlugin = async function (files, metalsmith, done) {
     const debug = metalsmith.debug('{{ pluginName }}');
     debug('Starting {{ pluginName }} with options:', config);
     
@@ -144,6 +151,14 @@ export default function {{ functionName }}(options = {}) {
       done(error);
     }
   };
+
+  // Set function name for debugging (helps with stack traces and debugging)
+  Object.defineProperty(metalsmithPlugin, 'name', { 
+    value: '{{ functionName }}Plugin',
+    configurable: true 
+  });
+  
+  return metalsmithPlugin;
 }
 
 {% if pluginType == 'processor' %}

@@ -63,10 +63,11 @@ Uses exact strings only:
 
 ### Release Process
 
-- **Problem**: Recurring GitHub release automation failures
-- **Solution**: GitHub CLI integration in release-it hooks
-- **Benefit**: No more token issues, fully automated
-- **Requirement**: Developers need `gh CLI` installed for releases
+- **Problem**: Recurring GitHub release automation failures (token not persisting from hooks)
+- **Solution**: GitHub CLI integration at script level: `GH_TOKEN=$(gh auth token) release-it`
+- **Benefit**: No more token issues, fully automated GitHub releases
+- **Requirement**: Developers need `gh CLI` installed and authenticated
+- **Key Fix**: Environment variable must be set at script level in package.json, not in hooks
 
 ## User Workflows
 
@@ -152,13 +153,42 @@ npm run lint          # Code quality
 
 - Major feature release with validation improvements
 - All tests passing (62/62)
-- GitHub release automation fixed
+- GitHub release automation fixed with proper GitHub CLI integration
 - Ready for production use
+
+### Release Process Implementation
+
+The release scripts in package.json must use this pattern:
+
+```json
+{
+  "release:patch": "GH_TOKEN=$(gh auth token) release-it patch",
+  "release:minor": "GH_TOKEN=$(gh auth token) release-it minor",
+  "release:major": "GH_TOKEN=$(gh auth token) release-it major"
+}
+```
+
+The .release-it.json configuration uses:
+
+```json
+{
+  "github": {
+    "release": true,
+    "tokenRef": "GH_TOKEN"
+  }
+}
+```
+
+**Why this works**:
+
+- `$(gh auth token)` retrieves the token from GitHub CLI
+- Setting `GH_TOKEN=` at the script level makes it available to the entire release-it process
+- release-it reads `GH_TOKEN` via `tokenRef` and creates the GitHub release automatically
 
 ### Next Release Preparation
 
 - Expect fine-tuning based on user feedback
-- Test the new GitHub CLI release automation
+- The GitHub CLI release automation is now working properly
 - Monitor for any edge cases in validation logic
 
 ## Communication Style

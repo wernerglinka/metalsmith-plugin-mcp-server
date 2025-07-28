@@ -23,7 +23,8 @@ async function loadValidationConfig(pluginPath) {
         enabled: true,
         requiredDirs: ['src', 'test'],
         requiredFiles: ['src/index.js', 'README.md', 'package.json'],
-        recommendedDirs: ['src/utils', 'src/processors', 'test/fixtures']
+        recommendedDirs: ['src/utils', 'src/processors', 'test/fixtures'],
+        recommendedFiles: ['.release-it.json']
       },
       tests: {
         enabled: true,
@@ -38,7 +39,7 @@ async function loadValidationConfig(pluginPath) {
       packageJson: {
         namePrefix: 'metalsmith-', // Set to "" to disable prefix recommendation
         requiredScripts: ['test'],
-        recommendedScripts: ['lint', 'format', 'test:coverage']
+        recommendedScripts: ['lint', 'format', 'test:coverage', 'release:patch', 'release:minor', 'release:major']
       }
     },
     recommendations: {
@@ -88,7 +89,11 @@ function deepMerge(target, source) {
  * @returns {Promise<Object>} Tool response
  */
 export async function validatePluginTool(args) {
-  const { path: pluginPath, checks = ['structure', 'tests', 'docs', 'package-json'], functional = false } = args;
+  const {
+    path: pluginPath,
+    checks = ['structure', 'tests', 'docs', 'package-json', 'jsdoc', 'performance', 'security'],
+    functional = false
+  } = args;
 
   const results = {
     passed: [],
@@ -133,6 +138,18 @@ export async function validatePluginTool(args) {
         case 'coverage':
           await checkCoverage(pluginPath, results, functional, config);
           break;
+        case 'jsdoc':
+          await checkJSDoc(pluginPath, results, config);
+          break;
+        case 'performance':
+          await checkPerformance(pluginPath, results, config);
+          break;
+        case 'security':
+          await checkSecurity(pluginPath, results, config);
+          break;
+        case 'integration':
+          await checkIntegration(pluginPath, results, config);
+          break;
       }
     }
 
@@ -166,6 +183,7 @@ export async function validatePluginTool(args) {
 async function checkStructure(pluginPath, results, functional = false, config) {
   const requiredDirs = config?.rules?.structure?.requiredDirs || ['src', 'test'];
   const requiredFiles = config?.rules?.structure?.requiredFiles || ['src/index.js', 'README.md', 'package.json'];
+  const recommendedFiles = config?.rules?.structure?.recommendedFiles || ['.release-it.json'];
 
   // Check directories
   for (const dir of requiredDirs) {
@@ -180,7 +198,7 @@ async function checkStructure(pluginPath, results, functional = false, config) {
     }
   }
 
-  // Check files
+  // Check required files
   for (const file of requiredFiles) {
     const filePath = path.join(pluginPath, file);
     try {
@@ -188,6 +206,23 @@ async function checkStructure(pluginPath, results, functional = false, config) {
       results.passed.push(`✓ File ${file} exists`);
     } catch {
       results.failed.push(`✗ Missing required file: ${file}`);
+    }
+  }
+
+  // Check recommended files
+  for (const file of recommendedFiles) {
+    const filePath = path.join(pluginPath, file);
+    try {
+      await fs.access(filePath);
+      results.passed.push(`✓ Recommended file ${file} exists`);
+    } catch {
+      if (file === '.release-it.json') {
+        results.recommendations.push(
+          `💡 Consider adding ${file} for automated releases. Run: npx metalsmith-plugin-mcp-server scaffold ${pluginPath} .release-it.json release-config`
+        );
+      } else {
+        results.recommendations.push(`💡 Consider adding recommended file: ${file}`);
+      }
     }
   }
 
@@ -644,10 +679,25 @@ async function checkPackageJson(pluginPath, results, config) {
           );
         } else if (script === 'test:coverage') {
           results.recommendations.push(`💡 Consider adding script: ${script}. Example: "test:coverage": "c8 npm test"`);
+        } else if (script.startsWith('release:')) {
+          const releaseType = script.split(':')[1];
+          results.recommendations.push(
+            `💡 Consider adding script: ${script}. Example: "${script}": "release-it ${releaseType}"`
+          );
         } else {
           results.recommendations.push(`💡 Consider adding script: ${script}`);
         }
       }
+    }
+
+    // Check for release-it dependency
+    const hasReleaseIt = packageJson.devDependencies?.['release-it'] || packageJson.dependencies?.['release-it'];
+    if (hasReleaseIt) {
+      results.passed.push('✓ release-it dependency found');
+    } else {
+      results.recommendations.push(
+        '💡 Consider adding release-it for automated releases. Run: npm install --save-dev release-it'
+      );
     }
   } catch (error) {
     results.failed.push(`✗ Error checking package.json: ${error.message}`);
@@ -686,6 +736,474 @@ async function checkEslint(pluginPath, results) {
     results.passed.push('✓ Using modern ESLint flat config');
   } catch {
     // Not using flat config
+  }
+}
+
+/**
+ * Check JSDoc documentation quality
+ */
+async function checkJSDoc(pluginPath, results, config) {
+  try {
+    const mainFilePath = path.join(pluginPath, 'src/index.js');
+    const mainFileContent = await fs.readFile(mainFilePath, 'utf-8');
+
+    // Check for typedef definitions (Options type)
+    const hasTypedef = /@typedef\s+\{[^}]*\}\s+Options/i.test(mainFileContent);
+    if (hasTypedef) {
+      results.passed.push('✓ JSDoc @typedef for Options found');
+    } else {
+      results.recommendations.push(
+        '💡 Consider adding @typedef for Options type to improve IDE support. See template: templates/plugin/index.js.template'
+      );
+    }
+
+    // Check for proper function documentation
+    const functionMatches = mainFileContent.match(/export\s+default\s+function\s+\w+/g) || [];
+    const functionDocs = mainFileContent.match(/\/\*\*[\s\S]*?\*\/\s*export\s+default\s+function/g) || [];
+
+    if (functionMatches.length > 0) {
+      if (functionDocs.length >= functionMatches.length) {
+        results.passed.push('✓ Main export function has JSDoc documentation');
+      } else {
+        results.recommendations.push('💡 Add JSDoc documentation to main export function with @param and @returns');
+      }
+    }
+
+    // Check for return type annotations
+    const hasReturnType = /@returns?\s+\{[^}]*import\(['"]metalsmith['"]\)\.Plugin\}/i.test(mainFileContent);
+    if (hasReturnType) {
+      results.passed.push('✓ JSDoc return type annotation includes Metalsmith.Plugin type');
+    } else {
+      results.recommendations.push("💡 Use @returns {import('metalsmith').Plugin} for better IDE support");
+    }
+
+    // Check for parameter documentation
+    const hasParamDocs = /@param\s+\{[^}]+\}/i.test(mainFileContent);
+    if (hasParamDocs) {
+      results.passed.push('✓ JSDoc parameter documentation found');
+    } else {
+      results.recommendations.push('💡 Add @param documentation for function parameters');
+    }
+
+    // Check for Object.defineProperty usage for function names
+    const hasDefineProperty = /Object\.defineProperty\([^,]+,\s*['"]name['"],/.test(mainFileContent);
+    if (hasDefineProperty) {
+      results.passed.push('✓ Function name set with Object.defineProperty for debugging');
+    } else {
+      results.recommendations.push(
+        '💡 Use Object.defineProperty to set function name for better debugging. See template pattern'
+      );
+    }
+
+    // Check for two-phase pattern documentation
+    const hasTwoPhaseComment = /two-phase|factory.*return.*plugin|return.*actual.*plugin/i.test(mainFileContent);
+    if (hasTwoPhaseComment) {
+      results.passed.push('✓ Two-phase plugin pattern documented');
+    } else {
+      results.recommendations.push('💡 Document the two-phase plugin pattern in comments for clarity');
+    }
+
+    // Check for utility files JSDoc if they exist
+    const utilFiles = await glob('src/utils/**/*.js', { cwd: pluginPath });
+    let utilDocsCount = 0;
+
+    for (const utilFile of utilFiles) {
+      try {
+        const utilContent = await fs.readFile(path.join(pluginPath, utilFile), 'utf-8');
+        if (utilContent.includes('/**')) {
+          utilDocsCount++;
+        }
+      } catch {
+        // Continue
+      }
+    }
+
+    if (utilFiles.length > 0) {
+      if (utilDocsCount >= utilFiles.length * 0.8) {
+        results.passed.push('✓ Utility files have good JSDoc coverage');
+      } else {
+        results.recommendations.push('💡 Add JSDoc documentation to utility functions for better maintainability');
+      }
+    }
+  } catch (error) {
+    results.warnings.push(`⚠ Could not check JSDoc documentation: ${error.message}`);
+  }
+}
+
+/**
+ * Check performance optimization patterns
+ */
+async function checkPerformance(pluginPath, results, config) {
+  try {
+    const mainFilePath = path.join(pluginPath, 'src/index.js');
+    const mainFileContent = await fs.readFile(mainFilePath, 'utf-8');
+
+    // Check for RegExp pre-compilation outside loops
+    const hasRegExpInLoop =
+      /for\s*\([^}]*\{[^}]*new\s+RegExp|while\s*\([^}]*\{[^}]*new\s+RegExp|forEach\s*\([^}]*\{[^}]*new\s+RegExp/s.test(
+        mainFileContent
+      );
+    if (hasRegExpInLoop) {
+      results.recommendations.push('💡 Consider pre-compiling RegExp patterns outside loops for better performance');
+    } else {
+      // Check if RegExp is used appropriately
+      const hasRegExp = /new\s+RegExp|\/[^/\n]+\/[gimuy]*/.test(mainFileContent);
+      if (hasRegExp) {
+        results.passed.push('✓ RegExp patterns appear to be optimally placed');
+      }
+    }
+
+    // Check for efficient file filtering before expensive operations
+    const hasFileFiltering = /Object\.keys\(files\)\.filter|metalsmith\.match|\.filter\(/.test(mainFileContent);
+    const hasExpensiveOperations = /await|Promise|Buffer|readFile|writeFile|transform|process/.test(mainFileContent);
+
+    if (hasExpensiveOperations && hasFileFiltering) {
+      results.passed.push('✓ File filtering detected before expensive operations');
+    } else if (hasExpensiveOperations && !hasFileFiltering) {
+      results.recommendations.push('💡 Consider filtering files before expensive operations to improve performance');
+    }
+
+    // Check for Set/Map usage for lookups
+    const hasSetOrMap = /new\s+(Set|Map)\(|\.has\(|\.get\(/.test(mainFileContent);
+    const hasArrayIncludes = /\.includes\(/.test(mainFileContent);
+
+    if (hasArrayIncludes && !hasSetOrMap) {
+      results.recommendations.push(
+        '💡 Consider using Set/Map for frequent lookups instead of Array.includes() for better performance'
+      );
+    } else if (hasSetOrMap) {
+      results.passed.push('✓ Efficient Set/Map usage detected for lookups');
+    }
+
+    // Check for caching computed values
+    const hasCaching = /cache|cached|memoiz|store.*result|const.*=.*compute/.test(mainFileContent);
+    const hasComputations = /calculate|compute|process|transform|parse/.test(mainFileContent);
+
+    if (hasComputations && hasCaching) {
+      results.passed.push('✓ Computed value caching detected');
+    } else if (hasComputations) {
+      results.recommendations.push('💡 Consider caching computed values that are reused for better performance');
+    }
+
+    // Check for direct property access vs deep lookups
+    const hasDeepAccess = /\w+\.\w+\.\w+\.\w+/.test(mainFileContent);
+    if (hasDeepAccess) {
+      results.recommendations.push(
+        '💡 Consider destructuring deeply nested properties for better performance and readability'
+      );
+    } else {
+      const hasDestructuring = /const\s*\{[^}]+\}\s*=/.test(mainFileContent);
+      if (hasDestructuring) {
+        results.passed.push('✓ Efficient property access patterns detected');
+      }
+    }
+
+    // Check for batch processing patterns
+    const hasBatchProcessing = /batch|chunk|slice\(|Promise\.all/.test(mainFileContent);
+    const hasFileIteration = /Object\.keys\(files\)\.forEach|for.*in\s+files/.test(mainFileContent);
+
+    if (hasFileIteration && hasBatchProcessing) {
+      results.passed.push('✓ Batch processing patterns detected for file handling');
+    } else if (hasFileIteration) {
+      results.recommendations.push(
+        '💡 Consider batch processing for large file sets. Use Promise.all() with batching for async operations'
+      );
+    }
+
+    // Check for unnecessary async/await usage
+    const unnecessaryAwait =
+      /await.*(?:return|resolve)\s*\([^)]*\)|await\s+(?:Promise\.resolve|true|false|null|\d+)/.test(mainFileContent);
+    if (unnecessaryAwait) {
+      results.recommendations.push('💡 Remove unnecessary await keywords on non-promise values');
+    }
+
+    // Check for synchronous operations in done() callback
+    const hasSyncInDone = /done\(\)(?!\s*;?\s*}\s*catch)/.test(mainFileContent);
+    const hasAsyncOperations = /await|Promise|setTimeout|setImmediate/.test(mainFileContent);
+
+    if (hasAsyncOperations && hasSyncInDone) {
+      results.passed.push('✓ Proper done() callback usage for async operations');
+    } else if (!hasAsyncOperations && hasSyncInDone) {
+      results.passed.push('✓ Direct done() call for synchronous operations');
+    }
+
+    // Check for memory-efficient buffer handling
+    const hasBufferOperations = /Buffer\.from|\.toString\(|contents/.test(mainFileContent);
+    const hasStringConcatenation = /\+\s*['"`]|['"`]\s*\+/.test(mainFileContent);
+
+    if (hasBufferOperations && hasStringConcatenation) {
+      results.recommendations.push(
+        '💡 Consider using Buffer methods instead of string concatenation for file content manipulation'
+      );
+    } else if (hasBufferOperations) {
+      results.passed.push('✓ Efficient Buffer handling detected');
+    }
+  } catch (error) {
+    results.warnings.push(`⚠ Could not check performance patterns: ${error.message}`);
+  }
+}
+
+/**
+ * Check security best practices
+ */
+async function checkSecurity(pluginPath, results, config) {
+  try {
+    const mainFilePath = path.join(pluginPath, 'src/index.js');
+    const mainFileContent = await fs.readFile(mainFilePath, 'utf-8');
+
+    // Check for dangerous operations
+    const dangerousOperations = [
+      { pattern: /eval\s*\(/, message: 'eval() usage detected - consider safer alternatives' },
+      { pattern: /Function\s*\(/, message: 'Function constructor usage detected - potential security risk' },
+      { pattern: /exec\s*\(|spawn\s*\(/, message: 'Shell execution detected - ensure proper input sanitization' },
+      {
+        pattern: /innerHTML|outerHTML/,
+        message: 'innerHTML usage detected - potential XSS risk if handling user content'
+      }
+    ];
+
+    for (const check of dangerousOperations) {
+      if (check.pattern.test(mainFileContent)) {
+        results.warnings.push(`⚠ Security concern: ${check.message}`);
+      }
+    }
+
+    // Check for input sanitization patterns
+    const hasInputValidation = /validate|sanitize|escape|clean|trim|normalize/.test(mainFileContent);
+    const hasUserInput = /options|config|params|input|user/.test(mainFileContent);
+
+    if (hasUserInput && hasInputValidation) {
+      results.passed.push('✓ Input validation/sanitization patterns detected');
+    } else if (hasUserInput) {
+      results.recommendations.push('💡 Consider adding input validation/sanitization for user-provided options');
+    }
+
+    // Check for safe file path handling
+    const hasPathOperations = /path\.join|path\.resolve|\.\.\/|\.\.\\/.test(mainFileContent);
+    const hasPathSecurity = /path\.normalize|path\.resolve.*cwd|isAbsolute|startsWith/.test(mainFileContent);
+
+    if (hasPathOperations && hasPathSecurity) {
+      results.passed.push('✓ Safe file path handling detected');
+    } else if (hasPathOperations) {
+      results.recommendations.push('💡 Use path.resolve() and validate file paths to prevent directory traversal');
+    }
+
+    // Check for sensitive information exposure
+    const sensitivePatternsInCode = [
+      { pattern: /password|secret|key|token/i, message: 'Potential sensitive information in code' },
+      { pattern: /api_key|apikey|api-key/i, message: 'API key references in code' },
+      {
+        pattern: /process\.env\.\w+.*console\.log|debug.*process\.env/i,
+        message: 'Environment variables in debug output'
+      }
+    ];
+
+    for (const check of sensitivePatternsInCode) {
+      if (check.pattern.test(mainFileContent)) {
+        results.warnings.push(`⚠ Security concern: ${check.message} - ensure no secrets are logged or exposed`);
+      }
+    }
+
+    // Check for proper error handling
+    const hasErrorHandling = /try\s*\{[\s\S]*catch|\.catch\s*\(/.test(mainFileContent);
+    const hasAsyncOperations = /await|Promise|async/.test(mainFileContent);
+
+    if (hasAsyncOperations && hasErrorHandling) {
+      results.passed.push('✓ Error handling detected for async operations');
+    } else if (hasAsyncOperations) {
+      results.recommendations.push('💡 Add proper error handling for async operations to prevent information leakage');
+    }
+
+    // Check for buffer overflow protection
+    const hasBufferLimits = /maxBuffer|limit|size.*check|length.*validate/.test(mainFileContent);
+    const hasBufferOperations = /Buffer\.from|\.toString\(|readFile|writeFile/.test(mainFileContent);
+
+    if (hasBufferOperations && hasBufferLimits) {
+      results.passed.push('✓ Buffer size validation detected');
+    } else if (hasBufferOperations) {
+      results.recommendations.push('💡 Consider adding buffer size limits to prevent memory exhaustion attacks');
+    }
+
+    // Check for regex denial of service (ReDoS) patterns
+    const regexPatterns = mainFileContent.match(/\/[^/\n]+\/[gimuy]*/g) || [];
+    const dangerousRegexPatterns = regexPatterns.filter((pattern) => {
+      // Check for common ReDoS patterns: nested quantifiers, alternation with overlap
+      return (
+        /\(\.\*\)[\*\+]|\(\.\+\)[\*\+]|\|.*\|.*\|/.test(pattern) ||
+        /\([^)]*\*[^)]*\)\*|\([^)]*\+[^)]*\)\+/.test(pattern)
+      );
+    });
+
+    if (dangerousRegexPatterns.length > 0) {
+      results.warnings.push('⚠ Potential ReDoS vulnerability in regex patterns - test with long inputs');
+    } else if (regexPatterns.length > 0) {
+      results.passed.push('✓ Regex patterns appear safe from ReDoS attacks');
+    }
+
+    // Check for secure temp file handling
+    const hasTempFiles = /tmp|temp|\.tmp\.|\/tmp\//.test(mainFileContent);
+    const hasSecureTempHandling = /mkdtemp|createWriteStream.*mode|fs\.open.*mode/.test(mainFileContent);
+
+    if (hasTempFiles && hasSecureTempHandling) {
+      results.passed.push('✓ Secure temporary file handling detected');
+    } else if (hasTempFiles) {
+      results.recommendations.push('💡 Use secure temp file creation with proper permissions (e.g., fs.mkdtemp)');
+    }
+
+    // Check for dependency security
+    try {
+      const packageJson = JSON.parse(await fs.readFile(path.join(pluginPath, 'package.json'), 'utf-8'));
+      const allDeps = { ...packageJson.dependencies, ...packageJson.devDependencies };
+
+      // Check for known risky dependencies (this is a basic check)
+      const riskyDeps = ['eval', 'vm2', 'serialize-javascript'];
+      const foundRiskyDeps = Object.keys(allDeps).filter((dep) => riskyDeps.includes(dep));
+
+      if (foundRiskyDeps.length > 0) {
+        results.warnings.push(`⚠ Potentially risky dependencies detected: ${foundRiskyDeps.join(', ')}`);
+      } else {
+        results.passed.push('✓ No obviously risky dependencies detected');
+      }
+
+      // Check for outdated dependency patterns
+      const hasAuditScript = packageJson.scripts?.audit || packageJson.scripts?.['audit:fix'];
+      if (hasAuditScript) {
+        results.passed.push('✓ Security audit script defined');
+      } else {
+        results.recommendations.push('💡 Add "audit": "npm audit" script to package.json for security monitoring');
+      }
+    } catch {
+      // Could not read package.json
+    }
+  } catch (error) {
+    results.warnings.push(`⚠ Could not check security patterns: ${error.message}`);
+  }
+}
+
+/**
+ * Check integration with common Metalsmith plugins
+ */
+async function checkIntegration(pluginPath, results, config) {
+  try {
+    const mainFilePath = path.join(pluginPath, 'src/index.js');
+    const mainFileContent = await fs.readFile(mainFilePath, 'utf-8');
+
+    // Check for metadata compatibility patterns
+    const respectsMetadata = /files\[.*?\]\.(?!contents)/g.test(mainFileContent);
+    const modifiesMetadata = /files\[.*?\]\.\w+\s*=|Object\.assign\(files\[.*?\]/.test(mainFileContent);
+
+    if (respectsMetadata || modifiesMetadata) {
+      results.passed.push('✓ Plugin respects/modifies file metadata appropriately');
+    } else {
+      results.recommendations.push(
+        '💡 Ensure plugin works with file metadata from other plugins (e.g., frontmatter, collections)'
+      );
+    }
+
+    // Check for metalsmith.metadata() usage
+    const usesGlobalMetadata = /metalsmith\.metadata\(\)/.test(mainFileContent);
+    if (usesGlobalMetadata) {
+      results.passed.push('✓ Plugin accesses global metadata');
+    } else {
+      results.recommendations.push('💡 Consider using metalsmith.metadata() to access site-wide information');
+    }
+
+    // Check for common plugin compatibility patterns
+    const commonPluginPatterns = [
+      { name: 'layouts', pattern: /layout|template/, check: 'layout property handling' },
+      { name: 'collections', pattern: /collection|group/, check: 'collection membership' },
+      { name: 'markdown', pattern: /\.md|markdown/, check: 'markdown file processing' },
+      { name: 'frontmatter', pattern: /frontmatter|yaml|title|date/, check: 'frontmatter data usage' }
+    ];
+
+    for (const plugin of commonPluginPatterns) {
+      if (plugin.pattern.test(mainFileContent)) {
+        results.passed.push(`✓ Plugin appears compatible with ${plugin.name} (${plugin.check})`);
+      }
+    }
+
+    // Check for proper file extension handling
+    const hasExtensionLogic = /\.endsWith\(|path\.extname|\.ext\b|\.extension/.test(mainFileContent);
+    if (hasExtensionLogic) {
+      results.passed.push('✓ Plugin handles file extensions properly');
+    } else {
+      results.recommendations.push('💡 Consider adding file extension validation for better plugin integration');
+    }
+
+    // Check for plugin ordering considerations
+    const hasOrderingDocs = await checkForOrderingDocumentation(pluginPath);
+    if (hasOrderingDocs) {
+      results.passed.push('✓ Plugin documentation includes ordering considerations');
+    } else {
+      results.recommendations.push('💡 Document plugin ordering requirements in README (before/after other plugins)');
+    }
+
+    // Check test files for integration examples
+    const testFiles = await glob('test/**/*.{js,cjs,mjs}', { cwd: pluginPath });
+    let hasIntegrationTests = false;
+
+    for (const testFile of testFiles) {
+      try {
+        const testContent = await fs.readFile(path.join(pluginPath, testFile), 'utf-8');
+        if (/metalsmith-|@metalsmith\/|layouts|markdown|collections/.test(testContent)) {
+          hasIntegrationTests = true;
+          break;
+        }
+      } catch {
+        // Continue
+      }
+    }
+
+    if (hasIntegrationTests) {
+      results.passed.push('✓ Integration tests with other plugins detected');
+    } else {
+      results.recommendations.push('💡 Consider adding integration tests with common Metalsmith plugins');
+    }
+
+    // Check for build pipeline examples in README
+    try {
+      const readmePath = path.join(pluginPath, 'README.md');
+      const readme = await fs.readFile(readmePath, 'utf-8');
+
+      const hasPipelineExample = /\.use\([^)]*\)[\s\S]*\.use\([^)]*\)/.test(readme);
+      if (hasPipelineExample) {
+        results.passed.push('✓ README includes plugin pipeline examples');
+      } else {
+        results.recommendations.push(
+          '💡 Add complete Metalsmith pipeline examples to README showing integration with other plugins'
+        );
+      }
+
+      // Check for common plugin mentions
+      const mentionsCommonPlugins = /@metalsmith\/|metalsmith-layouts|metalsmith-markdown|metalsmith-collections/.test(
+        readme
+      );
+      if (mentionsCommonPlugins) {
+        results.passed.push('✓ Documentation references common Metalsmith plugins');
+      } else {
+        results.recommendations.push('💡 Consider mentioning compatibility with common plugins in documentation');
+      }
+    } catch {
+      // Could not read README
+    }
+  } catch (error) {
+    results.warnings.push(`⚠ Could not check integration patterns: ${error.message}`);
+  }
+}
+
+/**
+ * Check for plugin ordering documentation
+ */
+async function checkForOrderingDocumentation(pluginPath) {
+  try {
+    const readmePath = path.join(pluginPath, 'README.md');
+    const readme = await fs.readFile(readmePath, 'utf-8');
+
+    // Look for ordering-related keywords
+    const orderingKeywords = /order|before|after|sequence|pipeline|placement|position/i;
+    return orderingKeywords.test(readme);
+  } catch {
+    return false;
   }
 }
 
