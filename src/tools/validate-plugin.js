@@ -139,16 +139,16 @@ export async function validatePluginTool(args) {
           await checkCoverage(pluginPath, results, functional, config);
           break;
         case 'jsdoc':
-          await checkJSDoc(pluginPath, results, config);
+          await checkJSDoc(pluginPath, results);
           break;
         case 'performance':
-          await checkPerformance(pluginPath, results, config);
+          await checkPerformance(pluginPath, results);
           break;
         case 'security':
-          await checkSecurity(pluginPath, results, config);
+          await checkSecurity(pluginPath, results);
           break;
         case 'integration':
-          await checkIntegration(pluginPath, results, config);
+          await checkIntegration(pluginPath, results);
           break;
       }
     }
@@ -742,7 +742,7 @@ async function checkEslint(pluginPath, results) {
 /**
  * Check JSDoc documentation quality
  */
-async function checkJSDoc(pluginPath, results, config) {
+async function checkJSDoc(pluginPath, results) {
   try {
     const mainFilePath = path.join(pluginPath, 'src/index.js');
     const mainFileContent = await fs.readFile(mainFilePath, 'utf-8');
@@ -833,7 +833,7 @@ async function checkJSDoc(pluginPath, results, config) {
 /**
  * Check performance optimization patterns
  */
-async function checkPerformance(pluginPath, results, config) {
+async function checkPerformance(pluginPath, results) {
   try {
     const mainFilePath = path.join(pluginPath, 'src/index.js');
     const mainFileContent = await fs.readFile(mainFilePath, 'utf-8');
@@ -946,7 +946,7 @@ async function checkPerformance(pluginPath, results, config) {
 /**
  * Check security best practices
  */
-async function checkSecurity(pluginPath, results, config) {
+async function checkSecurity(pluginPath, results) {
   try {
     const mainFilePath = path.join(pluginPath, 'src/index.js');
     const mainFileContent = await fs.readFile(mainFilePath, 'utf-8');
@@ -1029,8 +1029,7 @@ async function checkSecurity(pluginPath, results, config) {
     const dangerousRegexPatterns = regexPatterns.filter((pattern) => {
       // Check for common ReDoS patterns: nested quantifiers, alternation with overlap
       return (
-        /\(\.\*\)[\*\+]|\(\.\+\)[\*\+]|\|.*\|.*\|/.test(pattern) ||
-        /\([^)]*\*[^)]*\)\*|\([^)]*\+[^)]*\)\+/.test(pattern)
+        /\(\.\*\)[*+]|\(\.\+\)[*+]|\|.*\|.*\|/.test(pattern) || /\([^)]*\*[^)]*\)\*|\([^)]*\+[^)]*\)\+/.test(pattern)
       );
     });
 
@@ -1083,7 +1082,7 @@ async function checkSecurity(pluginPath, results, config) {
 /**
  * Check integration with common Metalsmith plugins
  */
-async function checkIntegration(pluginPath, results, config) {
+async function checkIntegration(pluginPath, results) {
   try {
     const mainFilePath = path.join(pluginPath, 'src/index.js');
     const mainFileContent = await fs.readFile(mainFilePath, 'utf-8');
