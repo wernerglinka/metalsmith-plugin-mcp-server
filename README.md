@@ -68,7 +68,7 @@ Check existing plugins against quality standards:
 ```js
 await mcp.call('validate-plugin', {
   path: './metalsmith-my-plugin',
-  checks: ['structure', 'tests', 'docs', 'package-json', 'eslint', 'coverage']
+  checks: ['structure', 'tests', 'docs', 'package-json', 'jsdoc', 'performance', 'security', 'integration']
 });
 ```
 
@@ -78,6 +78,10 @@ Validation checks include:
 - **Tests**: Test coverage and fixture setup
 - **Documentation**: README sections, examples, and badges
 - **Package.json**: Required fields and conventions
+- **JSDoc**: Type definitions, parameter documentation, and return types
+- **Performance**: RegExp caching, efficient filtering, Set/Map usage
+- **Security**: Input sanitization, safe file operations, dependency security
+- **Integration**: Compatibility with common Metalsmith plugins
 - **ESLint**: Modern configuration presence
 - **Coverage**: Test coverage analysis
 
@@ -125,6 +129,9 @@ You can use this tool in two ways:
 The fastest way to get started is using npx directly:
 
 ```bash
+# Show version information
+npx metalsmith-plugin-mcp-server version
+
 # Show help and available commands
 npx metalsmith-plugin-mcp-server help
 

@@ -4,9 +4,12 @@
 
 The fastest way to use the MCP server is with npx:
 
-> **New in v0.5.0**: Plugin names are used exactly as provided (no auto-prefixing), and descriptions are required for all new plugins.
+> **New in v0.8.0**: Enhanced validation with JSDoc, performance, security, and integration checks.
 
 ```bash
+# Show version information
+npx metalsmith-plugin-mcp-server version
+
 # Show available commands
 npx metalsmith-plugin-mcp-server --help
 
