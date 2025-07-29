@@ -23,14 +23,6 @@ Or use directly with npx (no installation required):
 npx metalsmith-plugin-mcp-server --help
 ```
 
-### Prerequisites
-
-For dependency updates, you'll also need:
-
-```bash
-npm install -g npm-check-updates
-```
-
 ## MCP Tools
 
 The MCP server provides four main tools:
@@ -109,7 +101,7 @@ await mcp.call('generate-configs', {
 
 ### 4. Dependency Updates
 
-Update dependencies in Metalsmith plugins using npm-check-updates:
+Update dependencies in Metalsmith plugins using npm's built-in commands:
 
 ```js
 await mcp.call('update-deps', {
@@ -126,7 +118,6 @@ Features:
 - **Batch Processing**: Process all plugins in a directory when run from parent folder
 - **Safety First**: Only updates minor/patch versions by default (no breaking changes)
 - **Comprehensive Reporting**: Shows which plugins had updates, failures, and next steps
-- **Prerequisites**: Requires `npm install -g npm-check-updates`
 
 ## Usage
 
@@ -161,7 +152,7 @@ npx metalsmith-plugin-mcp-server validate ./my-plugin
 # Generate configuration files
 npx metalsmith-plugin-mcp-server configs ./my-plugin
 
-# Update dependencies (requires: npm install -g npm-check-updates)
+# Update dependencies
 npx metalsmith-plugin-mcp-server update-deps ./my-plugin
 
 # Update all plugins in a directory
@@ -332,12 +323,24 @@ Add to your configuration file at `~/Library/Application Support/Claude/claude_d
 
 **For Claude Code**
 
-After installing the MCP server as above, configure it using Claude Code's MCP management
-commands:
+You can use the MCP server in two ways:
+
+**Option 1: Local Installation** (as described above)
+
+After installing the MCP server locally, configure it using Claude Code's MCP management commands:
 
 ```bash
 # Add the MCP server to Claude Code
 claude mcp add metalsmith-plugin /Users/yourusername/metalsmith-mcp-tools/node_modules/metalsmith-plugin-mcp-server/src/index.js
+```
+
+**Option 2: Using npx** (no installation required)
+
+You can run the MCP server directly with npx:
+
+```bash
+# Add the MCP server using npx
+claude mcp add metalsmith-plugin "npx metalsmith-plugin-mcp-server@latest server"
 ```
 
 **Verify it was added correctly!**
@@ -348,9 +351,10 @@ claude mcp list
 
 Important Notes:
 
-- Use the full absolute path to the src/index.js file (not just the directory)
-- Path is case-sensitive - use /Users (uppercase U) on macOS
-- Replace yourusername with your actual username
+- For local installation: Use the full absolute path to the src/index.js file (not just the directory)
+- For npx: The command must be exactly as shown with "server" at the end
+- Path is case-sensitive - use /Users (uppercase U) on macOS for local paths
+- Replace yourusername with your actual username for local installation
 - If using NVM, the path might be different - use which node to find your Node.js path
 
 > **Restart Required!**

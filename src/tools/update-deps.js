@@ -4,7 +4,7 @@ import path from 'path';
 import chalk from 'chalk';
 
 /**
- * Update dependencies using npm-check-updates
+ * Update dependencies using npm's built-in commands
  * @param {Object} args - Tool arguments
  * @param {string} args.path - Plugin directory path or parent directory
  * @param {boolean} args.major - Include major version updates
@@ -27,9 +27,6 @@ export async function updateDepsTool(args) {
   const results = [];
 
   try {
-    // Check if ncu is available
-    await checkNcuAvailable();
-
     // Determine if we're processing a single plugin or multiple plugins
     const plugins = await findPlugins(targetPath);
 
@@ -84,35 +81,6 @@ export async function updateDepsTool(args) {
       isError: true
     };
   }
-}
-
-/**
- * Check if npm-check-updates is available
- */
-function checkNcuAvailable() {
-  return new Promise((resolve, reject) => {
-    const child = spawn('ncu', ['--version'], { stdio: 'pipe' });
-
-    child.on('error', (error) => {
-      if (error.code === 'ENOENT') {
-        reject(
-          new Error(
-            'npm-check-updates (ncu) is not installed. Please install it with: npm install -g npm-check-updates'
-          )
-        );
-      } else {
-        reject(error);
-      }
-    });
-
-    child.on('exit', (code) => {
-      if (code === 0) {
-        resolve();
-      } else {
-        reject(new Error('npm-check-updates is not working properly'));
-      }
-    });
-  });
 }
 
 /**
@@ -193,52 +161,14 @@ async function findPluginSubdirectories(parentPath) {
 }
 
 /**
- * Update dependencies for a single plugin
+ * Get outdated dependencies using npm outdated
  */
-// eslint-disable-next-line require-await
-async function updatePluginDeps(pluginPath, options) {
-  const { major, interactive, dryRun } = options;
-
+async function getOutdatedDeps(pluginPath) {
   return new Promise((resolve) => {
-    const args = [];
-
-    // Build ncu command arguments
-    if (!major) {
-      args.push('--target', 'minor');
-    }
-
-    if (interactive) {
-      args.push('--interactive');
-    }
-
-    if (!dryRun) {
-      args.push('--upgrade');
-    }
-
-    // Add format for better output
-    args.push('--format', 'group');
-
-    // Add timeout to prevent hanging
-    args.push('--timeout', '30000');
-
-    const child = spawn('ncu', args, {
+    const child = spawn('npm', ['outdated', '--json'], {
       cwd: pluginPath,
       stdio: 'pipe'
     });
-
-    // Set a timeout to prevent hanging
-    const timeout = setTimeout(() => {
-      const pluginName = path.basename(pluginPath);
-      child.kill('SIGTERM');
-      resolve({
-        plugin: pluginName,
-        path: pluginPath,
-        success: false,
-        output: '',
-        error: 'Command timed out after 60 seconds',
-        hasUpdates: false
-      });
-    }, 60000);
 
     let stdout = '';
     let stderr = '';
@@ -252,30 +182,189 @@ async function updatePluginDeps(pluginPath, options) {
     });
 
     child.on('exit', (code) => {
-      clearTimeout(timeout);
-      const pluginName = path.basename(pluginPath);
-
-      resolve({
-        plugin: pluginName,
-        path: pluginPath,
-        success: code === 0,
-        output: stdout,
-        error: stderr,
-        hasUpdates: stdout.includes('upgraded') || stdout.includes('→')
-      });
+      // npm outdated returns exit code 1 when there are outdated deps
+      // This is expected behavior, not an error
+      if (code === 0 || code === 1) {
+        try {
+          const outdated = stdout ? JSON.parse(stdout) : {};
+          resolve({
+            success: true,
+            outdated,
+            error: null
+          });
+        } catch (error) {
+          resolve({
+            success: false,
+            outdated: {},
+            error: `Failed to parse npm outdated output: ${error.message}`
+          });
+        }
+      } else {
+        resolve({
+          success: false,
+          outdated: {},
+          error: stderr || 'Failed to check outdated dependencies'
+        });
+      }
     });
 
     child.on('error', (error) => {
-      clearTimeout(timeout);
-      const pluginName = path.basename(pluginPath);
-
       resolve({
+        success: false,
+        outdated: {},
+        error: error.message
+      });
+    });
+  });
+}
+
+/**
+ * Update dependencies for a single plugin
+ */
+async function updatePluginDeps(pluginPath, options) {
+  const { major, dryRun } = options;
+  const pluginName = path.basename(pluginPath);
+
+  try {
+    // First, check what's outdated
+    const outdatedResult = await getOutdatedDeps(pluginPath);
+
+    if (!outdatedResult.success) {
+      return {
         plugin: pluginName,
         path: pluginPath,
         success: false,
         output: '',
-        error: error.message,
+        error: outdatedResult.error,
         hasUpdates: false
+      };
+    }
+
+    const outdated = outdatedResult.outdated;
+    const deps = Object.keys(outdated);
+
+    if (deps.length === 0) {
+      return {
+        plugin: pluginName,
+        path: pluginPath,
+        success: true,
+        output: 'All dependencies are up to date',
+        error: '',
+        hasUpdates: false
+      };
+    }
+
+    // Filter dependencies based on major flag
+    const depsToUpdate = [];
+    const updateInfo = [];
+
+    for (const dep of deps) {
+      const info = outdated[dep];
+      const current = info.current;
+      const wanted = info.wanted;
+      const latest = info.latest;
+
+      // Determine if this is a major update
+      const currentMajor = current ? parseInt(current.split('.')[0]) : 0;
+      const latestMajor = latest ? parseInt(latest.split('.')[0]) : 0;
+      const isMajor = latestMajor > currentMajor;
+
+      if (major || !isMajor) {
+        const targetVersion = major ? latest : wanted;
+        if (targetVersion && targetVersion !== current) {
+          depsToUpdate.push(`${dep}@${targetVersion}`);
+          updateInfo.push(`${dep}: ${current} → ${targetVersion}${isMajor ? ' (major)' : ''}`);
+        }
+      } else if (wanted !== current) {
+        // For non-major updates when major flag is false
+        depsToUpdate.push(`${dep}@${wanted}`);
+        updateInfo.push(`${dep}: ${current} → ${wanted}`);
+      }
+    }
+
+    if (depsToUpdate.length === 0) {
+      return {
+        plugin: pluginName,
+        path: pluginPath,
+        success: true,
+        output: major ? 'All dependencies are up to date' : 'No minor/patch updates available',
+        error: '',
+        hasUpdates: false
+      };
+    }
+
+    // If dry run, just report what would be updated
+    if (dryRun) {
+      return {
+        plugin: pluginName,
+        path: pluginPath,
+        success: true,
+        output: updateInfo.join('\n'),
+        error: '',
+        hasUpdates: true,
+        dryRun: true
+      };
+    }
+
+    // Actually update the dependencies
+    const updateResult = await runNpmUpdate(pluginPath, depsToUpdate);
+
+    return {
+      plugin: pluginName,
+      path: pluginPath,
+      success: updateResult.success,
+      output: updateInfo.join('\n'),
+      error: updateResult.error,
+      hasUpdates: updateResult.success
+    };
+  } catch (error) {
+    return {
+      plugin: pluginName,
+      path: pluginPath,
+      success: false,
+      output: '',
+      error: error.message,
+      hasUpdates: false
+    };
+  }
+}
+
+/**
+ * Run npm update for specific packages
+ */
+async function runNpmUpdate(pluginPath, packages) {
+  return new Promise((resolve) => {
+    const args = ['install', ...packages, '--save-exact'];
+
+    const child = spawn('npm', args, {
+      cwd: pluginPath,
+      stdio: 'pipe'
+    });
+
+    let stdout = '';
+    let stderr = '';
+
+    child.stdout.on('data', (data) => {
+      stdout += data.toString();
+    });
+
+    child.stderr.on('data', (data) => {
+      stderr += data.toString();
+    });
+
+    child.on('exit', (code) => {
+      resolve({
+        success: code === 0,
+        output: stdout,
+        error: stderr
+      });
+    });
+
+    child.on('error', (error) => {
+      resolve({
+        success: false,
+        output: '',
+        error: error.message
       });
     });
   });
@@ -284,7 +373,6 @@ async function updatePluginDeps(pluginPath, options) {
 /**
  * Run npm install in a plugin directory
  */
-// eslint-disable-next-line require-await
 async function runNpmInstall(pluginPath) {
   return new Promise((resolve) => {
     const child = spawn('npm', ['install'], {
@@ -324,7 +412,6 @@ async function runNpmInstall(pluginPath) {
 /**
  * Run tests in a plugin directory
  */
-// eslint-disable-next-line require-await
 async function runTests(pluginPath) {
   return new Promise((resolve) => {
     const child = spawn('npm', ['test'], {
@@ -384,13 +471,18 @@ function generateUpdateReport(results) {
     lines.push(chalk.green.bold(`✅ Plugins with updates (${withUpdates.length}):`));
     withUpdates.forEach((result) => {
       lines.push(chalk.green(`  ${result.plugin}:`));
-      // Parse and display the updates
-      const updateLines = result.output.split('\n').filter((line) => line.includes('→') || line.trim().startsWith('✓'));
+
+      // Display the updates
+      const updateLines = result.output.split('\n');
       updateLines.forEach((line) => {
         if (line.trim()) {
           lines.push(`    ${line.trim()}`);
         }
       });
+
+      if (result.dryRun) {
+        lines.push(chalk.yellow('    (dry run - no changes made)'));
+      }
 
       // Show install results if available
       if (result.installResult) {
@@ -398,7 +490,9 @@ function generateUpdateReport(results) {
           lines.push(chalk.green('    ✓ Dependencies installed successfully'));
         } else {
           lines.push(chalk.red('    ✗ Failed to install dependencies'));
-          lines.push(chalk.red(`      ${result.installResult.error}`));
+          if (result.installResult.error) {
+            lines.push(chalk.red(`      ${result.installResult.error}`));
+          }
         }
       }
 
@@ -408,7 +502,9 @@ function generateUpdateReport(results) {
           lines.push(chalk.green('    ✓ Tests passed'));
         } else {
           lines.push(chalk.red('    ✗ Tests failed'));
-          lines.push(chalk.red(`      ${result.testResult.error}`));
+          if (result.testResult.error) {
+            lines.push(chalk.red(`      ${result.testResult.error}`));
+          }
         }
       }
 
@@ -438,20 +534,26 @@ function generateUpdateReport(results) {
   if (withUpdates.length > 0) {
     const hasAutoInstall = results.some((r) => r.installResult);
     const hasAutoTest = results.some((r) => r.testResult);
+    const hasDryRun = results.some((r) => r.dryRun);
 
-    if (!hasAutoInstall || !hasAutoTest) {
+    if (!hasAutoInstall || !hasAutoTest || hasDryRun) {
       lines.push(chalk.bold('Next steps:'));
-      lines.push('• Review the updates above');
 
-      if (!hasAutoInstall) {
-        lines.push('• Run `npm install` in plugins that were updated');
+      if (hasDryRun) {
+        lines.push('• Run without --dry-run to apply updates');
+      } else {
+        lines.push('• Review the updates above');
+
+        if (!hasAutoInstall) {
+          lines.push('• Run `npm install` in plugins that were updated');
+        }
+
+        if (!hasAutoTest) {
+          lines.push('• Run tests in updated plugins to ensure compatibility');
+        }
+
+        lines.push('• Check for any breaking changes in major version updates');
       }
-
-      if (!hasAutoTest) {
-        lines.push('• Run tests in updated plugins to ensure compatibility');
-      }
-
-      lines.push('• Check for any breaking changes in major version updates');
     }
   }
 

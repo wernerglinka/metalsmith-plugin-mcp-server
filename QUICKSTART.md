@@ -111,8 +111,6 @@ npm run test:configs
 **Update dependencies:**
 
 ```bash
-# Note: This requires ncu to be installed globally
-npm install -g npm-check-updates
 npx metalsmith-plugin-mcp-server update-deps ./test-plugins
 ```
 
