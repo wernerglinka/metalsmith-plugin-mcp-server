@@ -188,6 +188,57 @@ The .release-it.json configuration uses:
 - Setting `GH_TOKEN=` at the script level makes it available to the entire release-it process
 - release-it reads `GH_TOKEN` via `tokenRef` and creates the GitHub release automatically
 
+### Additional Release Best Practices
+
+Based on successful plugin implementations, consider these enhancements to .release-it.json:
+
+1. **Pre-release Authentication Check**
+
+   ```json
+   {
+     "hooks": {
+       "before:init": ["gh auth status"]
+     }
+   }
+   ```
+
+   Ensures GitHub CLI is authenticated before attempting release.
+
+2. **Custom Release Name**
+
+   ```json
+   {
+     "github": {
+       "releaseName": "${name} ${version}"
+     }
+   }
+   ```
+
+   Uses the actual plugin name from package.json for clearer release identification in GitHub.
+
+3. **Commit Pattern Filtering**
+
+   ```json
+   {
+     "git": {
+       "commitMessage": "chore: release v${version}",
+       "changelog": "git log --pretty=format:\"* %s (%h)\" ${from}...${to} | grep -v -E \"^\\* (chore|ci|dev):\""
+     }
+   }
+   ```
+
+   Excludes development/maintenance commits from changelog for cleaner release notes.
+
+4. **Success Confirmation**
+   ```json
+   {
+     "hooks": {
+       "after:release": "echo \"✅ Successfully released ${name} ${version}\""
+     }
+   }
+   ```
+   Provides clear feedback when release completes successfully.
+
 ### Next Release Preparation
 
 - Expect fine-tuning based on user feedback
