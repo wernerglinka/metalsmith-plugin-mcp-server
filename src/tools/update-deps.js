@@ -163,6 +163,7 @@ async function findPluginSubdirectories(parentPath) {
 /**
  * Get outdated dependencies using npm outdated
  */
+// eslint-disable-next-line require-await
 async function getOutdatedDeps(pluginPath) {
   return new Promise((resolve) => {
     const child = spawn('npm', ['outdated', '--json'], {
@@ -332,6 +333,7 @@ async function updatePluginDeps(pluginPath, options) {
 /**
  * Run npm update for specific packages
  */
+// eslint-disable-next-line require-await
 async function runNpmUpdate(pluginPath, packages) {
   return new Promise((resolve) => {
     const args = ['install', ...packages, '--save-exact'];
@@ -373,6 +375,7 @@ async function runNpmUpdate(pluginPath, packages) {
 /**
  * Run npm install in a plugin directory
  */
+// eslint-disable-next-line require-await
 async function runNpmInstall(pluginPath) {
   return new Promise((resolve) => {
     const child = spawn('npm', ['install'], {
@@ -412,6 +415,7 @@ async function runNpmInstall(pluginPath) {
 /**
  * Run tests in a plugin directory
  */
+// eslint-disable-next-line require-await
 async function runTests(pluginPath) {
   return new Promise((resolve) => {
     const child = spawn('npm', ['test'], {
