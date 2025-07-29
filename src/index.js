@@ -129,7 +129,7 @@ ${aiInstructions ? `\n${aiInstructions}` : ''}`,
   },
   {
     name: 'validate-plugin',
-    description: 'Check an existing plugin against quality standards',
+    description: 'Check an existing Metalsmith plugin against quality standards with build-time focused validations',
     inputSchema: {
       type: 'object',
       properties: {
@@ -141,10 +141,31 @@ ${aiInstructions ? `\n${aiInstructions}` : ''}`,
           type: 'array',
           items: {
             type: 'string',
-            enum: ['structure', 'tests', 'docs', 'package-json', 'eslint', 'coverage']
+            enum: [
+              'structure',
+              'tests',
+              'docs',
+              'package-json',
+              'eslint',
+              'coverage',
+              'jsdoc',
+              'performance',
+              'security',
+              'integration',
+              'metalsmith-patterns'
+            ]
           },
-          description: 'Specific checks to perform',
-          default: ['structure', 'tests', 'docs', 'package-json']
+          description: 'Specific checks to perform. Use metalsmith-patterns for plugin-specific validations',
+          default: [
+            'structure',
+            'tests',
+            'docs',
+            'package-json',
+            'jsdoc',
+            'performance',
+            'security',
+            'metalsmith-patterns'
+          ]
         }
       },
       required: ['path']

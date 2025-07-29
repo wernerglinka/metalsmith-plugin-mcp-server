@@ -68,7 +68,17 @@ Check existing plugins against quality standards:
 ```js
 await mcp.call('validate-plugin', {
   path: './metalsmith-my-plugin',
-  checks: ['structure', 'tests', 'docs', 'package-json', 'jsdoc', 'performance', 'security', 'integration']
+  checks: [
+    'structure',
+    'tests',
+    'docs',
+    'package-json',
+    'jsdoc',
+    'performance',
+    'security',
+    'integration',
+    'metalsmith-patterns'
+  ]
 });
 ```
 
@@ -79,9 +89,10 @@ Validation checks include:
 - **Documentation**: README sections, examples, and badges
 - **Package.json**: Required fields and conventions
 - **JSDoc**: Type definitions, parameter documentation, and return types
-- **Performance**: RegExp caching, efficient filtering, Set/Map usage
-- **Security**: Input sanitization, safe file operations, dependency security
+- **Performance**: Efficient files object iteration, Buffer handling, object destructuring
+- **Security**: Build-time security, dependency monitoring, error handling
 - **Integration**: Compatibility with common Metalsmith plugins
+- **Metalsmith Patterns**: Plugin factory patterns, function signatures, metadata handling
 - **ESLint**: Modern configuration presence
 - **Coverage**: Test coverage analysis
 

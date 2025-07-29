@@ -4,7 +4,7 @@
 
 The fastest way to use the MCP server is with npx:
 
-> **New in v0.8.0**: Enhanced validation with JSDoc, performance, security, and integration checks.
+> **New in v0.9.0**: Validation refactored for Metalsmith-specific patterns. Focuses on build-time concerns rather than server-oriented validations.
 
 ```bash
 # Show version information

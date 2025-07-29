@@ -4,16 +4,16 @@
 
 This is an MCP (Model Context Protocol) server for scaffolding and validating high-quality Metalsmith plugins. It provides tools for Claude to help users create, validate, and maintain Metalsmith plugins following best practices.
 
-## Current Status (v0.7.0)
+## Current Status (v0.9.0)
 
 ### Recent Major Work Completed
 
-1. **Enhanced Validation System** - Converted from warnings to actionable recommendations
-2. **Feature Validation** - Added validation for exact feature strings with helpful error messages
-3. **Modern Defaults** - Changed default from empty features to `['async-processing']`
-4. **Config Command** - Added `npx metalsmith-plugin-mcp-server config` for setup management
-5. **GitHub Release Automation** - Fixed recurring release issues using GitHub CLI
-6. **Removed Type Property** - Eliminated vestigial "type" classification system
+1. **Metalsmith-Specific Validation Refactor** - Complete overhaul of validation logic to focus on actual Metalsmith plugin patterns
+2. **Removed Inappropriate Server Validations** - Eliminated caching, file I/O, DoS protection, and other server-oriented checks
+3. **Added Plugin Pattern Validation** - New `metalsmith-patterns` check for factory functions, signatures, and metadata handling
+4. **Build-Time Security Focus** - Refactored security checks to focus on build-time concerns (dependency security, error handling)
+5. **Performance Optimization for Static Sites** - Updated performance checks for in-memory object transformations
+6. **Metalsmith Context Documentation** - Added comprehensive guide explaining Metalsmith's execution model
 
 ### Core Philosophy: "Evaluate, Judge, and Inform"
 
@@ -149,11 +149,14 @@ npm run lint          # Code quality
 
 ## Release Information
 
-### Current Version: 0.7.0
+### Current Version: 0.9.0
 
-- Major feature release with validation improvements
+- **BREAKING**: Validation logic completely refactored for Metalsmith-specific patterns
+- Removed inappropriate server-oriented recommendations (caching, DoS protection, etc.)
+- Added new `metalsmith-patterns` validation check
+- Updated performance and security validations for build-time context
 - All tests passing (62/62)
-- GitHub release automation fixed with proper GitHub CLI integration
+- Metalsmith execution model documented in METALSMITH_CONTEXT.md
 - Ready for production use
 
 ### Release Process Implementation
