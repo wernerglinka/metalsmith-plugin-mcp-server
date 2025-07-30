@@ -69,13 +69,15 @@ Uses exact strings only:
 - **Requirement**: Developers need `gh CLI` installed and authenticated
 - **Key Fix**: Environment variable must be set at script level in package.json, not in hooks
 
-**IMPORTANT**: When running releases, always use the `--ci` flag to bypass interactive prompts:
+**IMPORTANT**: The release scripts now include the `--ci` flag automatically and use a secure shell script:
 
 ```bash
-npm run release:patch -- --ci
-npm run release:minor -- --ci
-npm run release:major -- --ci
+npm run release:patch
+npm run release:minor
+npm run release:major
 ```
+
+The scripts use `./scripts/release.sh` which securely handles GitHub authentication without exposing tokens in package.json.
 
 ## User Workflows
 

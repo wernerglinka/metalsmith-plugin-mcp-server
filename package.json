@@ -23,9 +23,9 @@
     "depcheck": "depcheck",
     "release": "./node_modules/.bin/release-it .",
     "release:check": "npm run lint:check && ./node_modules/.bin/release-it . --dry-run",
-    "release:patch": "GH_TOKEN=$(gh auth token) release-it patch",
-    "release:minor": "GH_TOKEN=$(gh auth token) release-it minor",
-    "release:major": "GH_TOKEN=$(gh auth token) release-it major",
+    "release:patch": "./scripts/release.sh patch --ci",
+    "release:minor": "./scripts/release.sh minor --ci",
+    "release:major": "./scripts/release.sh major --ci",
     "commit": "node scripts/commit.js",
     "setup-hooks": "node scripts/setup-hooks.js"
   },
