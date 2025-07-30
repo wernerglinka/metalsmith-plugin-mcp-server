@@ -6,7 +6,7 @@
     "tag": true,
     "tagName": "v${version}",
     "push": true,
-    "changelog": "npx auto-changelog -u --commit-limit false --ignore-commit-pattern '^((dev|chore|ci):|Release)' --stdout"
+    "changelog": "npx auto-changelog --stdout --commit-limit false --unreleased --ignore-commit-pattern '^((dev|chore|ci):|Release)' --template https://raw.githubusercontent.com/release-it/release-it/main/templates/changelog-compact.hbs"
   },
   "github": {
     "release": true,
