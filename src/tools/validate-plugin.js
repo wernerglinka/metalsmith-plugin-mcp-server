@@ -672,7 +672,17 @@ async function checkPackageJson(pluginPath, results, config) {
 
     for (const script of recommendedScripts) {
       if (packageJson.scripts?.[script]) {
-        results.passed.push(`✓ Script "${script}" defined`);
+        // Check if release scripts use the insecure pattern
+        if (script.startsWith('release:') && packageJson.scripts[script].includes('GH_TOKEN=$(gh auth token)')) {
+          results.recommendations.push(
+            `⚠️  Script "${script}" exposes GitHub token in package.json. Update to: "${script}": "./scripts/release.sh ${script.split(':')[1]} --ci"`
+          );
+          results.recommendations.push(
+            `💡 Create scripts/release.sh with secure token handling. See: https://github.com/wernerglinka/metalsmith-plugin-mcp-server/blob/main/scripts/release.sh`
+          );
+        } else {
+          results.passed.push(`✓ Script "${script}" defined`);
+        }
       } else {
         if (script === 'lint') {
           results.recommendations.push(`💡 Consider adding script: ${script}. Example: "lint": "eslint src test"`);
@@ -685,7 +695,7 @@ async function checkPackageJson(pluginPath, results, config) {
         } else if (script.startsWith('release:')) {
           const releaseType = script.split(':')[1];
           results.recommendations.push(
-            `💡 Consider adding script: ${script}. Example: "${script}": "release-it ${releaseType}"`
+            `💡 Consider adding script: ${script}. Example: "${script}": "./scripts/release.sh ${releaseType} --ci"`
           );
         } else {
           results.recommendations.push(`💡 Consider adding script: ${script}`);
@@ -697,6 +707,22 @@ async function checkPackageJson(pluginPath, results, config) {
     const hasReleaseIt = packageJson.devDependencies?.['release-it'] || packageJson.dependencies?.['release-it'];
     if (hasReleaseIt) {
       results.passed.push('✓ release-it dependency found');
+
+      // Check for secure release script if release scripts are present
+      const hasReleaseScripts = recommendedScripts.some(
+        (script) => script.startsWith('release:') && packageJson.scripts?.[script]
+      );
+
+      if (hasReleaseScripts) {
+        try {
+          await fs.access(path.join(pluginPath, 'scripts/release.sh'));
+          results.passed.push('✓ Secure release script found (scripts/release.sh)');
+        } catch {
+          results.recommendations.push(
+            '💡 Consider using a secure release script to handle GitHub tokens. Create scripts/release.sh for better security.'
+          );
+        }
+      }
     } else {
       results.recommendations.push(
         '💡 Consider adding release-it for automated releases. Run: npm install --save-dev release-it'
