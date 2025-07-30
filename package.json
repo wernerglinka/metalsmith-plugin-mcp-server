@@ -1,6 +1,6 @@
 {
   "name": "metalsmith-plugin-mcp-server",
-  "version": "0.11.0",
+  "version": "0.11.1",
   "description": "MCP server for scaffolding and validating high-quality Metalsmith plugins",
   "type": "module",
   "exports": "./src/index.js",
