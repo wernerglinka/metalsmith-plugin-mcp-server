@@ -10,10 +10,9 @@
   "github": {
     "release": true,
     "releaseName": "v${version}",
-    "draft": false,
+    "draft": true,
     "autoGenerate": false,
-    "tokenRef": "GH_TOKEN",
-    "releaseNotes": "npx auto-changelog -u --commit-limit false --ignore-commit-pattern '^((dev|chore|ci):|Release)' --stdout"
+    "tokenRef": "GH_TOKEN"
   },
   "npm": {
     "publish": false,
@@ -26,6 +25,11 @@
       "gh auth status || (echo 'GitHub CLI not authenticated. Run: gh auth login' && exit 1)"
     ],
     "after:bump": "npx auto-changelog -p --commit-limit false --ignore-commit-pattern '^((dev|chore|ci):|Release)' && git add CHANGELOG.md",
-    "after:release": "echo Successfully released ${name} v${version} to ${repo.repository}."
+    "after:release": [
+      "npx auto-changelog -u --commit-limit false --ignore-commit-pattern '^((dev|chore|ci):|Release)' > /tmp/release-notes.md",
+      "gh release edit v${version} --notes-file /tmp/release-notes.md --draft=false",
+      "rm -f /tmp/release-notes.md",
+      "echo Successfully released ${name} v${version} to ${repo.repository}."
+    ]
   }
 }
