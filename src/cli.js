@@ -108,6 +108,7 @@ function showHelp() {
   console.warn('  scaffold [name] [description] [path] Create a new Metalsmith plugin');
   console.warn('  validate [path] [--functional] Validate an existing plugin');
   console.warn('  configs [path]                Generate configuration files');
+  console.warn('  show-template [type]          Display recommended configuration templates');
   console.warn('  update-deps [path] [--install] [--test] Update dependencies in plugin(s)\n');
 
   console.warn(chalk.gray('Note: Commands can be run in guided mode by omitting parameters\n'));
@@ -120,6 +121,8 @@ function showHelp() {
   console.warn('  npx metalsmith-plugin-mcp-server validate ./metalsmith-existing-plugin');
   console.warn('  npx metalsmith-plugin-mcp-server validate ./ --functional # Run tests & coverage');
   console.warn('  npx metalsmith-plugin-mcp-server configs ./my-plugin');
+  console.warn('  npx metalsmith-plugin-mcp-server show-template release-it  # Show .release-it.json template');
+  console.warn('  npx metalsmith-plugin-mcp-server show-template package-scripts # Show secure release scripts');
   console.warn('  npx metalsmith-plugin-mcp-server update-deps ./plugins     # Update all plugins');
   console.warn('  npx metalsmith-plugin-mcp-server update-deps ./my-plugin   # Update single plugin');
   console.warn('  npx metalsmith-plugin-mcp-server update-deps ./ --install --test # Update, install & test\n');
@@ -283,11 +286,12 @@ async function runGenerateConfigs(outputPath) {
       configs: ['eslint', 'prettier', 'editorconfig', 'gitignore', 'release-it']
     });
 
-    console.warn(chalk.green('✓ Configuration files generated:'));
-    result.files.forEach((file) => {
-      console.warn(chalk.gray(`  - ${file}`));
-    });
-    console.warn();
+    // The tool returns a content array, extract the text
+    if (result.content && result.content[0] && result.content[0].text) {
+      console.warn(result.content[0].text);
+    } else {
+      console.warn(styles.success('\n✓ Configuration files generated successfully!'));
+    }
   } catch (error) {
     console.error(chalk.red('Error generating configs:'), error.message);
     process.exit(1);
@@ -439,6 +443,55 @@ async function showConfig() {
 }
 
 /**
+ * Show recommended configuration templates
+ * Displays the recommended configuration for various file types
+ * @param {string} template - Template type to display
+ * @returns {Promise<void>}
+ */
+async function runShowTemplate(template) {
+  // Interactive mode if template is missing
+  if (!template) {
+    console.warn(styles.header('\nShow configuration template\n'));
+    console.warn('Available templates:');
+    console.warn('  release-it      - .release-it.json with secure GitHub token handling');
+    console.warn('  package-scripts - package.json scripts for secure releases');
+    console.warn('  eslint          - eslint.config.js modern flat config');
+    console.warn('  prettier        - prettier.config.js formatting rules');
+    console.warn('  gitignore       - .gitignore for Metalsmith plugins');
+    console.warn('  editorconfig    - .editorconfig for consistent coding style\n');
+
+    template = await prompt('Template type');
+
+    if (!template) {
+      console.error(styles.error('\nError: Template type is required'));
+      process.exit(1);
+    }
+  }
+
+  const validTemplates = ['release-it', 'package-scripts', 'eslint', 'prettier', 'gitignore', 'editorconfig'];
+  if (!validTemplates.includes(template)) {
+    console.error(styles.error(`\nError: Invalid template type. Valid options: ${validTemplates.join(', ')}`));
+    process.exit(1);
+  }
+
+  try {
+    // Import and run the show template tool directly
+    const { showTemplateTool } = await import('./tools/show-template.js');
+    const result = await showTemplateTool({ template });
+
+    // The tool returns a content array, extract the text
+    if (result.content && result.content[0] && result.content[0].text) {
+      console.warn(result.content[0].text);
+    } else {
+      console.warn(styles.error('No template content returned'));
+    }
+  } catch (error) {
+    console.error(styles.error('Error showing template:'), error.message);
+    process.exit(1);
+  }
+}
+
+/**
  * Update dependencies in Metalsmith plugin(s)
  * Uses npm-check-updates to check and update dependencies
  * @param {string} path - Path to plugin directory or parent directory containing plugins
@@ -526,6 +579,10 @@ switch (command) {
 
   case 'configs':
     runGenerateConfigs(args[1]);
+    break;
+
+  case 'show-template':
+    runShowTemplate(args[1]);
     break;
 
   case 'update-deps':

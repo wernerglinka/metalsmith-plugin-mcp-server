@@ -27,6 +27,7 @@ import { pluginScaffoldTool } from './tools/plugin-scaffold.js';
 import { validatePluginTool } from './tools/validate-plugin.js';
 import { generateConfigsTool } from './tools/generate-configs.js';
 import { updateDepsTool } from './tools/update-deps.js';
+import { showTemplateTool } from './tools/show-template.js';
 
 // Import AI assistant instructions
 import { promises as fs } from 'fs';
@@ -196,6 +197,21 @@ ${aiInstructions ? `\n${aiInstructions}` : ''}`,
     }
   },
   {
+    name: 'show-template',
+    description: 'Display recommended configuration templates for Metalsmith plugins',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        template: {
+          type: 'string',
+          enum: ['release-it', 'package-scripts', 'eslint', 'prettier', 'gitignore', 'editorconfig'],
+          description: 'Template to display'
+        }
+      },
+      required: ['template']
+    }
+  },
+  {
     name: 'update-deps',
     description: 'Update dependencies in Metalsmith plugin(s) using npm-check-updates',
     inputSchema: {
@@ -272,6 +288,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       case 'update-deps':
         return await updateDepsTool(args); // Update plugin dependencies
+
+      case 'show-template':
+        return await showTemplateTool(args); // Show configuration templates
 
       default:
         // This shouldn't happen if Claude only calls tools we advertised

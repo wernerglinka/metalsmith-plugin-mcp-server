@@ -682,7 +682,7 @@ async function checkPackageJson(pluginPath, results, config) {
             `⚠️  Script "${script}" exposes GitHub token in package.json. Update to: "${script}": "./scripts/release.sh ${script.split(':')[1]} --ci"`
           );
           results.recommendations.push(
-            `💡 Create scripts/release.sh with secure token handling. See: https://github.com/wernerglinka/metalsmith-plugin-mcp-server/blob/main/scripts/release.sh`
+            `💡 Create scripts/release.sh with secure token handling and ensure .release-it.json uses "tokenRef": "GH_TOKEN". See: https://github.com/wernerglinka/metalsmith-plugin-mcp-server/blob/main/scripts/release.sh`
           );
         } else {
           results.passed.push(`✓ Script "${script}" defined`);
@@ -725,6 +725,38 @@ async function checkPackageJson(pluginPath, results, config) {
           results.recommendations.push(
             '💡 Consider using a secure release script to handle GitHub tokens. Create scripts/release.sh for better security.'
           );
+        }
+
+        // Check for .release-it.json token consistency
+        try {
+          const releaseItPath = path.join(pluginPath, '.release-it.json');
+          await fs.access(releaseItPath);
+          const releaseItConfig = JSON.parse(await fs.readFile(releaseItPath, 'utf-8'));
+
+          // Check if GitHub integration is configured
+          if (releaseItConfig.github) {
+            const tokenRef = releaseItConfig.github.tokenRef;
+
+            if (tokenRef === 'GH_TOKEN') {
+              results.passed.push('✓ .release-it.json uses correct token reference (GH_TOKEN)');
+            } else if (tokenRef === 'GITHUB_TOKEN') {
+              results.recommendations.push(
+                `⚠️  .release-it.json uses "GITHUB_TOKEN" but secure scripts use "GH_TOKEN". Update tokenRef to "GH_TOKEN" in .release-it.json`
+              );
+            } else if (!tokenRef) {
+              results.recommendations.push(
+                '💡 Consider adding "tokenRef": "GH_TOKEN" to github section in .release-it.json for consistent token handling'
+              );
+            } else {
+              results.recommendations.push(
+                `⚠️  .release-it.json uses token reference "${tokenRef}". For consistency with secure scripts, consider using "GH_TOKEN"`
+              );
+            }
+          }
+        } catch (error) {
+          if (error.code !== 'ENOENT') {
+            results.warnings.push(`⚠️  Could not validate .release-it.json token configuration: ${error.message}`);
+          }
         }
       }
     } else {

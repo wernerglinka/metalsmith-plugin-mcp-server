@@ -403,15 +403,16 @@ async function generateReleaseItConfig(outputPath) {
       release: true,
       releaseName: 'v${version}',
       draft: false,
-      autoGenerate: true
+      autoGenerate: true,
+      tokenRef: 'GH_TOKEN'
     },
     npm: {
       publish: true,
       publishPath: '.'
     },
     hooks: {
-      'before:init': ['npm test', 'npm run lint'],
-      'after:release': 'echo Successfully released ${name} v${version} to ${repo.repository}.'
+      'before:init': ['gh auth status', 'npm test', 'npm run lint'],
+      'after:release': 'echo "✅ Successfully released ${name} v${version}"'
     }
   };
 

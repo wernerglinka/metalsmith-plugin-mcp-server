@@ -109,16 +109,10 @@ Metalsmith(__dirname)
 
 ## Debug
 
-To enable debug logs, set the DEBUG environment variable:
-
-```bash
-DEBUG={{ pluginName }}* node your-script.js
-```
-
-Or in your script:
+To enable debug logs, set the DEBUG environment variable to `{{ pluginName }}*`:
 
 ```javascript
-process.env.DEBUG = '{{ pluginName }}*';
+metalsmith.env('DEBUG', '{{ pluginName }}*');
 ```
 
 ## CLI Usage

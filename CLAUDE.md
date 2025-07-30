@@ -1,12 +1,46 @@
 # Metalsmith Plugin MCP Server - Development Context
 
+## Communication Style
+
+Maintain a friendly, professional, straightforward tone. Skip the enthusiasm and pleasantries - focus on solving problems effectively.
+
+- Be direct and concise in responses
+- Point out potential issues or better approaches when you see them
+- Provide critical feedback when warranted
+- Avoid phrases like "Great question!", "I'd be happy to...", or excessive praise
+- Lead with the solution, not the preamble
+- If something is wrong or could be improved, say so clearly
+- Prioritize code quality and correctness over being agreeable
+
+Remember: The goal is effective solutions, not making the user feel good about suboptimal choices.
+
+## Error Handling
+
+Focus on getting to successful results quickly:
+
+- Fail fast with clear, actionable error messages
+- Don't over-engineer error handling for unlikely edge cases
+- Validate inputs early to catch problems at the source
+- Use explicit error returns rather than exceptions where appropriate
+- When errors occur, provide specific information about what went wrong and how to fix it
+- Avoid defensive programming that obscures the actual problem
+- If recovery is possible and straightforward, do it; otherwise, fail clearly
+
 ## Project Overview
 
 This is an MCP (Model Context Protocol) server for scaffolding and validating high-quality Metalsmith plugins. It provides tools for Claude to help users create, validate, and maintain Metalsmith plugins following best practices.
 
-## Current Status (v0.9.0)
+## Current Status (v0.13.0)
 
-### Recent Major Work Completed
+### Recent Major Work Completed (v0.13.0)
+
+1. **Show-Template Command** - New command to display recommended configuration templates for release-it, package scripts, ESLint, Prettier, etc.
+2. **Enhanced Release Configuration** - Fixed .release-it.json template to include proper `tokenRef: "GH_TOKEN"` for consistent token handling
+3. **Comprehensive Token Validation** - Added validation that checks consistency between package.json scripts and .release-it.json token references
+4. **Improved UX** - Resolved configs command forEach error and enhanced validation messages to mention both package.json and .release-it.json issues
+5. **Template Fixes** - Corrected README template debug section to use proper `metalsmith.env('DEBUG', 'plugin-name*')` format
+
+### Previous Major Work (v0.9.0-v0.12.0)
 
 1. **Metalsmith-Specific Validation Refactor** - Complete overhaul of validation logic to focus on actual Metalsmith plugin patterns
 2. **Removed Inappropriate Server Validations** - Eliminated caching, file I/O, DoS protection, and other server-oriented checks
@@ -110,6 +144,13 @@ npx metalsmith-plugin-mcp-server scaffold my-plugin "Description here"
 
 # Validate with actual test runs
 npx metalsmith-plugin-mcp-server validate ./plugin --functional
+
+# Show recommended configuration templates
+npx metalsmith-plugin-mcp-server show-template release-it
+npx metalsmith-plugin-mcp-server show-template package-scripts
+
+# Generate configuration files
+npx metalsmith-plugin-mcp-server configs ./plugin
 ```
 
 ## Development Patterns
@@ -205,14 +246,15 @@ npm run release:major  # For breaking changes
 
 ## Release Information
 
-### Current Version: 0.9.0
+### Current Version: 0.13.0
 
-- **BREAKING**: Validation logic completely refactored for Metalsmith-specific patterns
-- Removed inappropriate server-oriented recommendations (caching, DoS protection, etc.)
-- Added new `metalsmith-patterns` validation check
-- Updated performance and security validations for build-time context
-- All tests passing (62/62)
-- Metalsmith execution model documented in METALSMITH_CONTEXT.md
+- **NEW**: show-template command for displaying recommended configuration templates
+- **FIXED**: configs command forEach error resolved
+- **ENHANCED**: .release-it.json template now includes proper tokenRef: "GH_TOKEN"
+- **IMPROVED**: comprehensive validation for token reference consistency between package.json and .release-it.json
+- **FIXED**: README template debug section uses correct metalsmith.env format
+- All UX issues from user feedback addressed
+- All tests passing
 - Ready for production use
 
 ### Release Process Implementation
