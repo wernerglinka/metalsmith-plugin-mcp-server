@@ -340,7 +340,7 @@ You can run the MCP server directly with npx:
 
 ```bash
 # Add the MCP server using npx
-claude mcp add metalsmith-plugin "npx metalsmith-plugin-mcp-server@latest server"
+claude mcp add metalsmith-plugin npx "metalsmith-plugin-mcp-server@latest" "server"
 ```
 
 **Verify it was added correctly!**

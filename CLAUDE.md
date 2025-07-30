@@ -168,6 +168,41 @@ npm run lint          # Code quality
 3. **Performance optimization** for functional validation
 4. **More granular configuration** options
 
+## Pre-Commit and Release Workflow
+
+### CRITICAL: Always Run Pre-Commit Validation
+
+**Before ANY commit or release, ALWAYS run these commands in order:**
+
+```bash
+npm run lint          # Fix linting issues
+npm run format        # Format code consistently
+npm test              # Ensure all tests pass
+```
+
+**If any of these commands fail, you MUST fix the issues before proceeding with commits or releases.**
+
+### Common Linting Fixes
+
+When linting fails, common issues include:
+
+- Missing semicolons or trailing commas
+- Inconsistent indentation or spacing
+- Unused variables or imports
+- JSDoc formatting issues
+
+**Always run `npm run lint` to automatically fix most issues, then check `npm run lint:check` to verify.**
+
+### Release Commands
+
+Only after successful pre-commit validation:
+
+```bash
+npm run release:patch  # For bug fixes
+npm run release:minor  # For new features
+npm run release:major  # For breaking changes
+```
+
 ## Release Information
 
 ### Current Version: 0.9.0

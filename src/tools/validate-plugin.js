@@ -24,7 +24,7 @@ async function loadValidationConfig(pluginPath) {
         requiredDirs: ['src', 'test'],
         requiredFiles: ['src/index.js', 'README.md', 'package.json'],
         recommendedDirs: ['src/utils', 'src/processors', 'test/fixtures'],
-        recommendedFiles: ['.release-it.json']
+        recommendedFiles: ['.release-it.json', 'CLAUDE.md']
       },
       tests: {
         enabled: true,
@@ -186,7 +186,7 @@ export async function validatePluginTool(args) {
 async function checkStructure(pluginPath, results, functional = false, config) {
   const requiredDirs = config?.rules?.structure?.requiredDirs || ['src', 'test'];
   const requiredFiles = config?.rules?.structure?.requiredFiles || ['src/index.js', 'README.md', 'package.json'];
-  const recommendedFiles = config?.rules?.structure?.recommendedFiles || ['.release-it.json'];
+  const recommendedFiles = config?.rules?.structure?.recommendedFiles || ['.release-it.json', 'CLAUDE.md'];
 
   // Check directories
   for (const dir of requiredDirs) {
@@ -222,6 +222,10 @@ async function checkStructure(pluginPath, results, functional = false, config) {
       if (file === '.release-it.json') {
         results.recommendations.push(
           `💡 Consider adding ${file} for automated releases. Run: npx metalsmith-plugin-mcp-server scaffold ${pluginPath} .release-it.json release-config`
+        );
+      } else if (file === 'CLAUDE.md') {
+        results.recommendations.push(
+          `💡 Consider adding ${file} for AI development context. Run: npx metalsmith-plugin-mcp-server scaffold ${pluginPath} CLAUDE.md claude-context`
         );
       } else {
         results.recommendations.push(`💡 Consider adding recommended file: ${file}`);

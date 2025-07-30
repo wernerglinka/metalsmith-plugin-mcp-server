@@ -213,6 +213,7 @@ export async function pluginScaffoldTool(args) {
             '- test/index.test.js (test suite)',
             '- package.json (package configuration)',
             '- README.md (documentation)',
+            '- CLAUDE.md (AI development context)',
             '- eslint.config.js (linting rules)',
             '',
             'Next steps:',
@@ -290,6 +291,8 @@ async function copyTemplates(pluginPath, data) {
   await copyTemplate(path.join(templatesDir, 'package.json.template'), path.join(pluginPath, 'package.json'), data);
 
   await copyTemplate(path.join(templatesDir, 'README.md.template'), path.join(pluginPath, 'README.md'), data);
+
+  await copyTemplate(path.join(templatesDir, 'CLAUDE.md.template'), path.join(pluginPath, 'CLAUDE.md'), data);
 
   await copyTemplate(path.join(templatesDir, 'index.js.template'), path.join(pluginPath, 'src/index.js'), data);
 
