@@ -5,15 +5,15 @@
     "requireBranch": "main",
     "tag": true,
     "tagName": "v${version}",
-    "push": true,
-    "changelog": "npx auto-changelog -u --commit-limit false --ignore-commit-pattern '^((dev|chore|ci):|Release)' --stdout"
+    "push": true
   },
   "github": {
     "release": true,
     "releaseName": "v${version}",
     "draft": false,
     "autoGenerate": false,
-    "tokenRef": "GH_TOKEN"
+    "tokenRef": "GH_TOKEN",
+    "releaseNotes": "npx auto-changelog -u --commit-limit false --ignore-commit-pattern '^((dev|chore|ci):|Release)' --stdout"
   },
   "npm": {
     "publish": false,
