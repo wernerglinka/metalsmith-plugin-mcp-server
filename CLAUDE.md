@@ -64,7 +64,7 @@ Uses exact strings only:
 ### Release Process
 
 - **Problem**: Recurring GitHub release automation failures (token not persisting from hooks)
-- **Solution**: GitHub CLI integration at script level: `GH_TOKEN=$(gh auth token) release-it`
+- **Solution**: GitHub CLI integration via secure shell script: `./scripts/release.sh`
 - **Benefit**: No more token issues, fully automated GitHub releases
 - **Requirement**: Developers need `gh CLI` installed and authenticated
 - **Key Fix**: Environment variable must be set at script level in package.json, not in hooks
@@ -182,13 +182,13 @@ npm run lint          # Code quality
 
 ### Release Process Implementation
 
-The release scripts in package.json must use this pattern:
+The release scripts in package.json use a secure shell script:
 
 ```json
 {
-  "release:patch": "GH_TOKEN=$(gh auth token) release-it patch",
-  "release:minor": "GH_TOKEN=$(gh auth token) release-it minor",
-  "release:major": "GH_TOKEN=$(gh auth token) release-it major"
+  "release:patch": "./scripts/release.sh patch --ci",
+  "release:minor": "./scripts/release.sh minor --ci",
+  "release:major": "./scripts/release.sh major --ci"
 }
 ```
 

@@ -314,6 +314,16 @@ async function copyTemplates(pluginPath, data) {
 
   // Copy test fixtures
   await copyTestFixtures(templatesDir, pluginPath, data);
+
+  // Copy release script
+  await copyTemplate(
+    path.join(templatesDir, 'scripts/release.sh.template'),
+    path.join(pluginPath, 'scripts/release.sh'),
+    data
+  );
+
+  // Make release script executable
+  await fs.chmod(path.join(pluginPath, 'scripts/release.sh'), 0o755);
 }
 
 /**

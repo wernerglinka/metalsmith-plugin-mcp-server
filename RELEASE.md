@@ -39,19 +39,40 @@ Environment variables must be set at the **process level** when release-it start
 
 #### 1. Package.json Scripts
 
-Set the token at the script level:
+Use a secure shell script to handle token management:
 
 ```json
 {
   "scripts": {
-    "release:patch": "GH_TOKEN=$(gh auth token) release-it patch",
-    "release:minor": "GH_TOKEN=$(gh auth token) release-it minor",
-    "release:major": "GH_TOKEN=$(gh auth token) release-it major"
+    "release:patch": "./scripts/release.sh patch --ci",
+    "release:minor": "./scripts/release.sh minor --ci",
+    "release:major": "./scripts/release.sh major --ci"
   }
 }
 ```
 
-#### 2. Release-it Configuration (.release-it.json)
+#### 2. Secure Shell Script (scripts/release.sh)
+
+The shell script handles GitHub token securely without exposing it in package.json:
+
+```bash
+#!/bin/bash
+set -e
+
+# Check GitHub CLI authentication
+if ! gh auth status >/dev/null 2>&1; then
+    echo "Error: GitHub CLI not authenticated. Run: gh auth login"
+    exit 1
+fi
+
+# Set the GitHub token securely
+export GH_TOKEN=$(gh auth token)
+
+# Run release-it with the specified type
+npx release-it "$@"
+```
+
+#### 3. Release-it Configuration (.release-it.json)
 
 ```json
 {
@@ -98,9 +119,9 @@ Set the token at the script level:
    ```
 
 2. **Script execution begins**
-   - `GH_TOKEN=$(gh auth token)` executes first
-   - `gh auth token` retrieves the token from GitHub CLI's secure storage
-   - The token is set as `GH_TOKEN` environment variable for the entire process
+   - The secure shell script checks GitHub CLI authentication
+   - Retrieves the token from GitHub CLI's secure storage internally
+   - Sets the token as `GH_TOKEN` environment variable within the script's process
 
 3. **release-it starts with token available**
    - release-it reads `GH_TOKEN` via `"tokenRef": "GH_TOKEN"`
@@ -165,14 +186,14 @@ gh auth status
 
 ### Issue: "GITHUB_TOKEN not found" warning
 
-**Solution**: Make sure you're using the updated scripts with `GH_TOKEN=$(gh auth token)`.
+**Solution**: Make sure you're using the secure shell script approach with `./scripts/release.sh`.
 
 ### Issue: GitHub release still not created
 
 **Check these:**
 
 1. Is GitHub CLI authenticated? Run `gh auth status`
-2. Is the token being set? Run `GH_TOKEN=$(gh auth token) && echo $GH_TOKEN`
+2. Is the token being set? Run `gh auth token` to verify you have a token
 3. Check .release-it.json has `"github": { "release": true, "tokenRef": "GH_TOKEN" }`
 
 ### Issue: Permission denied when creating release
@@ -185,14 +206,11 @@ gh auth refresh -s repo,write:packages
 
 ### Issue: Works on macOS but not on Windows
 
-**Solution**: Windows command prompt doesn't support the `$(command)` syntax. Use Git Bash or WSL, or set the token manually:
+**Solution**: The shell script requires a bash-compatible environment. On Windows, use Git Bash or WSL:
 
-```cmd
-# First get the token
-gh auth token
-
-# Then set it and run release-it
-set GH_TOKEN=your-token-here && release-it patch
+```bash
+# In Git Bash or WSL
+./scripts/release.sh patch --ci
 ```
 
 ## Testing the Release Process
@@ -202,14 +220,14 @@ set GH_TOKEN=your-token-here && release-it patch
 Test without actually creating a release:
 
 ```bash
-GH_TOKEN=$(gh auth token) release-it patch --dry-run
+./scripts/release.sh patch --dry-run
 ```
 
 ### Verify Token is Available
 
 ```bash
-# This should output your GitHub token
-GH_TOKEN=$(gh auth token) node -e "console.log(process.env.GH_TOKEN ? 'Token is set' : 'Token is NOT set')"
+# This should output your GitHub token (redacted)
+gh auth token
 ```
 
 ## What Happens During a Release
@@ -245,7 +263,7 @@ GH_TOKEN=$(gh auth token) node -e "console.log(process.env.GH_TOKEN ? 'Token is 
 See what's happening under the hood:
 
 ```bash
-DEBUG=release-it:* GH_TOKEN=$(gh auth token) release-it patch
+DEBUG=release-it:* ./scripts/release.sh patch
 ```
 
 ### Check Token Manually
@@ -274,7 +292,7 @@ gh auth login
 
 The key to making automated GitHub releases work is:
 
-1. **Set `GH_TOKEN` at the script level** in package.json
+1. **Use a secure shell script** to handle token management
 2. **Use `"tokenRef": "GH_TOKEN"`** in .release-it.json
 3. **Enable `"release": true`** in the github section
 4. **Ensure GitHub CLI is authenticated** before releasing
