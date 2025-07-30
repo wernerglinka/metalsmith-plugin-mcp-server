@@ -26,7 +26,7 @@
     ],
     "after:bump": "npx auto-changelog -p --commit-limit false --ignore-commit-pattern '^((dev|chore|ci):|Release)' && git add CHANGELOG.md",
     "after:release": [
-      "npx auto-changelog -u --commit-limit false --ignore-commit-pattern '^((dev|chore|ci):|Release)' > /tmp/release-notes.md",
+      "npx auto-changelog -u --commit-limit false --ignore-commit-pattern '^((dev|chore|ci):|Release)' --stdout > /tmp/release-notes.md 2>/dev/null",
       "gh release edit v${version} --notes-file /tmp/release-notes.md --draft=false",
       "rm -f /tmp/release-notes.md",
       "echo Successfully released ${name} v${version} to ${repo.repository}."
