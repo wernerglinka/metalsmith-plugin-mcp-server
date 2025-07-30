@@ -189,6 +189,17 @@ Once connected, you can ask Claude to:
 
 Note: Claude will now ask you to describe what the plugin should do before creating it.
 
+### 💡 Important: Following MCP Server Recommendations
+
+When the MCP server provides recommendations or code snippets through your AI assistant:
+
+- **Implement exactly as shown** - Don't create simplified versions
+- **Copy configurations precisely** - Release scripts, ESLint configs, etc. should match exactly
+- **Follow referenced patterns** - If the server mentions specific documentation patterns, use them as-is
+- **Ask before deviating** - If something seems unclear, ask for clarification rather than interpreting
+
+This prevents common issues like release automation failures or configuration conflicts.
+
 ### Working with Generated Plugins
 
 After Claude creates a plugin, the typical development workflow is:

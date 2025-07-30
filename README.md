@@ -424,6 +424,17 @@ Here are prompts that will trigger the MCP server's capabilities:
 
 The AI assistant will automatically use the MCP server tools to scaffold, validate, and configure your Metalsmith plugins according to best practices.
 
+### Important: Following MCP Server Recommendations
+
+When the MCP server provides recommendations or code snippets:
+
+- **Use them exactly as provided** - The recommendations are designed to follow established patterns and best practices
+- **Don't simplify or reinterpret** - The server's output includes specific configurations tested to work correctly
+- **Copy code snippets precisely** - Configuration files, scripts, and patterns should be implemented exactly as shown
+- **Follow referenced documentation** - If a recommendation mentions specific patterns in this documentation, use those patterns exactly
+
+This ensures consistent, high-quality plugin development and prevents common configuration issues.
+
 ## Options
 
 ### Plugin Scaffolding Options

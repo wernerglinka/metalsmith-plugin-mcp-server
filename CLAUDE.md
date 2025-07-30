@@ -69,6 +69,14 @@ Uses exact strings only:
 - **Requirement**: Developers need `gh CLI` installed and authenticated
 - **Key Fix**: Environment variable must be set at script level in package.json, not in hooks
 
+**IMPORTANT**: When running releases, always use the `--ci` flag to bypass interactive prompts:
+
+```bash
+npm run release:patch -- --ci
+npm run release:minor -- --ci
+npm run release:major -- --ci
+```
+
 ## User Workflows
 
 ### For Claude Code Integration
@@ -77,6 +85,17 @@ When users ask validation questions, guide them to use:
 
 > "Does the MCP server have any recommendations for this plugin?"
 > "Run the MCP validation on this plugin and implement any recommendations."
+
+### CRITICAL: Following MCP Server Recommendations
+
+**When the MCP server provides recommendations, ALWAYS:**
+
+1. Implement them EXACTLY as shown in the recommendation output
+2. Do NOT create your own interpretation or "simplified" version
+3. Copy the exact code snippets provided by the MCP server
+4. If a recommendation references existing patterns in CLAUDE.md, use those patterns precisely
+
+**Example**: If the MCP server recommends a release configuration, copy it exactly rather than creating a custom implementation.
 
 ### For CLI Usage
 
