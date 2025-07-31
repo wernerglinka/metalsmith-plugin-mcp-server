@@ -13,6 +13,7 @@
     "releaseName": "v${version}",
     "draft": false,
     "autoGenerate": false,
+    "releaseNotes": "npx auto-changelog --stdout --commit-limit false --unreleased --ignore-commit-pattern '^((dev|chore|ci):|Release)' --template https://raw.githubusercontent.com/release-it/release-it/main/templates/changelog-compact.hbs",
     "tokenRef": "GH_TOKEN"
   },
   "npm": {

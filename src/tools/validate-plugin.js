@@ -1361,6 +1361,100 @@ function generateReport(results) {
 }
 
 /**
+ * Check for usage of Metalsmith native methods vs external dependencies
+ */
+async function checkNativeMethodUsage(mainFileContent, pluginPath, results) {
+  try {
+    // Check package.json for dependencies that could be replaced with native methods
+    const packageJsonPath = path.join(pluginPath, 'package.json');
+    let packageJson = {};
+    try {
+      packageJson = JSON.parse(await fs.readFile(packageJsonPath, 'utf-8'));
+    } catch {
+      // No package.json, skip dependency checks
+    }
+
+    const allDependencies = {
+      ...packageJson.dependencies,
+      ...packageJson.devDependencies
+    };
+
+    // Check for debug package vs metalsmith.debug()
+    const usesDebugPackage = /require\s*\(\s*['"]debug['"]|import.*from\s+['"]debug['"]/m.test(mainFileContent);
+    const usesMetalsmithDebug = /metalsmith\.debug\(/m.test(mainFileContent);
+    const hasDebugDependency = allDependencies?.debug;
+
+    if (usesDebugPackage || hasDebugDependency) {
+      if (usesMetalsmithDebug) {
+        results.passed.push('✓ Using metalsmith.debug() instead of debug package');
+        if (hasDebugDependency) {
+          results.recommendations.push(
+            "💡 Remove debug dependency from package.json since you're using metalsmith.debug()"
+          );
+        }
+      } else {
+        results.recommendations.push(
+          '💡 Use metalsmith.debug() instead of debug package. Replace debug() calls with metalsmith.debug()'
+        );
+      }
+    } else if (usesMetalsmithDebug) {
+      results.passed.push('✓ Using metalsmith.debug() for debugging');
+    }
+
+    // Check for minimatch vs metalsmith.match()
+    const usesMinimatch = /require\s*\(\s*['"]minimatch['"]|import.*from\s+['"]minimatch['"]/m.test(mainFileContent);
+    const usesMetalsmithMatch = /metalsmith\.match\(/m.test(mainFileContent);
+    const hasMinimatchDependency = allDependencies?.minimatch;
+
+    if (usesMinimatch || hasMinimatchDependency) {
+      if (usesMetalsmithMatch) {
+        results.passed.push('✓ Using metalsmith.match() instead of minimatch package');
+        if (hasMinimatchDependency) {
+          results.recommendations.push(
+            "💡 Remove minimatch dependency from package.json since you're using metalsmith.match()"
+          );
+        }
+      } else {
+        results.recommendations.push(
+          '💡 Use metalsmith.match() instead of minimatch package for file pattern matching'
+        );
+      }
+    } else if (usesMetalsmithMatch) {
+      results.passed.push('✓ Using metalsmith.match() for pattern matching');
+    }
+
+    // Check for other common patterns that could use native methods
+    const usesMetalsmithEnv = /metalsmith\.env\(/m.test(mainFileContent);
+    const usesProcessEnv = /process\.env\./m.test(mainFileContent);
+
+    if (usesMetalsmithEnv) {
+      results.passed.push('✓ Using metalsmith.env() for environment variables');
+    } else if (usesProcessEnv) {
+      results.recommendations.push(
+        '💡 Consider using metalsmith.env() instead of process.env for accessing environment variables'
+      );
+    }
+
+    // Check for path manipulation vs metalsmith.path()
+    const usesPath = /require\s*\(\s*['"]path['"]|import.*from\s+['"]path['"]/m.test(mainFileContent);
+    const usesMetalsmithPath = /metalsmith\.path\(/m.test(mainFileContent);
+
+    if (usesPath && !usesMetalsmithPath) {
+      const hasPathJoins = /path\.join/m.test(mainFileContent);
+      if (hasPathJoins) {
+        results.recommendations.push(
+          '💡 Consider using metalsmith.path() for consistent path handling across different systems'
+        );
+      }
+    } else if (usesMetalsmithPath) {
+      results.passed.push('✓ Using metalsmith.path() for path handling');
+    }
+  } catch (error) {
+    results.warnings.push(`⚠ Could not check native method usage: ${error.message}`);
+  }
+}
+
+/**
  * Check Metalsmith-specific plugin patterns and quality
  */
 async function checkMetalsmithPatterns(pluginPath, results) {
@@ -1479,6 +1573,9 @@ async function checkMetalsmithPatterns(pluginPath, results) {
     if (!isMiddleware && !returnsMetalsmith) {
       results.recommendations.push('💡 Non-plugin functions should return metalsmith instance for chainability');
     }
+
+    // Check for Metalsmith native methods usage
+    await checkNativeMethodUsage(mainFileContent, pluginPath, results);
 
     // Check for error propagation in async plugins
     const hasAsyncOperations = /await|Promise|async/.test(mainFileContent);

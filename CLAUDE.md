@@ -155,6 +155,40 @@ npx metalsmith-plugin-mcp-server configs ./plugin
 
 ## Development Patterns
 
+### Metalsmith Dependency Pattern
+
+**Important**: Metalsmith should be listed in `devDependencies`, not `peerDependencies` in plugin package.json files. This is because:
+
+1. Metalsmith is required for running tests (tests import and use Metalsmith directly)
+2. The plugin itself doesn't need Metalsmith at runtime - it receives the metalsmith instance as a parameter
+3. Users will have Metalsmith installed in their own projects where they use the plugin
+4. Having it in devDependencies ensures tests can run during development and CI
+
+This differs from some other plugin ecosystems where the framework is a peer dependency. For Metalsmith plugins, the pattern is to have it as a dev dependency only.
+
+### Metalsmith Native Methods
+
+**CRITICAL**: Always prefer Metalsmith's native methods over external dependencies when available:
+
+- **metalsmith.debug()** instead of the `debug` package
+- **metalsmith.match()** instead of `minimatch` package
+- **metalsmith.env()** instead of `process.env`
+- **metalsmith.path()** instead of manual path manipulation
+
+The MCP server validates for these patterns and will recommend switching to native methods. This reduces dependencies, ensures consistency, and follows Metalsmith best practices.
+
+**Example**:
+
+```javascript
+// ❌ External dependency
+const debug = require('debug')('my-plugin');
+const minimatch = require('minimatch');
+
+// ✅ Native methods
+const debug = metalsmith.debug('my-plugin');
+const isMatch = metalsmith.match(pattern, filename);
+```
+
 ### When Adding New Validation Rules
 
 1. Make them **configurable** via validation config files
@@ -337,11 +371,30 @@ Based on successful plugin implementations, consider these enhancements to .rele
    ```
    Provides clear feedback when release completes successfully.
 
+### Release Notes Generation Fix
+
+**IMPORTANT**: Fixed a critical issue where GitHub releases only showed Snyk auto-fixes instead of our meaningful commits.
+
+**Problem**: The release-it configuration had `"autoGenerate": false` but wasn't explicitly using our CHANGELOG.md content for GitHub release notes.
+
+**Solution**: Added `"releaseNotes"` configuration to both the main .release-it.json and the template:
+
+```json
+{
+  "github": {
+    "autoGenerate": false,
+    "releaseNotes": "npx auto-changelog -u --commit-limit false --ignore-commit-pattern '^((dev|chore|ci):|Release)' --stdout"
+  }
+}
+```
+
+This ensures GitHub releases now show our actual feature commits and fixes instead of just dependency updates.
+
 ### Next Release Preparation
 
-- Expect fine-tuning based on user feedback
-- The GitHub CLI release automation is now working properly
-- Monitor for any edge cases in validation logic
+- GitHub releases will now properly show meaningful commits and features
+- Monitor that release notes include our actual changes, not just Snyk updates
+- The changelog generation is working correctly and ignores maintenance commits
 
 ## Communication Style
 

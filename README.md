@@ -43,7 +43,7 @@ await mcp.call('plugin-scaffold', {
 This creates a fully-configured plugin with:
 
 - **Dual Module Support**: Both ESM and CommonJS builds using microbundle
-- **Native Metalsmith Methods**: Uses `metalsmith.match()` instead of external dependencies
+- **Native Metalsmith Methods**: Enforces `metalsmith.debug()`, `metalsmith.match()`, `metalsmith.env()`, `metalsmith.path()` over external packages
 - **Zero External Dependencies**: Self-contained utilities for pattern matching and config merging
 - Comprehensive test setup with both ESM and CJS testing
 - Production-ready documentation
@@ -84,7 +84,7 @@ Validation checks include:
 - **Performance**: Efficient files object iteration, Buffer handling, object destructuring
 - **Security**: Build-time security, dependency monitoring, error handling
 - **Integration**: Compatibility with common Metalsmith plugins
-- **Metalsmith Patterns**: Plugin factory patterns, function signatures, metadata handling
+- **Metalsmith Patterns**: Plugin factory patterns, function signatures, metadata handling, native methods usage
 - **ESLint**: Modern configuration presence
 - **Coverage**: Test coverage analysis
 
@@ -209,7 +209,21 @@ npx metalsmith-plugin-mcp-server validate ./my-plugin --functional
 💡 Consider adding a LICENSE file. Generate one with: npx metalsmith-plugin-mcp-server scaffold ./my-plugin LICENSE MIT
 💡 Consider adding ESLint configuration. Generate with: npx metalsmith-plugin-mcp-server scaffold ./my-plugin eslint.config.js eslint
 💡 Consider adding script: lint. Example: "lint": "eslint src test"
+💡 Use metalsmith.debug() instead of debug package. Replace debug() calls with metalsmith.debug()
+💡 Use metalsmith.match() instead of minimatch package for file pattern matching
+💡 Remove debug dependency from package.json since you're using metalsmith.debug()
 ```
+
+**Native Methods Validation**
+
+The validator automatically detects usage of external packages that can be replaced with Metalsmith's native methods:
+
+- **debug** → **metalsmith.debug()**: For consistent debugging across plugins
+- **minimatch** → **metalsmith.match()**: For file pattern matching
+- **process.env** → **metalsmith.env()**: For environment variables
+- **path.join** → **metalsmith.path()**: For cross-platform path handling
+
+This reduces dependencies and ensures consistency with Metalsmith's built-in functionality.
 
 #### Dependency Update Features
 
