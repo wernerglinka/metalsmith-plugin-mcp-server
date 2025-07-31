@@ -4,6 +4,29 @@
 
 This is a Metalsmith plugin generated using the enhanced standards from `metalsmith-plugin-mcp-server`. It follows modern JavaScript patterns with dual ESM/CommonJS support and comprehensive testing.
 
+## Quick Commands
+
+**Quality & Validation:**
+```bash
+npx metalsmith-plugin-mcp-server --help                   # See all MCP server commands
+npx metalsmith-plugin-mcp-server validate . --functional  # Validate with MCP server
+npm test                                                   # Run tests with coverage
+npm run lint                                              # Lint and fix code
+```
+
+**Release Process:**
+```bash
+npm run release:patch   # Bug fixes (1.5.4 → 1.5.5)
+npm run release:minor   # New features (1.5.4 → 1.6.0)  
+npm run release:major   # Breaking changes (1.5.4 → 2.0.0)
+```
+
+**Development:**
+```bash
+npm run build          # Build ESM/CJS versions
+npm run test:coverage  # Run tests with detailed coverage
+```
+
 ## Pre-Commit and Release Workflow
 
 ### CRITICAL: Always Run Pre-Commit Validation

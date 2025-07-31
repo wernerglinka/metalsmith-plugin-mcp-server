@@ -547,7 +547,7 @@ async function checkDocumentation(pluginPath, results, config) {
       { pattern: /##?\s+Install/i, name: 'Installation' },
       { pattern: /##?\s+Usage/i, name: 'Usage' },
       { pattern: /##?\s+Options/i, name: 'Options' },
-      { pattern: /##?\s+Example/i, name: 'Examples' }
+      { pattern: /##?\s+Examples?/i, name: 'Example/Examples' }
     ];
 
     for (const section of requiredSections) {
