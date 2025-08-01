@@ -751,7 +751,10 @@ function smartMergeClaudeMd(existingContent, templateContent, context = {}) {
   const { hasMcpSection } = context;
 
   // Extract the MCP section from template
-  const mcpSectionMatch = templateContent.match(/(## MCP Server Integration \(CRITICAL\)[\s\S]*?)(?=\n## [^M]|$)/);
+  // Match everything from "## MCP Server Integration" until the next ## that's not part of MCP
+  const mcpSectionMatch = templateContent.match(
+    /(## MCP Server Integration \(CRITICAL\)[\s\S]*?)(?=\n## (?!MCP|Essential MCP|CRITICAL RULES for AI)|$)/
+  );
   const mcpSection = mcpSectionMatch ? mcpSectionMatch[1] : '';
 
   if (!mcpSection) {
@@ -762,7 +765,10 @@ function smartMergeClaudeMd(existingContent, templateContent, context = {}) {
 
   if (hasMcpSection) {
     // Replace existing MCP section with updated one
-    mergedContent = existingContent.replace(/(## MCP Server Integration[\s\S]*?)(?=\n## [^M]|$)/i, `${mcpSection}\n`);
+    mergedContent = existingContent.replace(
+      /(## MCP Server Integration[\s\S]*?)(?=\n## (?!MCP|Essential MCP|CRITICAL RULES for AI)|$)/i,
+      `${mcpSection}\n`
+    );
   } else {
     // Add MCP section after the project overview (or at the beginning)
     const overviewMatch = existingContent.match(/(## Project Overview[\s\S]*?)(?=\n## |$)/i);
