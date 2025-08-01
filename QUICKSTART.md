@@ -262,7 +262,7 @@ Note: Claude will ask you to describe what new plugins should do before creating
 
 - `list-templates` - See all available templates before creating anything
 - `get-template <name>` - Get exact template content instead of improvising
-- `validate-plugin .` - Get actionable recommendations with specific commands
+- `validate .` - Get actionable recommendations with specific commands
 
 This prevents common issues like release automation failures, configuration conflicts, and Claude creating custom implementations when official templates exist.
 

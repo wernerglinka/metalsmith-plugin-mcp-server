@@ -58,7 +58,7 @@ This creates a fully-configured plugin with:
 Check existing plugins against quality standards:
 
 ```js
-await mcp.call('validate-plugin', {
+await mcp.call('validate', {
   path: './metalsmith-my-plugin',
   checks: [
     'structure',
@@ -93,7 +93,7 @@ Validation checks include:
 Generate configuration files following enhanced standards:
 
 ```js
-await mcp.call('generate-configs', {
+await mcp.call('configs', {
   outputPath: './my-plugin',
   configs: ['eslint', 'prettier', 'editorconfig', 'gitignore', 'release-it']
 });
@@ -388,8 +388,8 @@ Important Notes:
 In a new Claude Code session, the following tools should be available:
 
 - **plugin-scaffold** - Generate plugin structures
-- **validate-plugin** - Check plugin quality
-- **generate-configs** - Create configuration files
+- **validate** - Check plugin quality
+- **configs** - Create configuration files
 - **update-deps** - Update plugin dependencies
 - **list-templates** - Show all available templates
 - **get-template** - Retrieve specific template content

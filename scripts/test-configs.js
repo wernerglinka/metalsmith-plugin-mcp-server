@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Test script for the generate-configs tool
+ * Test script for the configs tool
  * This generates configuration files and shows the results
  */
 
@@ -14,7 +14,7 @@ const testRequest = {
   id: 1,
   method: 'tools/call',
   params: {
-    name: 'generate-configs',
+    name: 'configs',
     arguments: {
       outputPath: './test-configs',
       configs: ['eslint', 'prettier', 'gitignore']
@@ -22,7 +22,7 @@ const testRequest = {
   }
 };
 
-console.log('⚙️  Testing generate-configs tool...\n');
+console.log('⚙️  Testing configs tool...\n');
 
 const server = spawn('node', ['src/index.js'], {
   stdio: ['pipe', 'pipe', 'pipe']

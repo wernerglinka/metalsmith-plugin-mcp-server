@@ -176,10 +176,10 @@ get-template configs/release-it.json
 get-template configs/eslint.config.js
 
 # Validate plugin and get actionable recommendations
-validate-plugin .
+validate .
 
 # Generate configuration files
-generate-configs .
+configs .
 \`\`\`
 
 ### CRITICAL RULES for AI Assistants

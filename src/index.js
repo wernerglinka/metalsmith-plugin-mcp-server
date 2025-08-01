@@ -132,7 +132,7 @@ ${aiInstructions ? `\n${aiInstructions}` : ''}`,
     }
   },
   {
-    name: 'validate-plugin',
+    name: 'validate',
     description: 'Check an existing Metalsmith plugin against quality standards with build-time focused validations',
     inputSchema: {
       type: 'object',
@@ -176,7 +176,7 @@ ${aiInstructions ? `\n${aiInstructions}` : ''}`,
     }
   },
   {
-    name: 'generate-configs',
+    name: 'configs',
     description: 'Generate configuration files following enhanced standards',
     inputSchema: {
       type: 'object',
@@ -334,10 +334,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       case 'plugin-scaffold':
         return await pluginScaffoldTool(args); // Generate new plugin
 
-      case 'validate-plugin':
+      case 'validate':
         return await validatePluginTool(args); // Check existing plugin
 
-      case 'generate-configs':
+      case 'configs':
         return await generateConfigsTool(args); // Create config files
 
       case 'update-deps':

@@ -166,13 +166,13 @@ echo '{"name": "metalsmith-test", "version": "1.0.0"}' > test-plugin/package.jso
 echo 'export default function() {}' > test-plugin/src/index.js
 echo '# Test Plugin' > test-plugin/README.md
 
-echo '{"jsonrpc": "2.0", "id": 3, "method": "tools/call", "params": {"name": "validate-plugin", "arguments": {"path": "./test-plugin", "checks": ["structure", "package-json"]}}}' | node src/index.js
+echo '{"jsonrpc": "2.0", "id": 3, "method": "tools/call", "params": {"name": "validate", "arguments": {"path": "./test-plugin", "checks": ["structure", "package-json"]}}}' | node src/index.js
 ```
 
 ### 4. Test Configuration Generation
 
 ```bash
-echo '{"jsonrpc": "2.0", "id": 4, "method": "tools/call", "params": {"name": "generate-configs", "arguments": {"outputPath": "./test-configs", "configs": ["eslint", "prettier"]}}}' | node src/index.js
+echo '{"jsonrpc": "2.0", "id": 4, "method": "tools/call", "params": {"name": "configs", "arguments": {"outputPath": "./test-configs", "configs": ["eslint", "prettier"]}}}' | node src/index.js
 ```
 
 ## Method 2: Using the Test Scripts

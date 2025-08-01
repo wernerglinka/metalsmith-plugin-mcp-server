@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Test script for the validate-plugin tool
+ * Test script for the validate tool
  * This creates a simple plugin structure and validates it
  */
 
@@ -99,7 +99,7 @@ async function validatePlugin() {
     id: 1,
     method: 'tools/call',
     params: {
-      name: 'validate-plugin',
+      name: 'validate',
       arguments: {
         path: './test-validation-plugin',
         checks: ['structure', 'tests', 'docs', 'package-json']
@@ -107,7 +107,7 @@ async function validatePlugin() {
     }
   };
 
-  console.log('🔍 Testing validate-plugin tool...\n');
+  console.log('🔍 Testing validate tool...\n');
 
   const server = spawn('node', ['src/index.js'], {
     stdio: ['pipe', 'pipe', 'pipe']
