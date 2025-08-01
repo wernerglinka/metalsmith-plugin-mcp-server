@@ -28,6 +28,8 @@ import { validatePluginTool } from './tools/validate-plugin.js';
 import { generateConfigsTool } from './tools/generate-configs.js';
 import { updateDepsTool } from './tools/update-deps.js';
 import { showTemplateTool } from './tools/show-template.js';
+import { listTemplatesTool } from './tools/list-templates.js';
+import { getTemplateTool } from './tools/get-template.js';
 
 // Import AI assistant instructions
 import { promises as fs } from 'fs';
@@ -212,6 +214,31 @@ ${aiInstructions ? `\n${aiInstructions}` : ''}`,
     }
   },
   {
+    name: 'list-templates',
+    description:
+      'List all available templates that can be retrieved with get-template. Use this to see what templates are available before using get-template.',
+    inputSchema: {
+      type: 'object',
+      properties: {},
+      required: []
+    }
+  },
+  {
+    name: 'get-template',
+    description:
+      'Get the exact content of a specific template file. Use list-templates first to see available templates. Always use official templates rather than creating your own versions.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        template: {
+          type: 'string',
+          description: 'Template name (e.g., "plugin/CLAUDE.md", "configs/release-it.json")'
+        }
+      },
+      required: ['template']
+    }
+  },
+  {
     name: 'update-deps',
     description: 'Update dependencies in Metalsmith plugin(s) using npm-check-updates',
     inputSchema: {
@@ -291,6 +318,12 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       case 'show-template':
         return await showTemplateTool(args); // Show configuration templates
+
+      case 'list-templates':
+        return await listTemplatesTool(args); // List all available templates
+
+      case 'get-template':
+        return await getTemplateTool(args); // Get specific template content
 
       default:
         // This shouldn't happen if Claude only calls tools we advertised

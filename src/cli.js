@@ -9,7 +9,7 @@
 
 import { spawn } from 'child_process';
 import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
+import path, { dirname, join } from 'path';
 import { promises as fs } from 'fs';
 import { homedir } from 'os';
 import chalk from 'chalk';
@@ -109,6 +109,9 @@ function showHelp() {
   console.warn('  validate [path] [--functional] Validate an existing plugin');
   console.warn('  configs [path]                Generate configuration files');
   console.warn('  show-template [type]          Display recommended configuration templates');
+  console.warn('  list-templates                List all available templates');
+  console.warn('  get-template [name]           Get specific template content (e.g., plugin/CLAUDE.md)');
+  console.warn('  install-claude-md [path] [--replace] [--dry-run] Install CLAUDE.md with AI assistant instructions');
   console.warn('  update-deps [path] [--install] [--test] Update dependencies in plugin(s)\n');
 
   console.warn(chalk.gray('Note: Commands can be run in guided mode by omitting parameters\n'));
@@ -122,7 +125,11 @@ function showHelp() {
   console.warn('  npx metalsmith-plugin-mcp-server validate ./ --functional # Run tests & coverage');
   console.warn('  npx metalsmith-plugin-mcp-server configs ./my-plugin');
   console.warn('  npx metalsmith-plugin-mcp-server show-template release-it  # Show .release-it.json template');
-  console.warn('  npx metalsmith-plugin-mcp-server show-template package-scripts # Show secure release scripts');
+  console.warn('  npx metalsmith-plugin-mcp-server list-templates            # Show all available templates');
+  console.warn('  npx metalsmith-plugin-mcp-server get-template plugin/CLAUDE.md # Get CLAUDE.md template');
+  console.warn('  npx metalsmith-plugin-mcp-server install-claude-md         # Smart merge CLAUDE.md in current dir');
+  console.warn('  npx metalsmith-plugin-mcp-server install-claude-md --replace # Replace existing CLAUDE.md');
+  console.warn('  npx metalsmith-plugin-mcp-server install-claude-md --dry-run # Preview changes without applying');
   console.warn('  npx metalsmith-plugin-mcp-server update-deps ./plugins     # Update all plugins');
   console.warn('  npx metalsmith-plugin-mcp-server update-deps ./my-plugin   # Update single plugin');
   console.warn('  npx metalsmith-plugin-mcp-server update-deps ./ --install --test # Update, install & test\n');
@@ -492,6 +499,293 @@ async function runShowTemplate(template) {
 }
 
 /**
+ * List all available templates
+ * Shows all templates that can be retrieved with get-template
+ * @returns {Promise<void>}
+ */
+async function runListTemplates() {
+  try {
+    // Import and run the list templates tool directly
+    const { listTemplatesTool } = await import('./tools/list-templates.js');
+    const result = await listTemplatesTool();
+
+    // The tool returns a content array, extract the text
+    if (result.content && result.content[0] && result.content[0].text) {
+      console.warn(result.content[0].text);
+    } else {
+      console.error(styles.error('No template list returned'));
+    }
+  } catch (error) {
+    console.error(styles.error('Error listing templates:'), error.message);
+    process.exit(1);
+  }
+}
+
+/**
+ * Get specific template content
+ * Retrieves the exact content of a specific template file
+ * @param {string} template - Template name (e.g., "plugin/CLAUDE.md")
+ * @returns {Promise<void>}
+ */
+async function runGetTemplate(template) {
+  // Interactive mode if template is missing
+  if (!template) {
+    console.warn(styles.header('\nGet template content\n'));
+    console.warn('Use "list-templates" to see all available templates.\n');
+    console.warn('Examples:');
+    console.warn('  plugin/CLAUDE.md        - AI development context');
+    console.warn('  configs/release-it.json - Release configuration');
+    console.warn('  configs/eslint.config.js- ESLint configuration\n');
+
+    template = await prompt('Template name (e.g., plugin/CLAUDE.md)');
+
+    if (!template) {
+      console.error(styles.error('\nError: Template name is required'));
+      process.exit(1);
+    }
+  }
+
+  try {
+    // Import and run the get template tool directly
+    const { getTemplateTool } = await import('./tools/get-template.js');
+    const result = await getTemplateTool({ template });
+
+    // The tool returns a content array, extract the text
+    if (result.content && result.content[0] && result.content[0].text) {
+      console.warn(result.content[0].text);
+    } else {
+      console.error(styles.error('No template content returned'));
+    }
+  } catch (error) {
+    console.error(styles.error('Error getting template:'), error.message);
+    process.exit(1);
+  }
+}
+
+/**
+ * Install CLAUDE.md template directly into a plugin directory
+ * Supports smart merging with existing CLAUDE.md files to preserve project-specific content
+ * @param {string} targetPath - Path where to install CLAUDE.md (defaults to current directory)
+ * @param {Object} options - Installation options
+ * @param {boolean} options.replace - Force full replacement instead of smart merge
+ * @param {boolean} options.dryRun - Show what would be changed without making changes
+ * @returns {Promise<void>}
+ */
+async function runInstallClaudeMd(targetPath = '.', options = {}) {
+  const { replace = false, dryRun = false } = options;
+
+  try {
+    console.warn(
+      styles.header(dryRun ? '\nDry run: CLAUDE.md template analysis\n' : '\nInstalling CLAUDE.md template\n')
+    );
+
+    // Get the plugin name from package.json if available
+    let pluginName = 'your-plugin';
+    let pluginDescription = 'A Metalsmith plugin';
+    let camelCaseName = 'yourPlugin';
+
+    try {
+      const packageJsonPath = path.join(targetPath, 'package.json');
+      const packageJson = JSON.parse(await fs.readFile(packageJsonPath, 'utf8'));
+
+      if (packageJson.name) {
+        pluginName = packageJson.name;
+        // Convert kebab-case to camelCase for function names
+        camelCaseName = pluginName
+          .replace(/^metalsmith-/, '') // Remove metalsmith- prefix
+          .replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());
+      }
+
+      if (packageJson.description) {
+        pluginDescription = packageJson.description;
+      }
+    } catch {
+      // If no package.json or can't read it, use defaults
+      console.warn(styles.warning('Note: Could not read package.json, using default values'));
+    }
+
+    const claudemdPath = path.join(targetPath, 'CLAUDE.md');
+    let existingContent = null;
+    let hasMcpSection = false;
+
+    // Check if CLAUDE.md already exists
+    try {
+      existingContent = await fs.readFile(claudemdPath, 'utf8');
+      hasMcpSection = /## MCP Server Integration|### MCP|Essential MCP Commands/i.test(existingContent);
+
+      console.warn(styles.info(`Found existing CLAUDE.md (${existingContent.length} characters)`));
+      console.warn(styles.info(`Has MCP section: ${hasMcpSection ? 'Yes' : 'No'}`));
+    } catch {
+      // File doesn't exist
+      console.warn(styles.info('No existing CLAUDE.md found'));
+    }
+
+    // Get the MCP template content
+    const { getTemplateTool } = await import('./tools/get-template.js');
+    const result = await getTemplateTool({ template: 'plugin/CLAUDE.md' });
+
+    if (!result.content || !result.content[0] || !result.content[0].text) {
+      throw new Error('Could not retrieve CLAUDE.md template');
+    }
+
+    // Extract just the template content (remove the wrapper text)
+    const fullOutput = result.content[0].text;
+    const contentMatch = fullOutput.match(/```\n([\s\S]*?)\n```/);
+
+    if (!contentMatch) {
+      throw new Error('Could not extract template content');
+    }
+
+    let templateContent = contentMatch[1];
+
+    // Replace template variables
+    templateContent = templateContent
+      .replace(/\{\{\s*name\s*\}\}/g, pluginName)
+      .replace(/\{\{\s*description\s*\}\}/g, pluginDescription)
+      .replace(/\{\{\s*camelCaseName\s*\}\}/g, camelCaseName);
+
+    // Handle conditional sections - for now, assume default features
+    templateContent = templateContent
+      .replace(
+        /\{%- if features\.includes\('async-processing'\) or features\.includes\('background-processing'\) %\}[\s\S]*?\{%- endif %\}/g,
+        ''
+      )
+      .replace(/\{%- if features\.includes\('metadata-generation'\) %\}[\s\S]*?\{%- endif %\}/g, '')
+      .replace(/\{%- if features\.length > 0 %\}[\s\S]*?\{%- else %\}([\s\S]*?)\{%- endif %\}/g, '$1')
+      .replace(/\{%- if features\.includes\('async-processing'\) %\}[\s\S]*?\{%- endif %\}/g, '');
+
+    let finalContent;
+    let operation;
+
+    if (!existingContent) {
+      // No existing file - create new
+      finalContent = templateContent;
+      operation = 'create';
+    } else if (replace) {
+      // Force full replacement
+      finalContent = templateContent;
+      operation = 'replace';
+    } else {
+      // Smart merge
+      finalContent = smartMergeClaudeMd(existingContent, templateContent, { hasMcpSection });
+      operation = 'merge';
+    }
+
+    if (dryRun) {
+      console.warn(styles.info(`\nOperation: ${operation}`));
+      console.warn(styles.info(`Final content length: ${finalContent.length} characters`));
+
+      if (existingContent) {
+        console.warn(styles.info(`Original length: ${existingContent.length} characters`));
+        console.warn(
+          styles.info(
+            `Change: ${finalContent.length - existingContent.length > 0 ? '+' : ''}${finalContent.length - existingContent.length} characters`
+          )
+        );
+      }
+
+      console.warn(styles.warning('\nPreview of changes (first 500 characters):'));
+      console.warn(styles.info(finalContent.substring(0, 500) + (finalContent.length > 500 ? '...' : '')));
+      console.warn(styles.info('\nUse without --dry-run to apply changes'));
+      return;
+    }
+
+    // Handle existing file confirmation
+    if (existingContent && !replace) {
+      const rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout
+      });
+
+      const message = hasMcpSection
+        ? 'Update existing CLAUDE.md with latest MCP guidance? (Y/n) '
+        : 'Add MCP Server integration to existing CLAUDE.md? (Y/n) ';
+
+      const answer = await new Promise((resolve) => {
+        rl.question(message, resolve);
+      });
+
+      rl.close();
+
+      if (answer.toLowerCase() === 'n' || answer.toLowerCase() === 'no') {
+        console.warn(styles.info('Installation cancelled'));
+        return;
+      }
+    }
+
+    await fs.writeFile(claudemdPath, finalContent, 'utf8');
+
+    const actionWord = operation === 'create' ? 'created' : operation === 'replace' ? 'replaced' : 'updated';
+    console.warn(styles.success(`✓ CLAUDE.md ${actionWord} successfully at ${claudemdPath}`));
+
+    if (operation === 'merge') {
+      console.warn(styles.info('✓ Preserved existing project-specific content'));
+      console.warn(
+        styles.info(
+          hasMcpSection ? '✓ Updated MCP Server integration section' : '✓ Added MCP Server integration section'
+        )
+      );
+    }
+
+    console.warn(styles.info('\nNext steps:'));
+    console.warn(
+      '1. Add the MCP server to Claude: claude mcp add metalsmith-plugin npx "metalsmith-plugin-mcp-server@latest" "server"'
+    );
+    console.warn('2. Ask Claude to review CLAUDE.md for full context');
+    console.warn('3. Claude will now have all the instructions to use the MCP server properly\n');
+  } catch (error) {
+    console.error(styles.error('Error installing CLAUDE.md:'), error.message);
+    process.exit(1);
+  }
+}
+
+/**
+ * Smart merge existing CLAUDE.md content with MCP template
+ * Preserves project-specific content while adding/updating MCP guidance
+ * @param {string} existingContent - Current CLAUDE.md content
+ * @param {string} templateContent - New template content
+ * @param {Object} context - Merge context information
+ * @returns {string} Merged content
+ */
+function smartMergeClaudeMd(existingContent, templateContent, context = {}) {
+  const { hasMcpSection } = context;
+
+  // Extract the MCP section from template
+  const mcpSectionMatch = templateContent.match(/(## MCP Server Integration \(CRITICAL\)[\s\S]*?)(?=\n## [^M]|$)/);
+  const mcpSection = mcpSectionMatch ? mcpSectionMatch[1] : '';
+
+  if (!mcpSection) {
+    throw new Error('Could not extract MCP section from template');
+  }
+
+  let mergedContent;
+
+  if (hasMcpSection) {
+    // Replace existing MCP section with updated one
+    mergedContent = existingContent.replace(/(## MCP Server Integration[\s\S]*?)(?=\n## [^M]|$)/i, `${mcpSection}\n`);
+  } else {
+    // Add MCP section after the project overview (or at the beginning)
+    const overviewMatch = existingContent.match(/(## Project Overview[\s\S]*?)(?=\n## |$)/i);
+
+    if (overviewMatch) {
+      // Insert after Project Overview
+      mergedContent = existingContent.replace(/(## Project Overview[\s\S]*?)(\n## )/, `$1\n\n${mcpSection}\n$2`);
+    } else {
+      // Insert at the beginning after the title
+      const titleMatch = existingContent.match(/^(# [^\n]*\n)/);
+      if (titleMatch) {
+        mergedContent = existingContent.replace(/^(# [^\n]*\n)/, `$1\n${mcpSection}\n\n`);
+      } else {
+        // Just prepend
+        mergedContent = `${mcpSection}\n\n${existingContent}`;
+      }
+    }
+  }
+
+  return mergedContent;
+}
+
+/**
  * Update dependencies in Metalsmith plugin(s)
  * Uses npm-check-updates to check and update dependencies
  * @param {string} path - Path to plugin directory or parent directory containing plugins
@@ -583,6 +877,23 @@ switch (command) {
 
   case 'show-template':
     runShowTemplate(args[1]);
+    break;
+
+  case 'list-templates':
+    runListTemplates();
+    break;
+
+  case 'get-template':
+    runGetTemplate(args[1]);
+    break;
+
+  case 'install-claude-md':
+    {
+      const targetPath = args[1];
+      const replace = args.includes('--replace');
+      const dryRun = args.includes('--dry-run');
+      runInstallClaudeMd(targetPath, { replace, dryRun });
+    }
     break;
 
   case 'update-deps':

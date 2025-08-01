@@ -152,6 +152,16 @@ npx metalsmith-plugin-mcp-server validate ./my-plugin
 # Generate configuration files
 npx metalsmith-plugin-mcp-server configs ./my-plugin
 
+# Show all available templates
+npx metalsmith-plugin-mcp-server list-templates
+
+# Get specific template content (useful for CLAUDE.md, configs, etc.)
+npx metalsmith-plugin-mcp-server get-template plugin/CLAUDE.md
+npx metalsmith-plugin-mcp-server get-template configs/release-it.json
+
+# Install CLAUDE.md with AI assistant instructions (perfect for MCP workflow)
+npx metalsmith-plugin-mcp-server install-claude-md
+
 # Update dependencies
 npx metalsmith-plugin-mcp-server update-deps ./my-plugin
 
@@ -381,6 +391,52 @@ In a new Claude Code session, the following tools should be available:
 - **validate-plugin** - Check plugin quality
 - **generate-configs** - Create configuration files
 - **update-deps** - Update plugin dependencies
+- **list-templates** - Show all available templates
+- **get-template** - Retrieve specific template content
+
+#### Optimal AI Workflow for Existing Plugins
+
+For existing plugins that don't have CLAUDE.md yet, use this workflow:
+
+1. **Add the MCP server** (if not already done):
+
+   ```bash
+   claude mcp add metalsmith-plugin npx "metalsmith-plugin-mcp-server@latest" "server"
+   ```
+
+2. **Install CLAUDE.md with complete AI instructions**:
+
+   ```bash
+   # Smart merge with existing CLAUDE.md (preserves your content)
+   npx metalsmith-plugin-mcp-server install-claude-md
+
+   # Preview changes before applying
+   npx metalsmith-plugin-mcp-server install-claude-md --dry-run
+
+   # Force full replacement (overwrites existing content)
+   npx metalsmith-plugin-mcp-server install-claude-md --replace
+   ```
+
+3. **Ask Claude to review CLAUDE.md for context**:
+
+   ```
+   Please review the CLAUDE.md file for context on how to work with this plugin
+   ```
+
+4. **Claude now has all the instructions** to:
+   - Use MCP server templates correctly
+   - Follow validation recommendations
+   - Avoid creating custom implementations
+   - Use proper commands like `get-template` and `list-templates`
+
+This ensures Claude instances work consistently and follow the MCP server patterns rather than improvising their own solutions.
+
+**Smart Merge Feature**: The `install-claude-md` command intelligently merges MCP guidance with existing project-specific content:
+
+- **Preserves existing content**: Your custom development notes, architecture decisions, and team instructions stay intact
+- **Adds MCP section**: Inserts comprehensive AI assistant instructions without overwriting your content
+- **Updates existing MCP sections**: If MCP guidance already exists, it updates it with the latest instructions
+- **Safe preview**: Use `--dry-run` to see exactly what changes will be made before applying them
 
 ### Restart Your AI Assistant\*\*:
 

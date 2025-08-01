@@ -25,6 +25,15 @@ npx metalsmith-plugin-mcp-server validate ./test-output/test-plugin --functional
 
 # Generate config files
 npx metalsmith-plugin-mcp-server configs ./test-output/test-plugin
+
+# Test template commands
+npx metalsmith-plugin-mcp-server list-templates
+npx metalsmith-plugin-mcp-server get-template plugin/CLAUDE.md
+npx metalsmith-plugin-mcp-server get-template configs/release-it.json
+
+# Test CLAUDE.md installation and smart merge
+npx metalsmith-plugin-mcp-server install-claude-md ./test-output/test-plugin
+npx metalsmith-plugin-mcp-server install-claude-md ./test-output/test-plugin --dry-run
 ```
 
 ### Test with local installation
@@ -310,6 +319,72 @@ The server logs to stderr, so you can monitor activity:
 ```bash
 node src/index.js 2>server.log &
 tail -f server.log
+```
+
+## Testing Smart Merge Functionality
+
+The `install-claude-md` command has smart merge capabilities that preserve existing content. Test this thoroughly:
+
+### Testing Smart Merge with Existing Content
+
+```bash
+# Create a test plugin with existing CLAUDE.md
+mkdir test-merge-plugin
+cd test-merge-plugin
+echo '{"name": "test-plugin", "description": "Test plugin"}' > package.json
+
+# Create existing CLAUDE.md with custom content
+cat > CLAUDE.md << 'EOF'
+# test-plugin - Development Context
+
+## Project Overview
+This plugin does amazing custom things.
+
+## Custom Development Notes
+- Special requirements here
+- Team-specific workflows
+- Custom deployment process
+
+## Architecture Notes
+Important design decisions that must be preserved.
+EOF
+
+# Test dry run (preview changes)
+npx metalsmith-plugin-mcp-server install-claude-md --dry-run
+
+# Test smart merge (should preserve custom content)
+npx metalsmith-plugin-mcp-server install-claude-md
+
+# Verify content was preserved and MCP section was added
+cat CLAUDE.md
+
+# Test updating existing MCP section
+npx metalsmith-plugin-mcp-server install-claude-md
+
+# Test force replacement (should overwrite everything)
+npx metalsmith-plugin-mcp-server install-claude-md --replace
+
+# Cleanup
+cd .. && rm -rf test-merge-plugin
+```
+
+### Testing Without Existing CLAUDE.md
+
+```bash
+# Create plugin without CLAUDE.md
+mkdir test-new-plugin
+cd test-new-plugin
+echo '{"name": "new-plugin", "description": "New plugin"}' > package.json
+
+# Should create new CLAUDE.md with plugin-specific content
+npx metalsmith-plugin-mcp-server install-claude-md
+
+# Verify plugin name and description were inserted
+grep "new-plugin" CLAUDE.md
+grep "New plugin" CLAUDE.md
+
+# Cleanup
+cd .. && rm -rf test-new-plugin
 ```
 
 ## Testing Generated Plugins

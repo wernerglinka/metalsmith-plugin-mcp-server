@@ -204,6 +204,36 @@ Run server tests with:
 npm test
 ```
 
+### Testing New Template Commands
+
+When working on template-related features, test all the template commands:
+
+```bash
+# List all templates
+npx metalsmith-plugin-mcp-server list-templates
+
+# Get specific templates
+npx metalsmith-plugin-mcp-server get-template plugin/CLAUDE.md
+npx metalsmith-plugin-mcp-server get-template configs/release-it.json
+
+# Test smart merge functionality
+mkdir test-plugin && cd test-plugin
+echo '{"name": "test-plugin"}' > package.json
+echo "# Test Plugin\nExisting content" > CLAUDE.md
+
+# Test dry run
+npx metalsmith-plugin-mcp-server install-claude-md --dry-run
+
+# Test smart merge
+npx metalsmith-plugin-mcp-server install-claude-md
+
+# Test full replacement
+npx metalsmith-plugin-mcp-server install-claude-md --replace
+
+# Cleanup
+cd .. && rm -rf test-plugin
+```
+
 ### Testing Generated Plugins
 
 Generated plugins use dual module testing. After scaffolding a plugin:

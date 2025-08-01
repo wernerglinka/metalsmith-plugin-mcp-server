@@ -221,11 +221,11 @@ async function checkStructure(pluginPath, results, functional = false, config) {
     } catch {
       if (file === '.release-it.json') {
         results.recommendations.push(
-          `💡 Consider adding ${file} for automated releases. Run: npx metalsmith-plugin-mcp-server scaffold ${pluginPath} .release-it.json release-config`
+          `💡 Consider adding ${file} for automated releases. Use: get-template configs/release-it.json`
         );
       } else if (file === 'CLAUDE.md') {
         results.recommendations.push(
-          `💡 Consider adding ${file} for AI development context. Run: npx metalsmith-plugin-mcp-server scaffold ${pluginPath} CLAUDE.md claude-context`
+          `💡 Consider adding ${file} for AI development context. Use: get-template plugin/CLAUDE.md`
         );
       } else {
         results.recommendations.push(`💡 Consider adding recommended file: ${file}`);

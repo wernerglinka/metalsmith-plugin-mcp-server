@@ -25,6 +25,18 @@ npx metalsmith-plugin-mcp-server validate ./my-plugin --functional
 # Generate configuration files
 npx metalsmith-plugin-mcp-server configs ./my-plugin
 
+# Show all available templates
+npx metalsmith-plugin-mcp-server list-templates
+
+# Get specific template content
+npx metalsmith-plugin-mcp-server get-template plugin/CLAUDE.md
+
+# Install CLAUDE.md with AI assistant instructions (smart merge)
+npx metalsmith-plugin-mcp-server install-claude-md
+
+# Preview CLAUDE.md changes before applying
+npx metalsmith-plugin-mcp-server install-claude-md --dry-run
+
 # Update dependencies (dry run)
 npx metalsmith-plugin-mcp-server update-deps ./my-plugin
 
@@ -132,6 +144,39 @@ echo '{"jsonrpc": "2.0", "id": 2, "method": "tools/call", "params": {"name": "pl
 
 ## 🤖 Using with Claude
 
+### Optimal Workflow for Existing Plugins
+
+If you have an existing plugin and want to use it with Claude efficiently:
+
+**1. Add the MCP server to Claude Code:**
+
+```bash
+claude mcp add metalsmith-plugin npx "metalsmith-plugin-mcp-server@latest" "server"
+```
+
+**2. Install AI guidance (preserves your existing content):**
+
+```bash
+# Smart merge - adds MCP guidance without overwriting your documentation
+npx metalsmith-plugin-mcp-server install-claude-md
+
+# Or preview changes first
+npx metalsmith-plugin-mcp-server install-claude-md --dry-run
+```
+
+**3. Ask Claude to review the guidance:**
+
+```
+Please review the CLAUDE.md file for context on how to work with this plugin
+```
+
+**4. Now Claude has both:**
+
+- Your project-specific context and requirements
+- Complete MCP server instructions to work properly
+
+This prevents Claude from creating custom implementations and ensures it uses the official MCP templates and validation recommendations.
+
 ### Option 1: Claude Desktop with npx
 
 Add to your Claude Desktop config (`~/Library/Application Support/Claude/claude_desktop_config.json` on macOS):
@@ -181,24 +226,45 @@ node src/index.js
 
 Once connected, you can ask Claude to:
 
+**Plugin Creation & Validation:**
+
 - **"Create a plugin called 'content-processor' that transforms markdown files"**
 - **"Make a plugin named 'image-optimizer' that compresses and resizes images"**
 - **"Validate my existing plugin at ./my-plugin"**
-- **"Generate ESLint and Prettier configs for my project"**
 - **"Create a transformer plugin with metadata generation"**
 
-Note: Claude will now ask you to describe what the plugin should do before creating it.
+**Template & Configuration Management:**
+
+- **"Show me all available templates"**
+- **"Get the CLAUDE.md template content"**
+- **"Install CLAUDE.md guidance for AI assistants"**
+- **"Generate ESLint and Prettier configs for my project"**
+- **"Add MCP server guidance to my existing CLAUDE.md"**
+
+**Smart AI Integration:**
+
+- **"Review the CLAUDE.md file for context on this plugin"** (after installing CLAUDE.md)
+- **"Update my plugin following MCP server recommendations"**
+- **"Use the official templates instead of creating custom ones"**
+
+Note: Claude will ask you to describe what new plugins should do before creating them, and it will use official MCP templates rather than creating custom implementations.
 
 ### 💡 Important: Following MCP Server Recommendations
 
-When the MCP server provides recommendations or code snippets through your AI assistant:
+**With CLAUDE.md installed, Claude now knows to:**
 
-- **Implement exactly as shown** - Don't create simplified versions
-- **Copy configurations precisely** - Release scripts, ESLint configs, etc. should match exactly
-- **Follow referenced patterns** - If the server mentions specific documentation patterns, use them as-is
-- **Ask before deviating** - If something seems unclear, ask for clarification rather than interpreting
+- **Use official templates** - `get-template` and `list-templates` instead of creating custom versions
+- **Follow validation recommendations** - Use exact commands provided by the validation tool
+- **Implement precisely** - Copy configurations and code exactly as shown in templates
+- **Ask before improvising** - Request clarification rather than making assumptions
 
-This prevents common issues like release automation failures or configuration conflicts.
+**Key Commands Claude Should Use:**
+
+- `list-templates` - See all available templates before creating anything
+- `get-template <name>` - Get exact template content instead of improvising
+- `validate-plugin .` - Get actionable recommendations with specific commands
+
+This prevents common issues like release automation failures, configuration conflicts, and Claude creating custom implementations when official templates exist.
 
 ### Working with Generated Plugins
 
