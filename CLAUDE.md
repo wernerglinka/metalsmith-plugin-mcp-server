@@ -28,6 +28,34 @@ Remember: The goal is effective solutions, not making the user feel good about s
 
 **Why**: Previous Claude instances have made "helpful" changes that broke workflows, especially changing npm.publish from false to true, causing unwanted automatic publishing.
 
+## CRITICAL: Context Detection Before MCP Server Usage
+
+**BEFORE using ANY MCP server command, MUST check:**
+
+1. **Use `LS` tool to list current directory contents**
+2. **Analyze the context:**
+   - Files present = EXISTING project → Use `get-template` for reference only
+   - Empty/no relevant files = NEW project → Use `plugin-scaffold`
+
+**EXISTING Project Indicators:**
+
+- `package.json` present
+- `src/` directory exists
+- `README.md` exists
+- Any plugin-related files
+
+**When EXISTING project detected:**
+
+- ❌ NEVER use `plugin-scaffold`
+- ✅ Use `get-template` to retrieve content for reference
+- ✅ Use `validate-plugin` for recommendations
+- ✅ Edit existing files directly
+
+**When NEW project (empty directory):**
+
+- ✅ Use `plugin-scaffold` to create structure
+- ✅ Follow complete scaffolding workflow
+
 ## Error Handling
 
 Focus on getting to successful results quickly:
