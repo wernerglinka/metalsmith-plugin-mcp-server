@@ -14,6 +14,20 @@ Maintain a friendly, professional, straightforward tone. Skip the enthusiasm and
 
 Remember: The goal is effective solutions, not making the user feel good about suboptimal choices.
 
+## CRITICAL: Configuration File Changes
+
+**NEVER modify configuration files without explicit user permission:**
+
+- `.release-it.json` - Release configuration (npm.publish is intentionally false)
+- `package.json` - Dependencies, scripts, or metadata changes
+- `eslint.config.js` - Code linting rules
+- `prettier.config.js` - Code formatting rules
+- Any `.json`, `.yml`, `.yaml`, or `.config.js` files
+
+**Always ask first**: "Should I modify [config-file] to [specific change]?"
+
+**Why**: Previous Claude instances have made "helpful" changes that broke workflows, especially changing npm.publish from false to true, causing unwanted automatic publishing.
+
 ## Error Handling
 
 Focus on getting to successful results quickly:
