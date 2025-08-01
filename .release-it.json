@@ -18,8 +18,7 @@
   },
   "npm": {
     "publish": false,
-    "publishPath": ".",
-    "_comment": "IMPORTANT: publish is intentionally false - npm publishing is done manually"
+    "publishPath": "."
   },
   "hooks": {
     "before:init": ["git pull", "npm test", "npm run lint", "npm run format"],
