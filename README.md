@@ -393,6 +393,7 @@ In a new Claude Code session, the following tools should be available:
 - **update-deps** - Update plugin dependencies
 - **list-templates** - Show all available templates
 - **get-template** - Retrieve specific template content
+- **install-claude-md** - Install CLAUDE.md file with smart merge capabilities
 
 #### Optimal AI Workflow for Existing Plugins
 

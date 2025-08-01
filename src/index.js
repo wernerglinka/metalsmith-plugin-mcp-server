@@ -30,6 +30,7 @@ import { updateDepsTool } from './tools/update-deps.js';
 import { showTemplateTool } from './tools/show-template.js';
 import { listTemplatesTool } from './tools/list-templates.js';
 import { getTemplateTool } from './tools/get-template.js';
+import { installClaudeMdTool } from './tools/install-claude-md.js';
 
 // Import AI assistant instructions
 import { promises as fs } from 'fs';
@@ -239,6 +240,32 @@ ${aiInstructions ? `\n${aiInstructions}` : ''}`,
     }
   },
   {
+    name: 'install-claude-md',
+    description:
+      'Install a CLAUDE.md file in the current directory for existing Metalsmith plugins. Uses smart merge to preserve user customizations while ensuring essential MCP sections are present.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        path: {
+          type: 'string',
+          description: 'Directory path where CLAUDE.md should be created (default: current directory)',
+          default: '.'
+        },
+        replace: {
+          type: 'boolean',
+          description: 'Replace existing CLAUDE.md file completely (default: false - smart merge mode)',
+          default: false
+        },
+        dryRun: {
+          type: 'boolean',
+          description: 'Preview changes without applying them',
+          default: false
+        }
+      },
+      required: []
+    }
+  },
+  {
     name: 'update-deps',
     description: 'Update dependencies in Metalsmith plugin(s) using npm-check-updates',
     inputSchema: {
@@ -324,6 +351,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       case 'get-template':
         return await getTemplateTool(args); // Get specific template content
+
+      case 'install-claude-md':
+        return await installClaudeMdTool(args); // Install CLAUDE.md file with smart merge
 
       default:
         // This shouldn't happen if Claude only calls tools we advertised
