@@ -49,6 +49,7 @@ Remember: The goal is effective solutions, not making the user feel good about s
 - ❌ NEVER use `plugin-scaffold`
 - ✅ Use `get-template` to retrieve content for reference
 - ✅ Use `validate-plugin` for recommendations
+- ✅ Use `install-claude-md` to add/update CLAUDE.md context file
 - ✅ Edit existing files directly
 
 **When NEW project (empty directory):**
