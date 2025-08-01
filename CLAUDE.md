@@ -320,6 +320,14 @@ The .release-it.json configuration uses:
 - Setting `GH_TOKEN=` at the script level makes it available to the entire release-it process
 - release-it reads `GH_TOKEN` via `tokenRef` and creates the GitHub release automatically
 
+**CRITICAL: npm Publishing Configuration**:
+
+The `.release-it.json` file has `"npm.publish": false` **intentionally**. This is NOT a bug:
+
+- npm publishing is done manually by Werner
+- DO NOT change this setting to `true`
+- The comment in the file explains this is intentional
+
 ### Additional Release Best Practices
 
 Based on successful plugin implementations, consider these enhancements to .release-it.json:
