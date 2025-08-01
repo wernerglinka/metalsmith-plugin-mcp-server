@@ -17,7 +17,7 @@
     "tokenRef": "GH_TOKEN"
   },
   "npm": {
-    "publish": true,
+    "publish": false,
     "publishPath": "."
   },
   "hooks": {
