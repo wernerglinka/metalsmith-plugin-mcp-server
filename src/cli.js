@@ -638,21 +638,13 @@ async function runInstallClaudeMd(targetPath = '.', options = {}) {
 
     let templateContent = contentMatch[1];
 
-    // Replace template variables
+    // Replace template variables only - leave code blocks untouched
     templateContent = templateContent
       .replace(/\{\{\s*name\s*\}\}/g, pluginName)
       .replace(/\{\{\s*description\s*\}\}/g, pluginDescription)
       .replace(/\{\{\s*camelCaseName\s*\}\}/g, camelCaseName);
 
-    // Handle conditional sections - for now, assume default features
-    templateContent = templateContent
-      .replace(
-        /\{%- if features\.includes\('async-processing'\) or features\.includes\('background-processing'\) %\}[\s\S]*?\{%- endif %\}/g,
-        ''
-      )
-      .replace(/\{%- if features\.includes\('metadata-generation'\) %\}[\s\S]*?\{%- endif %\}/g, '')
-      .replace(/\{%- if features\.length > 0 %\}[\s\S]*?\{%- else %\}([\s\S]*?)\{%- endif %\}/g, '$1')
-      .replace(/\{%- if features\.includes\('async-processing'\) %\}[\s\S]*?\{%- endif %\}/g, '');
+    // No conditional processing - this is markdown with code examples, not a nunjucks template
 
     let finalContent;
     let operation;
@@ -751,10 +743,8 @@ function smartMergeClaudeMd(existingContent, templateContent, context = {}) {
   const { hasMcpSection } = context;
 
   // Extract the MCP section from template
-  // Match everything from "## MCP Server Integration" until the next ## that's not part of MCP
-  const mcpSectionMatch = templateContent.match(
-    /(## MCP Server Integration \(CRITICAL\)[\s\S]*?)(?=\n## (?!MCP|Essential MCP|CRITICAL RULES for AI)|$)/
-  );
+  // Match everything from "## MCP Server Integration" until the next ## heading or end of content
+  const mcpSectionMatch = templateContent.match(/(## MCP Server Integration \(CRITICAL\)[\s\S]*?)(?=\n## |$)/);
   const mcpSection = mcpSectionMatch ? mcpSectionMatch[1] : '';
 
   if (!mcpSection) {
@@ -765,10 +755,7 @@ function smartMergeClaudeMd(existingContent, templateContent, context = {}) {
 
   if (hasMcpSection) {
     // Replace existing MCP section with updated one
-    mergedContent = existingContent.replace(
-      /(## MCP Server Integration[\s\S]*?)(?=\n## (?!MCP|Essential MCP|CRITICAL RULES for AI)|$)/i,
-      `${mcpSection}\n`
-    );
+    mergedContent = existingContent.replace(/(## MCP Server Integration[\s\S]*?)(?=\n## |$)/i, `${mcpSection}\n`);
   } else {
     // Add MCP section after the project overview (or at the beginning)
     const overviewMatch = existingContent.match(/(## Project Overview[\s\S]*?)(?=\n## |$)/i);
