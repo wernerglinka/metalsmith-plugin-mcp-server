@@ -1,249 +1,382 @@
-# Metalsmith Sectioned Blog Pagination - Development Guide
+# metalsmith-sectioned-blog-pagination - Development Context
 
-This plugin generates paginated blog landing pages for Metalsmith sites using a modular page building paradigm.
+## Project Overview
 
-## Quick Commands
+This is a Metalsmith plugin generated using the enhanced standards from `metalsmith-plugin-mcp-server`. It follows modern JavaScript patterns with dual ESM/CommonJS support and comprehensive testing.
 
-```bash
-# Development
-npm test           # Run all tests
-npm run coverage   # Generate coverage report
-npm run lint       # Lint and fix code
-npm run format     # Format code with Prettier
+## MCP Server Integration (CRITICAL)
 
-# Release
-npm run release:patch  # Bug fixes (1.0.0 → 1.0.1)
-npm run release:minor  # New features (1.0.0 → 1.1.0)
-npm run release:major  # Breaking changes (1.0.0 → 2.0.0)
-npm run release:check  # Dry run to preview release
+**IMPORTANT**: This plugin was created with `metalsmith-plugin-mcp-server`. When working on this plugin, AI assistants (Claude) MUST use the MCP server tools rather than creating their own implementations.
 
-# Build
-npm run build      # Build ESM and CommonJS versions
-```
-
-## Plugin Overview
-
-This plugin creates blog pagination metadata that works with sectioned/modular page builders. It generates multiple blog landing pages (e.g., `/blog/`, `/blog/2/`, `/blog/3/`) from a main template file.
-
-### Key Features
-
-- Generates pagination metadata for blog collections
-- Works with modular/sectioned page templates
-- Configurable posts per page
-- Compatible with Nunjucks and other templating engines
-
-## Architecture
-
-### Core Logic Flow
-
-1. Plugin reads the main blog template (default: `blog.md`)
-2. Calculates total pages based on collection size and `pagesPerPage`
-3. Creates new pages in Metalsmith's file tree for each pagination page
-4. Adds pagination metadata to each generated page
-5. Removes the original template from the build
-
-### Generated Metadata
-
-Each generated page receives:
-
-- `params.pageNumber`: Current page number (1-indexed)
-- `params.numberOfPages`: Total number of pages
-- `params.currentList`: Array of blog posts for current page
-- Original page metadata is preserved
-
-## Configuration Options
-
-- `pagesPerPage` (number): Number of blog posts per page (default: 10)
-- `blogDirectory` (string): Directory containing blog posts (default: "blog/")
-- `mainTemplate` (string): Main blog template file (default: "blog.md")
-
-## Testing
-
-The plugin includes comprehensive tests:
-
-- Unit tests for configuration validation
-- Integration tests with Metalsmith
-- Edge case handling (empty collections, missing templates)
-
-Run tests with:
+### Essential MCP Commands
 
 ```bash
-npm test           # Run all tests
-npm run test:esm   # Run ESM tests only
-npm run test:cjs   # Run CommonJS tests only
-npm run coverage   # Generate coverage report
+# List all available templates
+list-templates
+
+# Get specific template content (use these exactly as provided)
+get-template plugin/CLAUDE.md
+get-template configs/release-it.json
+get-template configs/eslint.config.js
+
+# Validate plugin and get actionable recommendations
+validate-plugin .
+
+# Generate configuration files
+generate-configs .
+
+# Show recommended configuration templates
+show-template release-it
+show-template eslint
+
+# Update dependencies
+update-deps .
 ```
 
-## Common Use Cases
+### CRITICAL RULES for AI Assistants
 
-### Basic Blog Pagination
+1. **ALWAYS use MCP server templates verbatim** - Never create simplified versions
+2. **ALWAYS use `list-templates` first** to see what's available
+3. **ALWAYS use `get-template`** to retrieve exact template content
+4. **NEVER improvise or create custom implementations** when MCP server provides templates
+5. **When validation recommends templates**, use the exact commands provided
+6. **If a command seems unclear**, ask the user for clarification rather than improvising
 
-```javascript
-metalsmith
-  .use(
-    collections({
-      blog: {
-        pattern: 'blog/*.md',
-        sortBy: 'date',
-        reverse: true
-      }
-    })
-  )
-  .use(
-    sectionedBlogPagination({
-      pagesPerPage: 12,
-      blogDirectory: 'blog/'
-    })
-  );
-```
+### Common Mistakes to AVOID
 
-### Multiple Blog Sections
+**❌ Wrong Approach:**
 
-For sites with multiple blog sections, run the plugin multiple times with different configurations:
+- Creating custom CLAUDE.md content instead of using `get-template plugin/CLAUDE.md`
+- Scaffolding entire new plugins when you just need a template
+- Making up template content or "simplifying" official templates
+- Ignoring validation recommendations
+- Using commands like `npx metalsmith-plugin-mcp-server scaffold ./ CLAUDE.md claude-context`
 
-```javascript
-// Tech blog
-.use(sectionedBlogPagination({
-  pagesPerPage: 10,
-  blogDirectory: "tech-blog/",
-  mainTemplate: "tech-blog.md"
-}))
-// Personal blog
-.use(sectionedBlogPagination({
-  pagesPerPage: 15,
-  blogDirectory: "personal/",
-  mainTemplate: "personal-blog.md"
-}))
-```
+**✅ Correct Approach:**
 
-## Debugging
+- Use `list-templates` to see what's available
+- Use `get-template <template-name>` to get exact content
+- Follow validation recommendations exactly as provided
+- Ask for clarification when commands seem confusing
+- Always use official templates verbatim
 
-Enable debug output:
+### Quick Commands
+
+**Quality & Validation:**
 
 ```bash
-DEBUG=metalsmith-sectioned-blog-pagination:* npm test
+npx metalsmith-plugin-mcp-server validate . --functional  # Validate with MCP server
+npm test                                                   # Run tests with coverage
+npm run lint                                              # Lint and fix code
 ```
 
-## Development Workflow
+**Release Process:**
 
-### Making Changes
-
-1. **Before starting**: Run tests to ensure clean state
-
-   ```bash
-   npm test
-   ```
-
-2. **During development**: Use watch mode if available or run tests frequently
-
-   ```bash
-   npm test
-   ```
-
-3. **Before committing**: Run all checks
-   ```bash
-   npm run lint
-   npm run format
-   npm test
-   npm run coverage
-   ```
-
-### Release Process
-
-1. **Ensure GitHub CLI is authenticated**:
-
-   ```bash
-   gh auth status
-   ```
-
-2. **Run release check**:
-
-   ```bash
-   npm run release:check
-   ```
-
-3. **Create release**:
-   ```bash
-   npm run release:patch  # for bug fixes
-   npm run release:minor  # for new features
-   npm run release:major  # for breaking changes
-   ```
-
-## Integration with Templates
-
-The plugin provides pagination data that can be used in templates:
-
-```nunjucks
-<ul class="blogs-pagination">
-  {% for i in range(0, params.numberOfPages) -%}
-  <li {% if ((i + 1) == params.pageNumber) %}class="active"{% endif %}>
-    {% if i == 0 %}
-    <a href="/blog/">1</a>
-    {% else %}
-    <a href="/blog/{{ i + 1 }}/">{{ i + 1 }}</a>
-    {% endif %}
-  </li>
-  {%- endfor %}
-</ul>
+```bash
+npm run release:patch   # Bug fixes (1.5.4 → 1.5.5)
+npm run release:minor   # New features (1.5.4 → 1.6.0)
+npm run release:major   # Breaking changes (1.5.4 → 2.0.0)
 ```
 
-## Project Structure
+**Development:**
+
+```bash
+npm run build          # Build ESM/CJS versions
+npm run test:coverage  # Run tests with detailed coverage
+```
+
+## Pre-Commit and Release Workflow
+
+### CRITICAL: Always Run Pre-Commit Validation
+
+**Before ANY commit or release, ALWAYS run these commands in order:**
+
+```bash
+npm run lint          # Fix linting issues
+npm run format        # Format code consistently
+npm test              # Ensure all tests pass
+```
+
+**If any of these commands fail, you MUST fix the issues before proceeding with commits or releases.**
+
+### Common Development Commands
+
+```bash
+# Build the plugin (required before testing)
+npm run build
+
+# Run tests for both ESM and CommonJS
+npm test
+
+# Run tests with coverage
+npm run test:coverage
+
+# Run linting and auto-fix issues
+npm run lint
+
+# Format code
+npm run format
+
+# Check formatting without making changes
+npm run format:check
+```
+
+### Release Commands
+
+Only after successful pre-commit validation:
+
+```bash
+npm run release:patch  # For bug fixes (0.0.X)
+npm run release:minor  # For new features (0.X.0)
+npm run release:major  # For breaking changes (X.0.0)
+```
+
+## Development Architecture
+
+### Dual Module Support
+
+This plugin supports both ESM and CommonJS:
+
+- **Source**: Write in ESM in `src/index.js`
+- **Build**: Creates both `lib/index.js` (ESM) and `lib/index.cjs` (CommonJS)
+- **Testing**: Tests run against built files for both formats
+
+### File Organization
 
 ```
 metalsmith-sectioned-blog-pagination/
 ├── src/
-│   ├── index.js          # Main plugin file
-│   └── utils/            # Utility functions
-│       ├── validation.js # Input validation
-│       └── pagination.js # Pagination helpers
-├── lib/                  # Built files (ESM & CJS)
+│   ├── index.js              # Main plugin entry point
+{%- if features.includes('async-processing') or features.includes('background-processing') %}
+│   ├── processors/           # Processing logic
+{%- endif %}
+{%- if features.includes('metadata-generation') %}
+│   ├── metadata/             # Metadata generation
+{%- endif %}
+│   └── utils/                # Utility functions
 ├── test/
-│   ├── index.js          # Main tests
-│   ├── cjs.test.cjs      # CommonJS compatibility tests
-│   └── fixtures/         # Test fixtures
-├── scripts/
-│   └── release.sh        # Secure release script
-└── .github/
-    └── workflows/
-        └── tests.yml     # CI/CD pipeline
+│   ├── index.test.js         # ESM tests
+│   ├── index.test.cjs        # CommonJS tests
+│   └── fixtures/             # Test data
+├── lib/                      # Built files (auto-generated)
+└── types/                    # TypeScript definitions
 ```
 
-## Code Style Guidelines
+### Plugin Features
 
-- Use functional programming patterns
-- Prefer pure functions
-- Use descriptive variable names
-- Add JSDoc comments for all public functions
-- Keep functions small and focused
-- Use early returns to reduce nesting
+{%- if features.length > 0 %}
+This plugin includes these enhanced features:
 
-## Testing Guidelines
+{%- if features.includes('async-processing') %}
 
-- Write tests for all new features
-- Maintain > 90% code coverage
-- Test both ESM and CommonJS builds
-- Include edge cases in tests
-- Use descriptive test names
+- **Async Processing**: Batch processing with configurable batch sizes and progress tracking
+  {%- endif %}
+  {%- if features.includes('background-processing') %}
+- **Background Processing**: Worker thread support for CPU-intensive operations
+  {%- endif %}
+  {%- if features.includes('metadata-generation') %}
+- **Metadata Generation**: Automatic metadata extraction and enrichment
+  {%- endif %}
+  {%- else %}
+  This plugin uses standard synchronous processing patterns.
+  {%- endif %}
 
-## Contributing
+## Testing Strategy
 
-When contributing to this plugin:
+### Test Structure
 
-1. Follow the existing code style
-2. Add tests for new functionality
-3. Update documentation as needed
-4. Ensure all tests pass
-5. Use semantic commit messages
+- **ESM Tests**: `test/index.test.js` - Tests the built ESM version
+- **CommonJS Tests**: `test/index.test.cjs` - Tests the built CommonJS version
+- **Fixtures**: `test/fixtures/` - Sample files for testing transformations
 
-## Known Issues & Limitations
+### Running Tests
 
-1. The plugin assumes blog posts are in a collection named "blog"
-2. Generated paths follow the pattern `{blogDirectory}/{pageNumber}/`
-3. The main template must exist before the plugin runs
+```bash
+# Build first (required!)
+npm run build
 
-## Future Enhancements
+# Run all tests
+npm test
 
-- Support for custom collection names
-- Configurable URL patterns
-- Previous/next page metadata
-- First/last page indicators
+# Run specific test format
+npm run test:esm
+npm run test:cjs
+
+# Coverage reporting
+npm run test:coverage
+```
+
+### Important: Build Before Testing
+
+**Always run `npm run build` before running tests** - the tests execute against the built files in `lib/`, not the source files in `src/`.
+
+## Code Quality Standards
+
+### ESLint Configuration
+
+- Uses ESLint 9.x flat configuration (`eslint.config.js`)
+- Automatically fixes common issues with `npm run lint`
+- Modern JavaScript patterns enforced
+
+### Formatting
+
+- Prettier configuration for consistent code style
+- Auto-format with `npm run format`
+- Check formatting with `npm run format:check`
+
+### Documentation
+
+- JSDoc comments for all public functions
+- README with comprehensive usage examples
+- Type definitions in `types/` directory
+
+## Plugin Development Patterns
+
+### Basic Plugin Structure
+
+```javascript
+/**
+ * Metalsmith plugin for blog pagination
+ * @param {Object} options - Plugin configuration
+ * @returns {Function} Metalsmith plugin function
+ */
+function sectionedBlogPagination(options = {}) {
+  return function (files, metalsmith, callback) {
+    // Plugin logic here
+    callback();
+  };
+}
+
+export default sectionedBlogPagination;
+```
+
+### Error Handling
+
+```javascript
+function sectionedBlogPagination(options = {}) {
+  return function (files, metalsmith, callback) {
+    try {
+      // Plugin processing
+      callback();
+    } catch (error) {
+      callback(error);
+    }
+  };
+}
+```
+
+{%- if features.includes('async-processing') %}
+
+### Async Processing Pattern
+
+```javascript
+function sectionedBlogPagination(options = {}) {
+  return async function (files, metalsmith) {
+    const batchSize = options.batchSize || 10;
+    const fileList = Object.keys(files);
+
+    for (let i = 0; i < fileList.length; i += batchSize) {
+      const batch = fileList.slice(i, i + batchSize);
+      await processBatch(batch, files, options);
+    }
+  };
+}
+```
+
+{%- endif %}
+
+## Release Process
+
+### Prerequisites
+
+- GitHub CLI (`gh`) installed and authenticated
+- All tests passing
+- Code properly linted and formatted
+
+### Automated Release
+
+The release process is fully automated:
+
+```bash
+# Patch release (bug fixes)
+npm run release:patch
+
+# Minor release (new features)
+npm run release:minor
+
+# Major release (breaking changes)
+npm run release:major
+```
+
+This automatically:
+
+- Updates version in package.json
+- Generates changelog
+- Creates git tag
+- Pushes to GitHub
+- Creates GitHub release
+
+## Common Development Tasks
+
+### Adding New Features
+
+1. Write feature in `src/index.js`
+2. Add comprehensive tests in `test/`
+3. Update JSDoc documentation
+4. Run pre-commit validation
+5. Test with real Metalsmith projects
+
+### Debugging
+
+```javascript
+// Add debug logging
+import { debuglog } from 'util';
+const debug = debuglog('metalsmith-sectioned-blog-pagination');
+
+function sectionedBlogPagination(options = {}) {
+  return function (files, metalsmith, callback) {
+    debug('Processing %d files', Object.keys(files).length);
+    // ... plugin logic
+  };
+}
+```
+
+### Performance Optimization
+
+- Use `metalsmith.match()` for file filtering
+- Avoid unnecessary file system operations
+- Process files in batches for large sites
+- Cache expensive computations
+
+## Integration Testing
+
+Test your plugin with real Metalsmith projects:
+
+```javascript
+import Metalsmith from 'metalsmith';
+import sectionedBlogPagination from 'metalsmith-sectioned-blog-pagination';
+
+const metalsmith = Metalsmith(__dirname)
+  .source('src')
+  .destination('dist')
+  .use(
+    sectionedBlogPagination({
+      // your options
+    })
+  )
+  .build((err) => {
+    if (err) throw err;
+    console.log('Build complete!');
+  });
+```
+
+## Communication Style
+
+### When Working on This Plugin
+
+- **Be specific** - Include exact error messages and file paths
+- **Test thoroughly** - Both ESM and CommonJS formats
+- **Follow patterns** - Use existing utilities and conventions
+- **Document changes** - Update JSDoc and README as needed
+
+This plugin follows the enhanced standards from `metalsmith-plugin-mcp-server` and is designed for modern Metalsmith development workflows.

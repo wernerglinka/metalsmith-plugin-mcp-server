@@ -24,6 +24,13 @@ validate-plugin .
 
 # Generate configuration files
 generate-configs .
+
+# Show recommended configuration templates
+show-template release-it
+show-template eslint
+
+# Update dependencies
+update-deps .
 ```
 
 ### CRITICAL RULES for AI Assistants
