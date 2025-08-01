@@ -1,11 +1,5 @@
 # Metalsmith Sectioned Blog Pagination - Development Guide
 
-## MCP Server Integration (CRITICAL)
-
-**IMPORTANT**: This plugin was created with `metalsmith-plugin-mcp-server`. When working on this plugin, AI assistants (Claude) MUST use the MCP server tools rather than creating their own implementations.
-
-### Essential MCP Commands
-
 This plugin generates paginated blog landing pages for Metalsmith sites using a modular page building paradigm.
 
 ## Quick Commands

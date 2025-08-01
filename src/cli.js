@@ -630,7 +630,8 @@ async function runInstallClaudeMd(targetPath = '.', options = {}) {
 
     // Extract just the template content (remove the wrapper text)
     const fullOutput = result.content[0].text;
-    const contentMatch = fullOutput.match(/```\n([\s\S]*?)\n```/);
+    // Use more specific regex to match the content section, not internal code blocks
+    const contentMatch = fullOutput.match(/## Content\n\n```\n([\s\S]*?)\n```\n\n## Usage Notes/);
 
     if (!contentMatch) {
       throw new Error('Could not extract template content');
