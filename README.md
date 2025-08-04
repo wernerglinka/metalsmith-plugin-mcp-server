@@ -25,7 +25,7 @@ npx metalsmith-plugin-mcp-server --help
 
 ## MCP Tools
 
-The MCP server provides four main tools:
+The MCP server provides six main tools:
 
 ### 1. Plugin Scaffolding
 
@@ -119,6 +119,44 @@ Features:
 - **Safety First**: Only updates minor/patch versions by default (no breaking changes)
 - **Comprehensive Reporting**: Shows which plugins had updates, failures, and next steps
 
+### 5. Plugin Audit
+
+Run comprehensive plugin audits combining validation, linting, testing, and coverage:
+
+```js
+await mcp.call('audit-plugin', {
+  path: './my-plugin',
+  fix: true, // Apply automatic fixes where possible
+  output: 'json' // Output format: 'console', 'json', or 'markdown'
+});
+```
+
+Features:
+- **Multi-Check Validation**: Runs validation, linting, formatting, tests, and coverage
+- **Health Scoring**: Provides overall health assessment (EXCELLENT, GOOD, FAIR, NEEDS IMPROVEMENT, POOR)
+- **Automatic Fixes**: Optional --fix flag to automatically resolve linting and formatting issues
+- **Multiple Output Formats**: Console, JSON, or Markdown reports
+- **Actionable Feedback**: Clear indication of what needs attention
+
+### 6. Batch Plugin Audit
+
+Audit multiple plugins in a directory and generate summary reports:
+
+```js
+await mcp.call('batch-audit', {
+  path: './plugins-directory',
+  fix: false, // Apply fixes to all plugins
+  output: 'console' // Summary format
+});
+```
+
+Features:
+- **Multi-Plugin Discovery**: Automatically finds all Metalsmith plugins in a directory
+- **Comprehensive Reporting**: Summary statistics showing plugin health distribution
+- **Batch Operations**: Optionally apply fixes to all plugins at once
+- **Progress Tracking**: Visual progress indicators for each plugin audit
+- **Problem Identification**: Highlights plugins needing immediate attention
+
 ## Usage
 
 You can use this tool in two ways:
@@ -148,6 +186,15 @@ npx metalsmith-plugin-mcp-server scaffold my-plugin "Processes and transforms co
 
 # Validate an existing plugin
 npx metalsmith-plugin-mcp-server validate ./my-plugin
+
+# Run comprehensive plugin audit
+npx metalsmith-plugin-mcp-server audit ./my-plugin
+
+# Run audit with automatic fixes
+npx metalsmith-plugin-mcp-server audit ./my-plugin --fix
+
+# Audit multiple plugins in a directory
+npx metalsmith-plugin-mcp-server batch-audit ./plugins
 
 # Generate configuration files
 npx metalsmith-plugin-mcp-server configs ./my-plugin
@@ -252,6 +299,61 @@ npx metalsmith-plugin-mcp-server update-deps ./my-plugin --install --test
 # Process multiple plugins in a directory
 npx metalsmith-plugin-mcp-server update-deps ./plugins --install --test
 ```
+
+#### Plugin Audit Features
+
+The audit commands provide comprehensive plugin health assessment:
+
+**Single Plugin Audit**:
+```bash
+# Basic audit (validation, linting, formatting, tests, coverage)
+npx metalsmith-plugin-mcp-server audit ./my-plugin
+
+# Audit with automatic fixes
+npx metalsmith-plugin-mcp-server audit ./my-plugin --fix
+
+# JSON output for CI/CD integration
+npx metalsmith-plugin-mcp-server audit ./my-plugin --output=json
+
+# Markdown report for documentation
+npx metalsmith-plugin-mcp-server audit ./my-plugin --output=markdown
+```
+
+**Batch Plugin Audit**:
+```bash
+# Audit all plugins in a directory
+npx metalsmith-plugin-mcp-server batch-audit ./plugins
+
+# Batch audit with fixes applied to all plugins
+npx metalsmith-plugin-mcp-server batch-audit ./plugins --fix
+
+# Get JSON summary of all plugin health statuses
+npx metalsmith-plugin-mcp-server batch-audit ./plugins --output=json
+```
+
+**Audit Health Scores**:
+- ✅ **EXCELLENT** (90%+): Plugin meets all quality standards
+- ✅ **GOOD** (80-89%): Minor improvements recommended
+- ⚠️ **FAIR** (70-79%): Some issues need attention
+- ⚠️ **NEEDS IMPROVEMENT** (60-69%): Multiple issues to address
+- ❌ **POOR** (<60%): Significant problems requiring fixes
+
+**What Gets Audited**:
+- **Validation**: Plugin structure and configuration (40% weight)
+- **Tests**: Test execution and pass/fail status (30% weight)
+- **Coverage**: Code coverage percentage (20% weight)
+- **Linting**: ESLint compliance (5% weight)
+- **Formatting**: Prettier compliance (5% weight)
+
+**Pre-Release Integration**:
+New plugins scaffolded with this tool include a `pre-release` script that runs a full audit before releasing:
+
+```bash
+# Run before any release to ensure quality
+npm run pre-release
+```
+
+This script runs: `npm run lint && npm run format:check && npm test && npx metalsmith-plugin-mcp-server validate .`
 
 #### Configuration Management
 

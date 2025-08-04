@@ -10,6 +10,7 @@ import { execSync } from 'child_process';
 import { existsSync, readFileSync } from 'fs';
 import chalk from 'chalk';
 import ora from 'ora';
+import { validatePluginTool } from './validate-plugin.js';
 
 /**
  * Run a command and capture output
@@ -19,12 +20,12 @@ import ora from 'ora';
  */
 function runCommand(command, cwd) {
     try {
-        const stdout = execSync(command, { 
+        const result = execSync(command, { 
             cwd, 
             encoding: 'utf8',
-            stdio: ['pipe', 'pipe', 'pipe']
+            stdio: 'pipe'
         });
-        return { stdout, stderr: '', success: true };
+        return { stdout: result, stderr: '', success: true };
     } catch (error) {
         return { 
             stdout: error.stdout || '', 
@@ -58,8 +59,22 @@ function hasScript(scriptName, pluginPath) {
  * @returns {number|null} Quality score percentage
  */
 function extractValidationScore(output) {
-    const scoreMatch = output.match(/Quality score: (\d+)%/);
-    return scoreMatch ? parseInt(scoreMatch[1], 10) : null;
+    // Look for quality score patterns in validation output
+    const patterns = [
+        /Quality score: (\d+)%/,
+        /Score: (\d+)%/,
+        /Overall: (\d+)%/,
+        /✓ Passed: (\d+)% score/
+    ];
+    
+    for (const pattern of patterns) {
+        const match = output.match(pattern);
+        if (match) {
+            return parseInt(match[1], 10);
+        }
+    }
+    
+    return null;
 }
 
 /**
@@ -68,29 +83,29 @@ function extractValidationScore(output) {
  * @returns {Object} Test statistics
  */
 function extractTestStats(output) {
-    // Common patterns for test runners
-    const patterns = {
-        passing: /(\d+) passing/,
-        failing: /(\d+) failing/,
-        total: /(\d+) tests?/
-    };
-    
     const stats = {
         passing: 0,
         failing: 0,
         total: 0
     };
     
-    Object.keys(patterns).forEach(key => {
-        const match = output.match(patterns[key]);
-        if (match) {
-            stats[key] = parseInt(match[1], 10);
-        }
-    });
+    // Try multiple patterns for different test runners
+    const passingMatch = output.match(/(\d+) passing/);
+    const failingMatch = output.match(/(\d+) failing/);
+    const totalMatch = output.match(/(\d+) tests?/);
     
-    // If we didn't find total, calculate it
+    if (passingMatch) stats.passing = parseInt(passingMatch[1], 10);
+    if (failingMatch) stats.failing = parseInt(failingMatch[1], 10);
+    if (totalMatch) stats.total = parseInt(totalMatch[1], 10);
+    
+    // Calculate total if not found but we have passing/failing
     if (stats.total === 0 && (stats.passing > 0 || stats.failing > 0)) {
         stats.total = stats.passing + stats.failing;
+    }
+    
+    // Handle case where we only have total tests passed
+    if (stats.total > 0 && stats.passing === 0 && stats.failing === 0) {
+        stats.passing = stats.total;
     }
     
     return stats;
@@ -102,11 +117,15 @@ function extractTestStats(output) {
  * @returns {number|null} Coverage percentage
  */
 function extractCoverage(output) {
-    // Look for overall coverage percentage
+    // Look for coverage percentage in various formats
     const patterns = [
-        /All files[^|]*\|[^|]*\|[^|]*(\d+\.?\d*)/,
-        /Coverage[:\s]+(\d+\.?\d*)%/,
-        /Statements\s*:\s*(\d+\.?\d*)%/
+        /All files[^|]*\|[^|]*\|[^|]*\|[^|]*(\d+\.?\d*)/,  // Istanbul table format
+        /Coverage[:\s]+(\d+\.?\d*)%/i,
+        /Statements\s*:[^\d]*(\d+\.?\d*)%/,
+        /Lines\s*:[^\d]*(\d+\.?\d*)%/,
+        /Functions\s*:[^\d]*(\d+\.?\d*)%/,
+        /Branches\s*:[^\d]*(\d+\.?\d*)%/,
+        /Total Coverage:\s*(\d+\.?\d*)%/i
     ];
     
     for (const pattern of patterns) {
@@ -143,14 +162,19 @@ export async function auditPlugin(args) {
     // 1. Run validation
     const validationSpinner = ora('Running validation...').start();
     try {
-        const { stdout } = runCommand(
-            `npx metalsmith-plugin-mcp-server validate "${pluginPath}"`,
-            pluginPath
-        );
-        results.validation.score = extractValidationScore(stdout);
+        const validationResult = await validatePluginTool({ path: pluginPath });
+        const validationText = validationResult.content[0].text;
+        
+        results.validation.score = extractValidationScore(validationText);
         results.validation.passed = results.validation.score >= 70;
-        validationSpinner.succeed(`Validation: ${results.validation.score}%`);
+        
+        if (results.validation.score !== null) {
+            validationSpinner.succeed(`Validation: ${results.validation.score}%`);
+        } else {
+            validationSpinner.warn('Validation: No score found');
+        }
     } catch (error) {
+        // Validation failed
         validationSpinner.fail('Validation failed');
     }
     
@@ -219,8 +243,6 @@ export async function auditPlugin(args) {
         results.coverage.passed = results.coverage.percentage >= 80;
         
         if (results.coverage.percentage !== null) {
-            const icon = results.coverage.passed ? '✓' : '⚠';
-            const color = results.coverage.passed ? 'green' : 'yellow';
             coverageSpinner[results.coverage.passed ? 'succeed' : 'warn'](
                 `Coverage: ${results.coverage.percentage}%`
             );

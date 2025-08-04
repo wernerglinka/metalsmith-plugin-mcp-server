@@ -107,6 +107,8 @@ function showHelp() {
   console.warn('  config                        Show current configuration and setup');
   console.warn('  scaffold [name] [description] [path] Create a new Metalsmith plugin');
   console.warn('  validate [path] [--functional] Validate an existing plugin');
+  console.warn('  audit [path] [--fix] [--output=json|markdown] Run comprehensive plugin audit');
+  console.warn('  batch-audit [path] [--fix] [--output=json|markdown] Run audit on multiple plugins');
   console.warn('  configs [path]                Generate configuration files');
   console.warn('  show-template [type]          Display recommended configuration templates');
   console.warn('  list-templates                List all available templates');
@@ -263,6 +265,86 @@ async function runValidate(path, functional = false) {
     }
   } catch (error) {
     console.error(chalk.red('Error validating plugin:'), error.message);
+    process.exit(1);
+  }
+}
+
+/**
+ * Run comprehensive plugin audit
+ * Runs validation, linting, formatting, tests, and coverage checks
+ * @param {string} path - Path to the plugin directory to audit
+ * @param {boolean} fix - Whether to apply automatic fixes
+ * @param {string} outputFormat - Output format (console, json, markdown)
+ * @returns {Promise<void>}
+ */
+async function runAudit(path, fix = false, outputFormat = 'console') {
+  // Interactive mode if path is missing
+  if (!path) {
+    console.warn(styles.header('\nRun comprehensive plugin audit\n'));
+    path = await prompt('Plugin path', '.');
+
+    if (!path) {
+      console.error(styles.error('\nError: Plugin path is required'));
+      process.exit(1);
+    }
+  }
+
+  try {
+    // Import and run the audit tool directly
+    const { auditPlugin } = await import('./tools/audit-plugin.js');
+    const result = await auditPlugin({
+      path,
+      fix,
+      output: outputFormat
+    });
+
+    // Output the result based on format
+    if (outputFormat === 'json' || outputFormat === 'markdown') {
+      console.log(result);
+    }
+    // For console format, the output is already displayed by the audit tool
+  } catch (error) {
+    console.error(chalk.red('Error running plugin audit:'), error.message);
+    process.exit(1);
+  }
+}
+
+/**
+ * Run batch audit on multiple plugins
+ * Finds and audits all plugins in a directory, providing summary report
+ * @param {string} path - Path to search for plugin directories  
+ * @param {boolean} fix - Whether to apply automatic fixes
+ * @param {string} outputFormat - Output format (console, json, markdown)
+ * @returns {Promise<void>}
+ */
+async function runBatchAudit(path, fix = false, outputFormat = 'console') {
+  // Interactive mode if path is missing
+  if (!path) {
+    console.warn(styles.header('\nRun batch audit on multiple plugins\n'));
+    path = await prompt('Search path', '.');
+
+    if (!path) {
+      console.error(styles.error('\nError: Search path is required'));
+      process.exit(1);
+    }
+  }
+
+  try {
+    // Import and run the batch audit tool directly
+    const { batchAudit } = await import('./tools/batch-audit.js');
+    const result = await batchAudit({
+      path,
+      fix,
+      output: outputFormat
+    });
+
+    // Output the result based on format
+    if (outputFormat === 'json' || outputFormat === 'markdown') {
+      console.log(result);
+    }
+    // For console format, the output is already displayed by the batch audit tool
+  } catch (error) {
+    console.error(chalk.red('Error running batch audit:'), error.message);
     process.exit(1);
   }
 }
@@ -865,6 +947,22 @@ switch (command) {
     }
     break;
 
+  case 'audit':
+    {
+      const path = args[1];
+      const fix = args.includes('--fix');
+      const outputFormat = args.find(arg => arg.startsWith('--output='))?.split('=')[1] || 'console';
+      runAudit(path, fix, outputFormat);
+    }
+    break;
+  case 'batch-audit':
+    {
+      const path = args[1];
+      const fix = args.includes('--fix');
+      const outputFormat = args.find(arg => arg.startsWith('--output='))?.split('=')[1] || 'console';
+      runBatchAudit(path, fix, outputFormat);
+    }
+    break;
   case 'configs':
     runGenerateConfigs(args[1]);
     break;

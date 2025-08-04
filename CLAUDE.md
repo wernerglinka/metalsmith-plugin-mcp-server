@@ -73,9 +73,18 @@ Focus on getting to successful results quickly:
 
 This is an MCP (Model Context Protocol) server for scaffolding and validating high-quality Metalsmith plugins. It provides tools for Claude to help users create, validate, and maintain Metalsmith plugins following best practices.
 
-## Current Status (v0.13.0)
+## Current Status (v1.0.0-alpha - Phase 1 Complete)
 
-### Recent Major Work Completed (v0.13.0)
+### Phase 1 Foundation Work Completed
+
+1. **Audit Plugin Tool** - Comprehensive plugin health assessment combining validation, linting, formatting, tests, and coverage into a single command
+2. **Batch Audit Command** - Audit multiple plugins in a directory with summary reporting and batch operations
+3. **CLI Integration** - Added `audit` and `batch-audit` commands to CLI with --fix and --output options
+4. **MCP Integration** - Audit tools available via MCP server for AI assistant integration
+5. **Pre-Release Validation Hooks** - New plugins include `pre-release` script that runs full audit before releases
+6. **Health Scoring System** - Five-tier health assessment (EXCELLENT/GOOD/FAIR/NEEDS IMPROVEMENT/POOR) with weighted scoring
+
+### Previous Major Work (v0.13.0)
 
 1. **Show-Template Command** - New command to display recommended configuration templates for release-it, package scripts, ESLint, Prettier, etc.
 2. **Enhanced Release Configuration** - Fixed .release-it.json template to include proper `tokenRef: "GH_TOKEN"` for consistent token handling
@@ -187,6 +196,15 @@ npx metalsmith-plugin-mcp-server scaffold my-plugin "Description here"
 
 # Validate with actual test runs
 npx metalsmith-plugin-mcp-server validate ./plugin --functional
+
+# Run comprehensive plugin audit (validation + linting + tests + coverage)
+npx metalsmith-plugin-mcp-server audit ./plugin
+
+# Run audit with automatic fixes
+npx metalsmith-plugin-mcp-server audit ./plugin --fix
+
+# Audit multiple plugins in a directory
+npx metalsmith-plugin-mcp-server batch-audit ./plugins
 
 # Show recommended configuration templates
 npx metalsmith-plugin-mcp-server show-template release-it
