@@ -28,6 +28,7 @@ import { validatePluginTool } from './tools/validate-plugin.js';
 import { generateConfigsTool } from './tools/generate-configs.js';
 import { updateDepsTool } from './tools/update-deps.js';
 import { showTemplateTool } from './tools/show-template.js';
+import { auditPlugin } from './tools/audit-plugin.js';
 import { listTemplatesTool } from './tools/list-templates.js';
 import { getTemplateTool } from './tools/get-template.js';
 import { installClaudeMdTool } from './tools/install-claude-md.js';
@@ -293,6 +294,32 @@ ${aiInstructions ? `\n${aiInstructions}` : ''}`,
         }
       },
       required: []
+  },
+  {
+    name: 'audit-plugin',
+    description: 'Comprehensive plugin audit with validation, recommendations, and fix suggestions',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        path: {
+          type: 'string',
+          description: 'Path to the plugin directory',
+          default: '.'
+        },
+        fix: {
+          type: 'boolean',
+          description: 'Apply automatic fixes where possible',
+          default: false
+        },
+        output: {
+          type: 'string',
+          enum: ['console', 'markdown', 'json'],
+          description: 'Output format for audit report',
+          default: 'console'
+        }
+      },
+      required: ['path']
+    }
     }
   }
 ];
@@ -355,6 +382,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       case 'install-claude-md':
         return await installClaudeMdTool(args); // Install CLAUDE.md file with smart merge
 
+
+      case 'audit-plugin':
+        return await auditPlugin(args); // Run comprehensive plugin audit
       default:
         // This shouldn't happen if Claude only calls tools we advertised
         throw new Error(`Unknown tool: ${name}`);
