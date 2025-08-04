@@ -4,7 +4,7 @@
 
 The fastest way to use the MCP server is with npx:
 
-> **New in v0.9.0**: Validation refactored for Metalsmith-specific patterns. Focuses on build-time concerns rather than server-oriented validations.
+> **New in v1.0.0**: Phase 1 Foundation complete with comprehensive audit tools, batch operations, and pre-release validation hooks. Standardized quality workflows for all plugin development.
 
 ```bash
 # Show version information
@@ -21,6 +21,15 @@ npx metalsmith-plugin-mcp-server validate ./my-plugin
 
 # Functional validation (runs tests and coverage)
 npx metalsmith-plugin-mcp-server validate ./my-plugin --functional
+
+# Run comprehensive plugin audit (validation + linting + tests + coverage)
+npx metalsmith-plugin-mcp-server audit ./my-plugin
+
+# Audit with automatic fixes
+npx metalsmith-plugin-mcp-server audit ./my-plugin --fix
+
+# Audit multiple plugins in a directory
+npx metalsmith-plugin-mcp-server batch-audit ./plugins
 
 # Generate configuration files
 npx metalsmith-plugin-mcp-server configs ./my-plugin
@@ -288,7 +297,26 @@ npm test
 # - Add tests in test/
 # - Run npm run build before testing
 # - Both ESM and CJS builds are tested automatically
+
+# Before releasing, run comprehensive quality checks
+npm run pre-release
 ```
+
+### Pre-Release Validation
+
+New plugins include a `pre-release` script that runs comprehensive quality checks:
+
+```bash
+npm run pre-release
+```
+
+This script runs:
+- `npm run lint` - ESLint validation
+- `npm run format:check` - Prettier formatting validation  
+- `npm test` - Full test suite
+- `npx metalsmith-plugin-mcp-server validate .` - Plugin validation
+
+Use this before any release to ensure your plugin meets quality standards.
 
 ## 🎯 Expected Results
 
@@ -306,6 +334,14 @@ npm test
 - Quality score and detailed report
 - Standards compliance checking
 - Actionable improvement recommendations
+
+### Plugin Audit
+
+- Comprehensive health assessment (validation + linting + tests + coverage)
+- Overall health score: EXCELLENT, GOOD, FAIR, NEEDS IMPROVEMENT, or POOR
+- Automatic fixes for linting and formatting issues
+- Multiple output formats for different use cases
+- Batch operations for multiple plugins with summary reports
 
 ### Config Generation
 
