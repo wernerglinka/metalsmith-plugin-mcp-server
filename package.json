@@ -58,6 +58,7 @@
     "glob": "^11.0.3",
     "js-yaml": "^4.1.0",
     "nunjucks": "^3.2.4",
+    "ora": "^8.1.1",
     "validate-npm-package-name": "^6.0.2"
   },
   "devDependencies": {
