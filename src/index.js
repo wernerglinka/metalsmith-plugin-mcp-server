@@ -382,7 +382,6 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       case 'install-claude-md':
         return await installClaudeMdTool(args); // Install CLAUDE.md file with smart merge
 
-
       case 'audit-plugin':
         return await auditPlugin(args); // Run comprehensive plugin audit
       default:

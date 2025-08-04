@@ -45,7 +45,14 @@ export default [
     }
   },
   {
-    files: ['scripts/**/*.js', 'examples/**/*.js', 'src/tools/audit-plugin.js', 'src/tools/batch-audit.js', 'src/cli.js', 'test-audit.js'],
+    files: [
+      'scripts/**/*.js',
+      'examples/**/*.js',
+      'src/tools/audit-plugin.js',
+      'src/tools/batch-audit.js',
+      'src/cli.js',
+      'test-audit.js'
+    ],
     rules: {
       'no-console': 'off', // Allow console in scripts, examples, and audit tools
       'require-await': 'off' // Allow async functions without await in scripts

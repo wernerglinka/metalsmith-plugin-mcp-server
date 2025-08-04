@@ -315,7 +315,7 @@ async function runAudit(path, fix = false, outputFormat = 'console') {
 /**
  * Run batch audit on multiple plugins
  * Finds and audits all plugins in a directory, providing summary report
- * @param {string} path - Path to search for plugin directories  
+ * @param {string} path - Path to search for plugin directories
  * @param {boolean} fix - Whether to apply automatic fixes
  * @param {string} outputFormat - Output format (console, json, markdown)
  * @returns {Promise<void>}
@@ -954,7 +954,7 @@ switch (command) {
     {
       const path = args[1];
       const fix = args.includes('--fix');
-      const outputFormat = args.find(arg => arg.startsWith('--output='))?.split('=')[1] || 'console';
+      const outputFormat = args.find((arg) => arg.startsWith('--output='))?.split('=')[1] || 'console';
       runAudit(path, fix, outputFormat);
     }
     break;
@@ -962,7 +962,7 @@ switch (command) {
     {
       const path = args[1];
       const fix = args.includes('--fix');
-      const outputFormat = args.find(arg => arg.startsWith('--output='))?.split('=')[1] || 'console';
+      const outputFormat = args.find((arg) => arg.startsWith('--output='))?.split('=')[1] || 'console';
       runBatchAudit(path, fix, outputFormat);
     }
     break;

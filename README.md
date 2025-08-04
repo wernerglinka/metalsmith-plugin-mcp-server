@@ -132,6 +132,7 @@ await mcp.call('audit-plugin', {
 ```
 
 Features:
+
 - **Multi-Check Validation**: Runs validation, linting, formatting, tests, and coverage
 - **Health Scoring**: Provides overall health assessment (EXCELLENT, GOOD, FAIR, NEEDS IMPROVEMENT, POOR)
 - **Automatic Fixes**: Optional --fix flag to automatically resolve linting and formatting issues
@@ -151,6 +152,7 @@ await mcp.call('batch-audit', {
 ```
 
 Features:
+
 - **Multi-Plugin Discovery**: Automatically finds all Metalsmith plugins in a directory
 - **Comprehensive Reporting**: Summary statistics showing plugin health distribution
 - **Batch Operations**: Optionally apply fixes to all plugins at once
@@ -305,6 +307,7 @@ npx metalsmith-plugin-mcp-server update-deps ./plugins --install --test
 The audit commands provide comprehensive plugin health assessment:
 
 **Single Plugin Audit**:
+
 ```bash
 # Basic audit (validation, linting, formatting, tests, coverage)
 npx metalsmith-plugin-mcp-server audit ./my-plugin
@@ -320,6 +323,7 @@ npx metalsmith-plugin-mcp-server audit ./my-plugin --output=markdown
 ```
 
 **Batch Plugin Audit**:
+
 ```bash
 # Audit all plugins in a directory
 npx metalsmith-plugin-mcp-server batch-audit ./plugins
@@ -332,6 +336,7 @@ npx metalsmith-plugin-mcp-server batch-audit ./plugins --output=json
 ```
 
 **Audit Health Scores**:
+
 - ✅ **EXCELLENT** (90%+): Plugin meets all quality standards
 - ✅ **GOOD** (80-89%): Minor improvements recommended
 - ⚠️ **FAIR** (70-79%): Some issues need attention
@@ -339,6 +344,7 @@ npx metalsmith-plugin-mcp-server batch-audit ./plugins --output=json
 - ❌ **POOR** (<60%): Significant problems requiring fixes
 
 **What Gets Audited**:
+
 - **Validation**: Plugin structure and configuration (40% weight)
 - **Tests**: Test execution and pass/fail status (30% weight)
 - **Coverage**: Code coverage percentage (20% weight)

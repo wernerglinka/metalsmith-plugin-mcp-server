@@ -311,8 +311,9 @@ npm run pre-release
 ```
 
 This script runs:
+
 - `npm run lint` - ESLint validation
-- `npm run format:check` - Prettier formatting validation  
+- `npm run format:check` - Prettier formatting validation
 - `npm test` - Full test suite
 - `npx metalsmith-plugin-mcp-server validate .` - Plugin validation
 
