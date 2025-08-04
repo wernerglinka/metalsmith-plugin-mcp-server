@@ -43,7 +43,7 @@ function runCommand(command, cwd) {
  */
 function hasScript(scriptName, pluginPath) {
     const packagePath = resolve(pluginPath, 'package.json');
-    if (!existsSync(packagePath)) return false;
+    if (!existsSync(packagePath)) {return false;}
     
     try {
         const packageJson = JSON.parse(readFileSync(packagePath, 'utf8'));
@@ -94,9 +94,9 @@ function extractTestStats(output) {
     const failingMatch = output.match(/(\d+) failing/);
     const totalMatch = output.match(/(\d+) tests?/);
     
-    if (passingMatch) stats.passing = parseInt(passingMatch[1], 10);
-    if (failingMatch) stats.failing = parseInt(failingMatch[1], 10);
-    if (totalMatch) stats.total = parseInt(totalMatch[1], 10);
+    if (passingMatch) {stats.passing = parseInt(passingMatch[1], 10);}
+    if (failingMatch) {stats.failing = parseInt(failingMatch[1], 10);}
+    if (totalMatch) {stats.total = parseInt(totalMatch[1], 10);}
     
     // Calculate total if not found but we have passing/failing
     if (stats.total === 0 && (stats.passing > 0 || stats.failing > 0)) {
@@ -173,7 +173,7 @@ export async function auditPlugin(args) {
         } else {
             validationSpinner.warn('Validation: No score found');
         }
-    } catch (error) {
+    } catch {
         // Validation failed
         validationSpinner.fail('Validation failed');
     }
@@ -294,16 +294,16 @@ function calculateOverallHealth(results) {
     }
     
     // Linting and formatting (10% weight)
-    if (results.linting.passed) score += 5;
-    if (results.formatting.passed) score += 5;
+    if (results.linting.passed) {score += 5;}
+    if (results.formatting.passed) {score += 5;}
     total += 10;
     
     const percentage = total > 0 ? (score / total) * 100 : 0;
     
-    if (percentage >= 90) return 'EXCELLENT';
-    if (percentage >= 80) return 'GOOD';
-    if (percentage >= 70) return 'FAIR';
-    if (percentage >= 60) return 'NEEDS IMPROVEMENT';
+    if (percentage >= 90) {return 'EXCELLENT';}
+    if (percentage >= 80) {return 'GOOD';}
+    if (percentage >= 70) {return 'FAIR';}
+    if (percentage >= 60) {return 'NEEDS IMPROVEMENT';}
     return 'POOR';
 }
 

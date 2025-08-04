@@ -294,6 +294,7 @@ ${aiInstructions ? `\n${aiInstructions}` : ''}`,
         }
       },
       required: []
+    }
   },
   {
     name: 'audit-plugin',
@@ -319,7 +320,6 @@ ${aiInstructions ? `\n${aiInstructions}` : ''}`,
         }
       },
       required: ['path']
-    }
     }
   }
 ];

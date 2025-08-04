@@ -208,12 +208,12 @@ export async function batchAudit(args) {
     console.log(chalk.blue(`\n📊 Batch Audit Summary\n`));
     console.log(`Total plugins audited: ${summary.total}`);
     
-    if (summary.excellent > 0) console.log(chalk.green(`  ✅ Excellent: ${summary.excellent}`));
-    if (summary.good > 0) console.log(chalk.green(`  ✅ Good: ${summary.good}`));
-    if (summary.fair > 0) console.log(chalk.yellow(`  ⚠️  Fair: ${summary.fair}`));
-    if (summary.needsImprovement > 0) console.log(chalk.red(`  ⚠️  Needs Improvement: ${summary.needsImprovement}`));
-    if (summary.poor > 0) console.log(chalk.red(`  ❌ Poor: ${summary.poor}`));
-    if (summary.failed > 0) console.log(chalk.red(`  💥 Failed: ${summary.failed}`));
+    if (summary.excellent > 0) {console.log(chalk.green(`  ✅ Excellent: ${summary.excellent}`));}
+    if (summary.good > 0) {console.log(chalk.green(`  ✅ Good: ${summary.good}`));}
+    if (summary.fair > 0) {console.log(chalk.yellow(`  ⚠️  Fair: ${summary.fair}`));}
+    if (summary.needsImprovement > 0) {console.log(chalk.red(`  ⚠️  Needs Improvement: ${summary.needsImprovement}`));}
+    if (summary.poor > 0) {console.log(chalk.red(`  ❌ Poor: ${summary.poor}`));}
+    if (summary.failed > 0) {console.log(chalk.red(`  💥 Failed: ${summary.failed}`));}
     
     const passed = summary.excellent + summary.good;
     const needsAttention = summary.fair + summary.needsImprovement + summary.poor + summary.failed;
@@ -249,12 +249,12 @@ function generateMarkdownBatchReport(summary, results) {
         '|--------|-------|'
     ];
     
-    if (summary.excellent > 0) lines.push(`| ✅ Excellent | ${summary.excellent} |`);
-    if (summary.good > 0) lines.push(`| ✅ Good | ${summary.good} |`);
-    if (summary.fair > 0) lines.push(`| ⚠️ Fair | ${summary.fair} |`);
-    if (summary.needsImprovement > 0) lines.push(`| ⚠️ Needs Improvement | ${summary.needsImprovement} |`);
-    if (summary.poor > 0) lines.push(`| ❌ Poor | ${summary.poor} |`);
-    if (summary.failed > 0) lines.push(`| 💥 Failed | ${summary.failed} |`);
+    if (summary.excellent > 0) {lines.push(`| ✅ Excellent | ${summary.excellent} |`);}
+    if (summary.good > 0) {lines.push(`| ✅ Good | ${summary.good} |`);}
+    if (summary.fair > 0) {lines.push(`| ⚠️ Fair | ${summary.fair} |`);}
+    if (summary.needsImprovement > 0) {lines.push(`| ⚠️ Needs Improvement | ${summary.needsImprovement} |`);}
+    if (summary.poor > 0) {lines.push(`| ❌ Poor | ${summary.poor} |`);}
+    if (summary.failed > 0) {lines.push(`| 💥 Failed | ${summary.failed} |`);}
     
     lines.push('', '## Plugin Details', '', '| Plugin | Health | Validation | Tests | Coverage |');
     lines.push('|--------|--------|------------|-------|----------|');
@@ -293,11 +293,11 @@ function generateConsoleBatchReport(results) {
                 lines.push(`  💥 ${plugin.pluginName}: Failed - ${plugin.error}`);
             } else {
                 const issues = [];
-                if (plugin.validationScore < 70) issues.push(`low validation (${plugin.validationScore}%)`);
-                if (!plugin.testsPassed) issues.push('failing tests');
-                if (plugin.coverage !== null && plugin.coverage < 80) issues.push(`low coverage (${plugin.coverage}%)`);
-                if (!plugin.linting) issues.push('linting issues');
-                if (!plugin.formatting) issues.push('formatting issues');
+                if (plugin.validationScore < 70) {issues.push(`low validation (${plugin.validationScore}%)`);}
+                if (!plugin.testsPassed) {issues.push('failing tests');}
+                if (plugin.coverage !== null && plugin.coverage < 80) {issues.push(`low coverage (${plugin.coverage}%)`);}
+                if (!plugin.linting) {issues.push('linting issues');}
+                if (!plugin.formatting) {issues.push('formatting issues');}
                 
                 const display = getHealthDisplay(plugin.overallHealth);
                 lines.push(`  ${display.icon} ${plugin.pluginName}: ${issues.join(', ')}`);

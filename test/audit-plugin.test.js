@@ -9,11 +9,7 @@ import { expect } from 'chai';
 import { auditPlugin } from '../src/tools/audit-plugin.js';
 import { promises as fs } from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
 import { tmpdir } from 'os';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 describe('audit-plugin tool', () => {
     let tempDir;
@@ -62,7 +58,7 @@ console.log('Test file exists');
         if (tempDir) {
             try {
                 await fs.rm(tempDir, { recursive: true, force: true });
-            } catch (error) {
+            } catch {
                 // Ignore cleanup errors
             }
         }
