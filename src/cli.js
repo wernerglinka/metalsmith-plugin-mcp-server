@@ -125,6 +125,9 @@ function showHelp() {
   console.warn('  npx metalsmith-plugin-mcp-server scaffold                  # Guided mode');
   console.warn('  npx metalsmith-plugin-mcp-server validate ./metalsmith-existing-plugin');
   console.warn('  npx metalsmith-plugin-mcp-server validate ./ --functional # Run tests & coverage');
+  console.warn('  npx metalsmith-plugin-mcp-server audit ./my-plugin       # Comprehensive plugin audit');
+  console.warn('  npx metalsmith-plugin-mcp-server audit ./my-plugin --fix # Audit with automatic fixes');
+  console.warn('  npx metalsmith-plugin-mcp-server batch-audit ./plugins   # Audit multiple plugins');
   console.warn('  npx metalsmith-plugin-mcp-server configs ./my-plugin');
   console.warn('  npx metalsmith-plugin-mcp-server show-template release-it  # Show .release-it.json template');
   console.warn('  npx metalsmith-plugin-mcp-server list-templates            # Show all available templates');
