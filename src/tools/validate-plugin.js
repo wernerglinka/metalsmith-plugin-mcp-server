@@ -82,6 +82,70 @@ function deepMerge(target, source) {
 }
 
 /**
+ * Check if plugin has CLAUDE.md with existing development standards
+ * @param {string} pluginPath - Plugin directory path
+ * @returns {Promise<Object>} CLAUDE.md analysis results
+ */
+async function analyzeClaudeStandards(pluginPath) {
+  const claudePath = path.join(pluginPath, 'CLAUDE.md');
+
+  try {
+    const claudeContent = await fs.readFile(claudePath, 'utf-8');
+
+    const analysis = {
+      exists: true,
+      hasReleasePatterns: false,
+      hasTokenPatterns: false,
+      approvedReleasePattern: null,
+      approvedTokenPattern: null
+    };
+
+    // Check for specific CLAUDE.md approved patterns
+    // Priority: npm script pattern (most specific wins)
+    if (
+      claudeContent.includes('npm run release:') &&
+      claudeContent.includes('GH_TOKEN=$(gh auth token)') &&
+      !claudeContent.includes('Update to:') &&
+      !claudeContent.includes('./scripts/release.sh')
+    ) {
+      analysis.hasReleasePatterns = true;
+      analysis.hasTokenPatterns = true;
+      analysis.approvedReleasePattern = 'npm-script-with-gh-token';
+      analysis.approvedTokenPattern = 'npm-script-with-gh-token';
+    }
+    // Shell script pattern
+    else if (
+      claudeContent.includes('./scripts/release.sh') &&
+      claudeContent.includes('export GH_TOKEN=$(gh auth token)')
+    ) {
+      analysis.hasReleasePatterns = true;
+      analysis.hasTokenPatterns = true;
+      analysis.approvedReleasePattern = 'shell-script';
+      analysis.approvedTokenPattern = 'shell-script';
+    }
+    // Check for generic token patterns
+    else if (
+      claudeContent.includes('GH_TOKEN=$(gh auth token)') &&
+      !claudeContent.includes('exposes GitHub token') &&
+      !claudeContent.includes('Update to:')
+    ) {
+      analysis.hasTokenPatterns = true;
+      analysis.approvedTokenPattern = 'npm-script-with-gh-token';
+    }
+
+    return analysis;
+  } catch {
+    return {
+      exists: false,
+      hasReleasePatterns: false,
+      hasTokenPatterns: false,
+      approvedReleasePattern: null,
+      approvedTokenPattern: null
+    };
+  }
+}
+
+/**
  * Validate a Metalsmith plugin against quality standards
  * @param {Object} args - Tool arguments
  * @param {string} args.path - Plugin directory path
@@ -536,18 +600,18 @@ async function checkDocumentation(pluginPath, results, config) {
     // Check README sections
     const requiredSections =
       config?.rules?.documentation?.requiredSections?.map((name) => ({
-        pattern: new RegExp(`##?\\s+${name}`, 'i'),
+        pattern: new RegExp(`#{1,4}\\s+.*${name}`, 'i'),
         name
       })) || [];
 
     const recommendedSections = config?.rules?.documentation?.recommendedSections?.map((name) => ({
-      pattern: new RegExp(`##?\\s+${name}`, 'i'),
+      pattern: new RegExp(`#{1,4}\\s+.*${name}`, 'i'),
       name
     })) || [
-      { pattern: /##?\s+Install/i, name: 'Installation' },
-      { pattern: /##?\s+Usage/i, name: 'Usage' },
-      { pattern: /##?\s+Options/i, name: 'Options' },
-      { pattern: /##?\s+Examples?/i, name: 'Example/Examples' }
+      { pattern: /#{1,4}\s+.*Install/i, name: 'Installation' },
+      { pattern: /#{1,4}\s+.*Usage/i, name: 'Usage' },
+      { pattern: /#{1,4}\s+.*Options/i, name: 'Options' },
+      { pattern: /#{1,4}\s+.*Examples?/i, name: 'Example/Examples' }
     ];
 
     for (const section of requiredSections) {
@@ -611,6 +675,7 @@ async function checkDocumentation(pluginPath, results, config) {
  */
 async function checkPackageJson(pluginPath, results, config) {
   try {
+    const claudeAnalysis = await analyzeClaudeStandards(pluginPath);
     const packageJson = JSON.parse(await fs.readFile(path.join(pluginPath, 'package.json'), 'utf-8'));
 
     // Required fields
@@ -676,14 +741,21 @@ async function checkPackageJson(pluginPath, results, config) {
 
     for (const script of recommendedScripts) {
       if (packageJson.scripts?.[script]) {
-        // Check if release scripts use the insecure pattern
+        // Check release scripts based on existing CLAUDE.md standards
         if (script.startsWith('release:') && packageJson.scripts[script].includes('GH_TOKEN=$(gh auth token)')) {
-          results.recommendations.push(
-            `⚠️  Script "${script}" exposes GitHub token in package.json. Update to: "${script}": "./scripts/release.sh ${script.split(':')[1]} --ci"`
-          );
-          results.recommendations.push(
-            `💡 Create scripts/release.sh with secure token handling and ensure .release-it.json uses "tokenRef": "GH_TOKEN". See: https://github.com/wernerglinka/metalsmith-plugin-mcp-server/blob/main/scripts/release.sh`
-          );
+          // Check if this pattern is approved in CLAUDE.md
+          if (claudeAnalysis.exists && claudeAnalysis.approvedTokenPattern === 'npm-script-with-gh-token') {
+            results.passed.push(`✓ Script "${script}" uses CLAUDE.md approved pattern (npm script with GH_TOKEN)`);
+          } else if (claudeAnalysis.exists && claudeAnalysis.approvedReleasePattern === 'shell-script') {
+            results.recommendations.push(
+              `💡 CLAUDE.md recommends shell script approach. Consider updating "${script}" to: "./scripts/release.sh ${script.split(':')[1]} --ci"`
+            );
+          } else {
+            // No CLAUDE.md guidance - offer both options
+            results.recommendations.push(
+              `💡 Consider secure release approach: either npm script pattern "GH_TOKEN=$(gh auth token) npx release-it ${script.split(':')[1]} --ci" or shell script "./scripts/release.sh ${script.split(':')[1]} --ci"`
+            );
+          }
         } else {
           results.passed.push(`✓ Script "${script}" defined`);
         }
@@ -698,9 +770,19 @@ async function checkPackageJson(pluginPath, results, config) {
           results.recommendations.push(`💡 Consider adding script: ${script}. Example: "test:coverage": "c8 npm test"`);
         } else if (script.startsWith('release:')) {
           const releaseType = script.split(':')[1];
-          results.recommendations.push(
-            `💡 Consider adding script: ${script}. Example: "${script}": "./scripts/release.sh ${releaseType} --ci"`
-          );
+          if (claudeAnalysis.exists && claudeAnalysis.approvedTokenPattern === 'npm-script-with-gh-token') {
+            results.recommendations.push(
+              `💡 Consider adding script: ${script}. CLAUDE.md pattern: "${script}": "GH_TOKEN=$(gh auth token) npx release-it ${releaseType} --ci"`
+            );
+          } else if (claudeAnalysis.exists && claudeAnalysis.approvedReleasePattern === 'shell-script') {
+            results.recommendations.push(
+              `💡 Consider adding script: ${script}. CLAUDE.md pattern: "${script}": "./scripts/release.sh ${releaseType} --ci"`
+            );
+          } else {
+            results.recommendations.push(
+              `💡 Consider adding script: ${script}. Example: "${script}": "./scripts/release.sh ${releaseType} --ci"`
+            );
+          }
         } else {
           results.recommendations.push(`💡 Consider adding script: ${script}`);
         }
@@ -718,13 +800,29 @@ async function checkPackageJson(pluginPath, results, config) {
       );
 
       if (hasReleaseScripts) {
-        try {
-          await fs.access(path.join(pluginPath, 'scripts/release.sh'));
-          results.passed.push('✓ Secure release script found (scripts/release.sh)');
-        } catch {
-          results.recommendations.push(
-            '💡 Consider using a secure release script to handle GitHub tokens. Create scripts/release.sh for better security.'
-          );
+        // Check shell script based on CLAUDE.md standards
+        if (claudeAnalysis.exists && claudeAnalysis.approvedReleasePattern === 'shell-script') {
+          try {
+            await fs.access(path.join(pluginPath, 'scripts/release.sh'));
+            results.passed.push('✓ Secure release script found (scripts/release.sh) - matches CLAUDE.md standards');
+          } catch {
+            results.recommendations.push(
+              '💡 CLAUDE.md recommends shell script approach. Create scripts/release.sh for consistency with existing standards.'
+            );
+          }
+        } else if (claudeAnalysis.exists && claudeAnalysis.approvedTokenPattern === 'npm-script-with-gh-token') {
+          // CLAUDE.md approves npm script approach - don't recommend shell script
+          results.passed.push('✓ Release process follows CLAUDE.md standards (npm script with GH_TOKEN)');
+        } else {
+          // No CLAUDE.md guidance - offer shell script as option
+          try {
+            await fs.access(path.join(pluginPath, 'scripts/release.sh'));
+            results.passed.push('✓ Secure release script found (scripts/release.sh)');
+          } catch {
+            results.recommendations.push(
+              '💡 Consider using a secure release script to handle GitHub tokens. Create scripts/release.sh for better security.'
+            );
+          }
         }
 
         // Check for .release-it.json token consistency
@@ -733,23 +831,40 @@ async function checkPackageJson(pluginPath, results, config) {
           await fs.access(releaseItPath);
           const releaseItConfig = JSON.parse(await fs.readFile(releaseItPath, 'utf-8'));
 
-          // Check if GitHub integration is configured
+          // Check if GitHub integration is configured based on CLAUDE.md standards
           if (releaseItConfig.github) {
             const tokenRef = releaseItConfig.github.tokenRef;
 
-            if (tokenRef === 'GH_TOKEN') {
+            if (claudeAnalysis.exists && claudeAnalysis.approvedTokenPattern === 'npm-script-with-gh-token') {
+              // CLAUDE.md approves npm script approach - tokenRef may not be needed
+              if (tokenRef) {
+                results.passed.push(
+                  `✓ .release-it.json has tokenRef "${tokenRef}" (npm script approach doesn't require this but it's configured)`
+                );
+              } else {
+                results.passed.push(
+                  '✓ Token handling follows CLAUDE.md standards (npm script with GH_TOKEN) - no tokenRef needed'
+                );
+              }
+            } else if (tokenRef === 'GH_TOKEN') {
               results.passed.push('✓ .release-it.json uses correct token reference (GH_TOKEN)');
             } else if (tokenRef === 'GITHUB_TOKEN') {
               results.recommendations.push(
-                `⚠️  .release-it.json uses "GITHUB_TOKEN" but secure scripts use "GH_TOKEN". Update tokenRef to "GH_TOKEN" in .release-it.json`
+                `⚠️  .release-it.json uses "GITHUB_TOKEN" but shell scripts use "GH_TOKEN". Update tokenRef to "GH_TOKEN" in .release-it.json`
               );
             } else if (!tokenRef) {
-              results.recommendations.push(
-                '💡 Consider adding "tokenRef": "GH_TOKEN" to github section in .release-it.json for consistent token handling'
-              );
+              if (claudeAnalysis.exists && claudeAnalysis.approvedReleasePattern === 'shell-script') {
+                results.recommendations.push(
+                  '💡 CLAUDE.md recommends shell script approach. Add "tokenRef": "GH_TOKEN" to github section in .release-it.json for consistency'
+                );
+              } else {
+                results.recommendations.push(
+                  '💡 Consider adding "tokenRef": "GH_TOKEN" to github section in .release-it.json for consistent token handling'
+                );
+              }
             } else {
               results.recommendations.push(
-                `⚠️  .release-it.json uses token reference "${tokenRef}". For consistency with secure scripts, consider using "GH_TOKEN"`
+                `⚠️  .release-it.json uses token reference "${tokenRef}". For consistency, consider using "GH_TOKEN"`
               );
             }
           }
