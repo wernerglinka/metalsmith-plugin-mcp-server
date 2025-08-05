@@ -73,9 +73,17 @@ Focus on getting to successful results quickly:
 
 This is an MCP (Model Context Protocol) server for scaffolding and validating high-quality Metalsmith plugins. It provides tools for Claude to help users create, validate, and maintain Metalsmith plugins following best practices.
 
-## Current Status (v1.0.0-alpha - Phase 1 Complete)
+## Current Status (v1.1.0 - Smart Validation Update)
 
-### Phase 1 Foundation Work Completed
+### Recent Major Work Completed (v1.1.0)
+
+1. **CLAUDE.md-Aware Validation** - Validation system now detects existing project standards from CLAUDE.md files and validates against them instead of imposing conflicting recommendations
+2. **Improved Section Detection** - Enhanced README validation to detect Examples sections at any header level (###, ####, etc.)
+3. **Context-Aware Recommendations** - Provides recommendations that match existing project patterns rather than generic suggestions
+4. **Reduced False Positives** - Eliminated incorrect warnings for approved patterns (e.g., npm script release approaches)
+5. **Quality Score Improvements** - Better scores reflecting actual compliance rather than conflicts with existing standards
+
+### Phase 1 Foundation Work Completed (v1.0.0)
 
 1. **Audit Plugin Tool** - Comprehensive plugin health assessment combining validation, linting, formatting, tests, and coverage into a single command
 2. **Batch Audit Command** - Audit multiple plugins in a directory with summary reporting and batch operations

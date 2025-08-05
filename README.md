@@ -78,7 +78,7 @@ Validation checks include:
 
 - **Structure**: Required directories and files
 - **Tests**: Test coverage and fixture setup
-- **Documentation**: README sections, examples, and badges
+- **Documentation**: README sections, examples, and badges (detects sections at any header level)
 - **Package.json**: Required fields and conventions
 - **JSDoc**: Type definitions, parameter documentation, and return types
 - **Performance**: Efficient files object iteration, Buffer handling, object destructuring
@@ -87,6 +87,8 @@ Validation checks include:
 - **Metalsmith Patterns**: Plugin factory patterns, function signatures, metadata handling, native methods usage
 - **ESLint**: Modern configuration presence
 - **Coverage**: Test coverage analysis
+
+**🔍 Smart CLAUDE.md Integration**: The validation system automatically detects existing project standards from CLAUDE.md files and validates against them instead of imposing conflicting recommendations. For example, if your CLAUDE.md specifies npm script release patterns, the validator recognizes this as approved and doesn't suggest shell script alternatives.
 
 ### 3. Configuration Generation
 
@@ -241,9 +243,9 @@ npx metalsmith-plugin-mcp-server scaffold my-awesome-plugin "Processes markdown 
 
 #### Enhanced Validation Features
 
-The `validate` command now supports functional validation that actually runs your tests and coverage:
+The `validate` command now supports functional validation that actually runs your tests and coverage, plus smart CLAUDE.md integration:
 
-**Standard Validation** (structure-based):
+**Standard Validation** (structure-based, respects CLAUDE.md standards):
 
 ```bash
 npx metalsmith-plugin-mcp-server validate ./my-plugin
@@ -254,6 +256,8 @@ npx metalsmith-plugin-mcp-server validate ./my-plugin
 ```bash
 npx metalsmith-plugin-mcp-server validate ./my-plugin --functional
 ```
+
+**CLAUDE.md Integration**: If your plugin has a CLAUDE.md file with established patterns (like npm script releases), the validator automatically detects and validates against those patterns instead of suggesting conflicting approaches.
 
 **Understanding Validation Output:**
 
