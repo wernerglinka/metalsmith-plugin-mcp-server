@@ -181,7 +181,7 @@ function startServer() {
  * @param {string} [outputPath] - The directory where the plugin will be created (uses config default if not provided)
  * @returns {Promise<void>}
  */
-async function runScaffold(name, description, outputPath) {
+async function runScaffold(name, description, userOutputPath) {
   // Interactive mode if parameters are missing
   if (!name) {
     console.warn(styles.header('\nScaffold a new Metalsmith plugin\n'));
@@ -205,10 +205,14 @@ async function runScaffold(name, description, outputPath) {
   // Load user configuration
   const config = await readUserConfig();
 
+  let outputPath = userOutputPath;
   if (!outputPath) {
     const defaultPath = config.outputPath || '.';
     outputPath = await prompt('Output path', defaultPath);
   }
+
+  // Sanitize the output path to prevent traversal attacks
+  outputPath = sanitizePath(outputPath || '.', process.cwd());
 
   try {
     // Import and run the scaffold tool directly
@@ -368,8 +372,9 @@ async function runBatchAudit(userPath, fix = false, outputFormat = 'console') {
  * @param {string} outputPath - The directory where config files will be generated
  * @returns {Promise<void>}
  */
-async function runGenerateConfigs(outputPath) {
+async function runGenerateConfigs(userOutputPath) {
   // Interactive mode if path is missing
+  let outputPath = userOutputPath;
   if (!outputPath) {
     console.warn(styles.header('\nGenerate configuration files\n'));
     outputPath = await prompt('Output path', '.');
@@ -379,6 +384,9 @@ async function runGenerateConfigs(outputPath) {
       process.exit(1);
     }
   }
+
+  // Sanitize the output path to prevent traversal attacks
+  outputPath = sanitizePath(outputPath, process.cwd());
 
   try {
     // Import and run the generate configs tool directly
@@ -666,13 +674,16 @@ async function runGetTemplate(template) {
  * @param {boolean} options.dryRun - Show what would be changed without making changes
  * @returns {Promise<void>}
  */
-async function runInstallClaudeMd(targetPath = '.', options = {}) {
+async function runInstallClaudeMd(userPath = '.', options = {}) {
   const { replace = false, dryRun = false } = options;
 
   try {
     console.warn(
       styles.header(dryRun ? '\nDry run: CLAUDE.md template analysis\n' : '\nInstalling CLAUDE.md template\n')
     );
+
+    // Sanitize the target path to prevent traversal attacks
+    const targetPath = sanitizePath(userPath || '.', process.cwd());
 
     // Get the plugin name from package.json if available
     let pluginName = 'your-plugin';
@@ -882,8 +893,9 @@ function smartMergeClaudeMd(existingContent, templateContent, context = {}) {
  * @param {boolean} test - Run tests after installing updates
  * @returns {Promise<void>}
  */
-async function runUpdateDeps(path, install = false, test = false) {
+async function runUpdateDeps(userPath, install = false, test = false) {
   // Interactive mode if path is missing
+  let path = userPath;
   if (!path) {
     console.warn(styles.header('\nUpdate plugin dependencies\n'));
 
@@ -900,6 +912,9 @@ async function runUpdateDeps(path, install = false, test = false) {
       }
     }
   }
+
+  // Sanitize the path to prevent traversal attacks
+  path = sanitizePath(path, process.cwd());
 
   try {
     // Import and run the update deps tool directly

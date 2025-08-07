@@ -1,6 +1,7 @@
 import { promises as fs } from 'fs';
 import path from 'path';
 import chalk from 'chalk';
+import { sanitizePath } from '../utils/path-security.js';
 
 /**
  * Generate configuration files following enhanced standards
@@ -10,7 +11,10 @@ import chalk from 'chalk';
  * @returns {Promise<Object>} Tool response
  */
 export async function generateConfigsTool(args) {
-  const { outputPath = '.', configs = ['eslint', 'prettier', 'editorconfig', 'gitignore'] } = args;
+  const { outputPath: userPath = '.', configs = ['eslint', 'prettier', 'editorconfig', 'gitignore'] } = args;
+
+  // Sanitize the output path to prevent traversal attacks
+  const outputPath = sanitizePath(userPath, process.cwd());
 
   const generated = [];
   const errors = [];

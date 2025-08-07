@@ -2,6 +2,7 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import nunjucks from 'nunjucks';
+import { sanitizePath } from '../utils/path-security.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -12,7 +13,10 @@ const __dirname = path.dirname(__filename);
  */
 export async function installClaudeMdTool(args) {
   try {
-    const { path: targetPath = '.', replace = false, dryRun = false } = args;
+    const { path: userPath = '.', replace = false, dryRun = false } = args;
+
+    // Sanitize the target path to prevent traversal attacks
+    const targetPath = sanitizePath(userPath, process.cwd());
 
     // Get plugin info from package.json if available
     let pluginName = 'your-plugin';

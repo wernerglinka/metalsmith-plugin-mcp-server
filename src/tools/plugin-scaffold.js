@@ -22,6 +22,7 @@ import chalk from 'chalk'; // Colored terminal output
 // Our utility functions for template processing
 import { copyTemplate } from '../utils/template.js';
 import { generatePluginStructure } from '../utils/structure.js';
+import { sanitizePath } from '../utils/path-security.js';
 
 // Get the directory containing this file (needed for finding templates)
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -117,8 +118,11 @@ export async function pluginScaffoldTool(args) {
     conventionWarning = `⚠️  Warning: Plugin name '${name}' doesn't follow the 'metalsmith-*' naming convention. Consider renaming to 'metalsmith-${name.replace(/^metalsmith-?/, '')}' for better discoverability.\n\n`;
   }
 
+  // Sanitize the output path to prevent traversal attacks
+  const safeOutputPath = sanitizePath(outputPath, process.cwd());
+
   // Construct the full path where the plugin will be created
-  const pluginPath = path.join(outputPath, name);
+  const pluginPath = path.join(safeOutputPath, name);
 
   try {
     // Check if directory already exists to avoid overwriting existing work

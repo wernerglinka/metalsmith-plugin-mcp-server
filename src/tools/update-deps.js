@@ -2,6 +2,7 @@ import { promises as fs } from 'fs';
 import { spawn } from 'child_process';
 import path from 'path';
 import chalk from 'chalk';
+import { sanitizePath } from '../utils/path-security.js';
 
 /**
  * Update dependencies using npm's built-in commands
@@ -16,13 +17,16 @@ import chalk from 'chalk';
  */
 export async function updateDepsTool(args) {
   const {
-    path: targetPath = '.',
+    path: userPath = '.',
     major = false,
     interactive = false,
     dryRun = false,
     install = false,
     test = false
   } = args;
+
+  // Sanitize the target path to prevent traversal attacks
+  const targetPath = sanitizePath(userPath, process.cwd());
 
   const results = [];
 
