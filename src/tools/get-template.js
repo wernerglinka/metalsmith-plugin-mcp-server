@@ -9,6 +9,7 @@
 import { promises as fs } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { sanitizeTemplateName } from '../utils/path-security.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -24,9 +25,12 @@ export async function getTemplateTool(args) {
       throw new Error('Template name is required');
     }
 
+    // Sanitize template name to prevent path traversal
+    const sanitizedTemplateName = sanitizeTemplateName(templateName);
+
     // Build path to template file
     const templatesDir = path.join(__dirname, '../../templates');
-    const templatePath = path.join(templatesDir, `${templateName}.template`);
+    const templatePath = path.join(templatesDir, `${sanitizedTemplateName}.template`);
 
     // Check if template exists
     try {

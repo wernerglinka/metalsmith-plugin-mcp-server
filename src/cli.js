@@ -14,6 +14,7 @@ import { promises as fs } from 'fs';
 import { homedir } from 'os';
 import chalk from 'chalk';
 import readline from 'readline';
+import { sanitizePath } from './utils/path-security.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -239,19 +240,22 @@ async function runScaffold(name, description, outputPath) {
  * @param {string} path - Path to the plugin directory to validate
  * @returns {Promise<void>}
  */
-async function runValidate(path, functional = false) {
+async function runValidate(userPath, functional = false) {
   // Interactive mode if path is missing
-  if (!path) {
+  if (!userPath) {
     console.warn(styles.header('\nValidate a Metalsmith plugin\n'));
-    path = await prompt('Plugin path', '.');
+    userPath = await prompt('Plugin path', '.');
 
-    if (!path) {
+    if (!userPath) {
       console.error(styles.error('\nError: Plugin path is required'));
       process.exit(1);
     }
   }
 
   try {
+    // Sanitize the path to prevent traversal attacks
+    const path = sanitizePath(userPath, process.cwd());
+
     // Import and run the validate tool directly
     const { validatePluginTool } = await import('./tools/validate-plugin.js');
     const result = await validatePluginTool({
@@ -280,19 +284,22 @@ async function runValidate(path, functional = false) {
  * @param {string} outputFormat - Output format (console, json, markdown)
  * @returns {Promise<void>}
  */
-async function runAudit(path, fix = false, outputFormat = 'console') {
+async function runAudit(userPath, fix = false, outputFormat = 'console') {
   // Interactive mode if path is missing
-  if (!path) {
+  if (!userPath) {
     console.warn(styles.header('\nRun comprehensive plugin audit\n'));
-    path = await prompt('Plugin path', '.');
+    userPath = await prompt('Plugin path', '.');
 
-    if (!path) {
+    if (!userPath) {
       console.error(styles.error('\nError: Plugin path is required'));
       process.exit(1);
     }
   }
 
   try {
+    // Sanitize the path to prevent traversal attacks
+    const path = sanitizePath(userPath, process.cwd());
+
     // Import and run the audit tool directly
     const { auditPlugin } = await import('./tools/audit-plugin.js');
     const result = await auditPlugin({
@@ -320,19 +327,22 @@ async function runAudit(path, fix = false, outputFormat = 'console') {
  * @param {string} outputFormat - Output format (console, json, markdown)
  * @returns {Promise<void>}
  */
-async function runBatchAudit(path, fix = false, outputFormat = 'console') {
+async function runBatchAudit(userPath, fix = false, outputFormat = 'console') {
   // Interactive mode if path is missing
-  if (!path) {
+  if (!userPath) {
     console.warn(styles.header('\nRun batch audit on multiple plugins\n'));
-    path = await prompt('Search path', '.');
+    userPath = await prompt('Search path', '.');
 
-    if (!path) {
+    if (!userPath) {
       console.error(styles.error('\nError: Search path is required'));
       process.exit(1);
     }
   }
 
   try {
+    // Sanitize the path to prevent traversal attacks
+    const path = sanitizePath(userPath, process.cwd());
+
     // Import and run the batch audit tool directly
     const { batchAudit } = await import('./tools/batch-audit.js');
     const result = await batchAudit({

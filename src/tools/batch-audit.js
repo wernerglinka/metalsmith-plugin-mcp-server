@@ -11,6 +11,7 @@ import { glob } from 'glob';
 import chalk from 'chalk';
 import ora from 'ora';
 import { auditPlugin } from './audit-plugin.js';
+import { sanitizePath } from '../utils/path-security.js';
 
 /**
  * Check if a directory is a valid plugin directory
@@ -143,7 +144,7 @@ function getHealthDisplay(health) {
  * @returns {Promise<string>} Batch audit report
  */
 export async function batchAudit(args) {
-  const searchPath = resolve(process.cwd(), args.path || '.');
+  const searchPath = sanitizePath(args.path || '.', process.cwd());
   const results = [];
 
   console.log(chalk.blue(`\n📊 Running batch audit in ${chalk.bold(searchPath)}...\n`));

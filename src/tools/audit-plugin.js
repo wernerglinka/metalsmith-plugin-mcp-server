@@ -11,6 +11,7 @@ import { existsSync, readFileSync } from 'fs';
 import chalk from 'chalk';
 import ora from 'ora';
 import { validatePluginTool } from './validate-plugin.js';
+import { sanitizePath } from '../utils/path-security.js';
 
 /**
  * Run a command and capture output
@@ -150,7 +151,7 @@ function extractCoverage(output) {
  * @returns {Promise<string>} Audit report
  */
 export async function auditPlugin(args) {
-  const pluginPath = resolve(process.cwd(), args.path || '.');
+  const pluginPath = sanitizePath(args.path || '.', process.cwd());
   const pluginName = basename(pluginPath);
   const results = {
     validation: { score: null, passed: false },

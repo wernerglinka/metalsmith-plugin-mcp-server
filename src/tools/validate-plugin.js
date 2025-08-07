@@ -3,6 +3,7 @@ import path from 'path';
 import { glob } from 'glob';
 import { spawn } from 'child_process';
 import chalk from 'chalk';
+import { sanitizePath } from '../utils/path-security.js';
 
 /**
  * Load validation configuration from file
@@ -154,7 +155,7 @@ async function analyzeClaudeStandards(pluginPath) {
  */
 export async function validatePluginTool(args) {
   const {
-    path: pluginPath,
+    path: userPath,
     checks = ['structure', 'tests', 'docs', 'package-json', 'jsdoc', 'performance', 'security', 'metalsmith-patterns'],
     functional = false
   } = args;
@@ -167,6 +168,9 @@ export async function validatePluginTool(args) {
   };
 
   try {
+    // Sanitize the path to prevent traversal attacks
+    const pluginPath = sanitizePath(userPath || '.', process.cwd());
+
     // Verify plugin directory exists
     await fs.access(pluginPath);
 
