@@ -448,24 +448,42 @@ Based on successful plugin implementations, consider these enhancements to .rele
    ```
    Provides clear feedback when release completes successfully.
 
-### Release Notes Generation Fix
+### Improved Release Notes System (v1.2.0)
 
-**IMPORTANT**: Fixed a critical issue where GitHub releases only showed Snyk auto-fixes instead of our meaningful commits.
+**IMPLEMENTED**: Complete release notes improvement system addressing malformed GitHub releases.
 
-**Problem**: The release-it configuration had `"autoGenerate": false` but wasn't explicitly using our CHANGELOG.md content for GitHub release notes.
+**New System Features:**
 
-**Solution**: Added `"releaseNotes"` configuration to both the main .release-it.json and the template:
+- ✅ Clean, professional GitHub release notes
+- ✅ Version-specific changes (no "Unreleased" sections)
+- ✅ Automatic commit filtering (excludes chore, ci, dev commits)
+- ✅ Proper GitHub markdown formatting with commit links
+- ✅ Full changelog links for detailed comparisons
 
-```json
-{
-  "github": {
-    "autoGenerate": false,
-    "releaseNotes": "npx auto-changelog -u --commit-limit false --ignore-commit-pattern '^((dev|chore|ci):|Release)' --stdout"
-  }
-}
-```
+**Implementation Changes:**
 
-This ensures GitHub releases now show our actual feature commits and fixes instead of just dependency updates.
+1. **Custom Release Notes Script**: New `scripts/release-notes.sh` template generates clean, focused release notes
+2. **Updated Release-It Configuration**: Template now uses `"releaseNotes": "./scripts/release-notes.sh ${latestTag}"`
+3. **Scaffold Integration**: Automatically creates and installs release notes script in new plugins
+4. **Configs Command Enhancement**: Includes release notes script when generating release-it configuration
+5. **Validation Checks**: New validation rules ensure release notes system is properly configured
+6. **Documentation Updates**: Both plugin templates and main documentation updated with release management info
+
+**Template Changes:**
+
+- `templates/scripts/release-notes.sh.template` - Custom release notes generation script
+- `templates/configs/release-it.json.template` - Updated to use custom release notes
+- `templates/plugin/CLAUDE.md.template` - Added release system documentation
+- `templates/plugin/README.md.template` - Added release management section
+
+**Validation Integration:**
+
+- New `checkReleaseNotes` validation function
+- Checks for script existence and executability
+- Validates .release-it.json configuration
+- Provides upgrade paths for existing plugins
+
+This replaces the previous auto-changelog approach with a more targeted solution that generates clean, professional GitHub releases.
 
 ### Next Release Preparation
 

@@ -280,33 +280,41 @@ function {{ camelCaseName }}(options = {}) {
 
 ## Release Process
 
+### Automated Release Process
+
+The release process uses an improved release notes system that generates clean, version-specific GitHub releases:
+
+**Key Features:**
+- ✅ Clean, professional release notes
+- ✅ Only current version changes (no "Unreleased" sections)
+- ✅ Automatic commit filtering (excludes chore, ci, dev commits)
+- ✅ Proper GitHub markdown formatting with commit links
+
+**Release Commands:**
+```bash
+npm run release:patch  # Bug fixes (1.2.3 → 1.2.4)
+npm run release:minor  # New features (1.2.3 → 1.3.0)  
+npm run release:major  # Breaking changes (1.2.3 → 2.0.0)
+```
+
+The release notes are automatically generated using `scripts/release-notes.sh` which:
+1. Gets commits since the previous tag
+2. Filters out merge commits and maintenance commits
+3. Formats with proper GitHub links
+4. Includes full changelog link
+
 ### Prerequisites
 
 - GitHub CLI (`gh`) installed and authenticated
 - All tests passing
 - Code properly linted and formatted
 
-### Automated Release
-
-The release process is fully automated:
-
-```bash
-# Patch release (bug fixes)
-npm run release:patch
-
-# Minor release (new features)  
-npm run release:minor
-
-# Major release (breaking changes)
-npm run release:major
-```
-
 This automatically:
 - Updates version in package.json
 - Generates changelog
 - Creates git tag
 - Pushes to GitHub
-- Creates GitHub release
+- Creates GitHub release with clean, professional notes
 
 ## Common Development Tasks
 

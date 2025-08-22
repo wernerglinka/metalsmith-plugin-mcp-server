@@ -156,7 +156,17 @@ async function analyzeClaudeStandards(pluginPath) {
 export async function validatePluginTool(args) {
   const {
     path: userPath,
-    checks = ['structure', 'tests', 'docs', 'package-json', 'jsdoc', 'performance', 'security', 'metalsmith-patterns'],
+    checks = [
+      'structure',
+      'tests',
+      'docs',
+      'package-json',
+      'release-notes',
+      'jsdoc',
+      'performance',
+      'security',
+      'metalsmith-patterns'
+    ],
     functional = false
   } = args;
 
@@ -199,6 +209,9 @@ export async function validatePluginTool(args) {
           if (config.rules.packageJson) {
             await checkPackageJson(pluginPath, results, config);
           }
+          break;
+        case 'release-notes':
+          await checkReleaseNotes(pluginPath, results);
           break;
         case 'eslint':
           await checkEslint(pluginPath, results);
@@ -1710,5 +1723,78 @@ async function checkMetalsmithPatterns(pluginPath, results) {
     }
   } catch (error) {
     results.warnings.push(`⚠ Could not check Metalsmith patterns: ${error.message}`);
+  }
+}
+
+/**
+ * Check release notes system
+ */
+async function checkReleaseNotes(pluginPath, results) {
+  try {
+    // Check for release notes script
+    const scriptPath = path.join(pluginPath, 'scripts', 'release-notes.sh');
+    try {
+      const scriptStat = await fs.stat(scriptPath);
+      const isExecutable = scriptStat.mode & 0o111;
+
+      if (isExecutable) {
+        results.passed.push('✓ Release notes script exists and is executable');
+      } else {
+        results.warnings.push(
+          '⚠ Release notes script exists but is not executable. Run: chmod +x scripts/release-notes.sh'
+        );
+      }
+    } catch (error) {
+      if (error.code === 'ENOENT') {
+        results.recommendations.push(
+          '💡 Consider adding release notes script for professional GitHub releases. Run: npx metalsmith-plugin-mcp-server configs . release-it'
+        );
+      }
+    }
+
+    // Check release-it configuration for custom release notes
+    try {
+      const releaseItPath = path.join(pluginPath, '.release-it.json');
+      const releaseItContent = await fs.readFile(releaseItPath, 'utf-8');
+      const releaseItConfig = JSON.parse(releaseItContent);
+
+      const releaseNotes = releaseItConfig.github?.releaseNotes;
+      if (releaseNotes && releaseNotes.includes('./scripts/release-notes.sh')) {
+        results.passed.push('✓ Release-it configured to use custom release notes script');
+      } else if (releaseNotes && releaseNotes.includes('auto-changelog')) {
+        results.recommendations.push(
+          '💡 Consider upgrading to custom release notes script for cleaner GitHub releases. Update .release-it.json releaseNotes to: "./scripts/release-notes.sh ${latestTag}"'
+        );
+      } else if (releaseItConfig.github?.autoGenerate === true) {
+        results.recommendations.push(
+          '💡 Using GitHub auto-generated release notes. For more control, consider custom release notes script'
+        );
+      }
+
+      // Check for autoGenerate setting
+      if (releaseItConfig.github?.autoGenerate === false && !releaseNotes) {
+        results.warnings.push(
+          '⚠ GitHub release notes disabled but no custom releaseNotes configured. Add "releaseNotes": "./scripts/release-notes.sh ${latestTag}" to github section'
+        );
+      }
+    } catch (error) {
+      if (error.code !== 'ENOENT') {
+        results.warnings.push(`⚠ Could not validate .release-it.json release notes configuration: ${error.message}`);
+      }
+    }
+
+    // Check for scripts directory
+    try {
+      const scriptsDirStat = await fs.stat(path.join(pluginPath, 'scripts'));
+      if (!scriptsDirStat.isDirectory()) {
+        results.recommendations.push('💡 Create scripts directory for release automation: mkdir scripts');
+      }
+    } catch (error) {
+      if (error.code === 'ENOENT') {
+        results.recommendations.push('💡 Create scripts directory for release automation: mkdir scripts');
+      }
+    }
+  } catch (error) {
+    results.warnings.push(`⚠ Could not check release notes system: ${error.message}`);
   }
 }
