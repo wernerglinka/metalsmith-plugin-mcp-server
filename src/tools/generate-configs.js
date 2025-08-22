@@ -492,7 +492,7 @@ echo ""
 # Only show full changelog link if we have a previous tag
 if [ "$PREV_TAG" != "HEAD~20" ]; then
     CURRENT_TAG=$(git describe --tags --exact-match HEAD 2>/dev/null || echo "HEAD")
-    echo "**Full Changelog**: [\$PREV_TAG...\$CURRENT_TAG](\${REPO_URL}/compare/\${PREV_TAG}...\${CURRENT_TAG})"
+    echo "**Full Changelog**: [$PREV_TAG...$CURRENT_TAG](\${REPO_URL}/compare/$PREV_TAG...$CURRENT_TAG)"
 fi`;
 
   await fs.writeFile(scriptPath, script);
