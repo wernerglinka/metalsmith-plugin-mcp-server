@@ -160,6 +160,63 @@ npm run release:minor  # New features (1.2.3 → 1.3.0)
 npm run release:major  # Breaking changes (1.2.3 → 2.0.0)
 ```
 
+### Writing Commit Messages for Rich Release Notes
+
+Since release notes are auto-generated from commit messages, write detailed commits that clearly explain what changed and why:
+
+**Good Examples:**
+```bash
+feat: add HTML attribute minification support
+
+- Implement advanced attribute optimization algorithm
+- Add support for preserving custom elements
+- Improve processing performance by 40% on large files
+- Add configuration option for selective attribute handling
+
+Closes #123, resolves #124
+```
+
+```bash
+fix: resolve nested script tag processing issue
+
+- Fix edge case where nested script tags caused parsing errors
+- Add comprehensive test coverage for complex HTML structures
+- Improve error messages for malformed HTML
+- Update documentation with troubleshooting guide
+
+Fixes #156
+```
+
+```bash
+docs: update usage examples with new API patterns
+
+- Add async/await examples for modern JavaScript patterns
+- Include TypeScript usage examples
+- Update configuration options table
+- Add troubleshooting section for common issues
+```
+
+**Commit Message Format:**
+- **type**: Brief description (50 chars or less)
+- **body**: Detailed explanation with bullet points
+- **footer**: Issue references and breaking change notices
+
+**Commit Types:**
+- `feat:` New features or enhancements
+- `fix:` Bug fixes
+- `docs:` Documentation updates
+- `perf:` Performance improvements
+- `refactor:` Code refactoring without functional changes
+- `test:` Test additions or modifications
+- `build:` Build system or dependency changes
+
+**Why This Matters:**
+- Each commit message becomes a release note entry
+- Users see exactly what changed and the impact
+- Links to issues/PRs are preserved in GitHub releases
+- Breaking changes are clearly documented
+- Professional release notes are generated automatically
+
 ## Contributing
 
 1. Fork the repository
