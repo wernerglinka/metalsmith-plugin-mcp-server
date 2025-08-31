@@ -53,7 +53,7 @@
     "README.md"
   ],
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.17.0",
+    "@modelcontextprotocol/sdk": "^1.17.2",
     "chalk": "^5.4.1",
     "glob": "^11.0.3",
     "js-yaml": "^4.1.0",
