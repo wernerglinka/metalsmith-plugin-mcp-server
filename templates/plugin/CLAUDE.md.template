@@ -224,6 +224,141 @@ npm run test:coverage
 - README with comprehensive usage examples
 - Type definitions in `types/` directory
 
+### Enhanced Quality Validation (v1.4.0)
+
+This plugin is validated against enhanced quality standards that catch common professional plugin issues. The MCP server validation includes:
+
+#### 1. Marketing Language Detection (`marketing-language`)
+**What it catches**: Buzzwords and marketing language in documentation
+- ❌ Avoid: "intelligent", "smart", "seamless", "revolutionary", "cutting-edge"
+- ✅ Use: Technical descriptions of actual functionality
+
+**Examples:**
+```javascript
+// ❌ Marketing language
+"This intelligent plugin seamlessly transforms content"
+
+// ✅ Technical description  
+"Transforms markdown content to HTML with configurable options"
+```
+
+#### 2. Module System Consistency (`module-consistency`)
+**What it catches**: Dangerous CJS/ESM mixing in README examples that causes runtime errors
+- ❌ Avoid: Mixed `require()` and `import` in the same example
+- ✅ Use: Consistent module syntax that matches package.json type
+
+**Examples:**
+```javascript
+// ❌ Mixed module systems (causes runtime errors)
+const Metalsmith = require('metalsmith');
+import myPlugin from 'my-plugin';
+
+// ✅ Consistent ESM
+import Metalsmith from 'metalsmith';
+import myPlugin from 'my-plugin';
+
+// ✅ Consistent CJS  
+const Metalsmith = require('metalsmith');
+const myPlugin = require('my-plugin');
+```
+
+#### 3. Hardcoded Values Detection (`hardcoded-values`)
+**What it catches**: Values that should be user-configurable options
+- ❌ Avoid: Hardcoded wordsPerMinute, viewport settings, timeouts
+- ✅ Use: Configurable options with sensible defaults
+
+**Examples:**
+```javascript
+// ❌ Hardcoded values
+const wordsPerMinute = 200;
+const viewport = { width: 1200, height: 800 };
+
+// ✅ Configurable with defaults
+function myPlugin(options = {}) {
+  const config = {
+    wordsPerMinute: 200,
+    viewport: { width: 1200, height: 800 },
+    ...options
+  };
+  // ...
+}
+```
+
+#### 4. Performance Pattern Analysis (`performance-patterns`)
+**What it catches**: Objects recreated inside functions and redundant utilities
+- ❌ Avoid: Objects redefined in functions, redundant utilities (get, pick, identity)
+- ✅ Use: Module-level constants, established libraries
+
+**Examples:**
+```javascript
+// ❌ Object recreation inside function (performance killer)
+function processFiles(files) {
+  const typeMap = { // Recreated on every call!
+    '.md': 'markdown',
+    '.html': 'html'
+  };
+  // ...
+}
+
+// ✅ Module-level constant
+const TYPE_MAP = {
+  '.md': 'markdown', 
+  '.html': 'html'
+};
+
+function processFiles(files) {
+  // Use TYPE_MAP constant
+}
+
+// ❌ Redundant utility functions
+const get = (obj, path) => path.split('.').reduce((o, k) => o?.[k], obj);
+const pick = (obj, keys) => keys.reduce((r, k) => ({...r, [k]: obj[k]}), {});
+
+// ✅ Use established libraries or native methods
+import { get, pick } from 'lodash';
+// or use native Object methods where appropriate
+```
+
+#### 5. Internationalization Readiness (`i18n-readiness`)
+**What it catches**: English-only text outputs that prevent global plugin adoption
+- ❌ Avoid: Hardcoded English strings in output
+- ✅ Use: Data objects that templates can customize
+
+**Examples:**
+```javascript
+// ❌ English-only output (limits global usage)
+function readingTime(content) {
+  const minutes = Math.ceil(content.length / 1000);
+  return `${minutes} minute read`; // Hardcoded English!
+}
+
+// ✅ Return data objects for template customization
+function readingTime(content) {
+  const minutes = Math.ceil(content.length / 1000);
+  return {
+    minutes,
+    seconds: (content.length / 1000 * 60) % 60,
+    words: content.split(/\s+/).length
+  };
+}
+```
+
+### Running Quality Validation
+
+```bash
+# Run comprehensive validation including enhanced quality checks
+npx metalsmith-plugin-mcp-server validate . --functional
+
+# The validation automatically includes all enhanced quality rules:
+# - marketing-language
+# - module-consistency  
+# - hardcoded-values
+# - performance-patterns
+# - i18n-readiness
+```
+
+These enhanced quality standards help create plugins that meet professional standards and avoid common pitfalls identified by Metalsmith maintainers.
+
 ## Plugin Development Patterns
 
 ### Basic Plugin Structure
@@ -238,6 +373,68 @@ function {{ camelCaseName }}(options = {}) {
   return function(files, metalsmith, callback) {
     // Plugin logic here
     callback();
+  };
+}
+
+export default {{ camelCaseName }};
+```
+
+### Quality-Compliant Plugin Structure
+
+Following the enhanced quality standards, here's a pattern that avoids common pitfalls:
+
+```javascript
+// ✅ Module-level constants (avoid performance-patterns violations)
+const DEFAULT_CONFIG = {
+  // ✅ Configurable values (avoid hardcoded-values violations)
+  wordsPerMinute: 200,
+  timeout: 5000,
+  batchSize: 10
+};
+
+const FILE_TYPE_MAP = {
+  '.md': 'markdown',
+  '.html': 'html',
+  '.txt': 'text'
+};
+
+/**
+ * Processes files with configurable options
+ * ✅ Technical description (avoid marketing-language violations)
+ * @param {Object} options - Plugin configuration
+ * @returns {Function} Metalsmith plugin function
+ */
+function {{ camelCaseName }}(options = {}) {
+  // ✅ Merge user options with defaults
+  const config = { ...DEFAULT_CONFIG, ...options };
+  
+  return function(files, metalsmith, callback) {
+    try {
+      // ✅ Use metalsmith native methods (prefer over external deps)
+      const debug = metalsmith.debug('{{ name }}');
+      
+      Object.keys(files).forEach(filename => {
+        // ✅ Use module-level constants
+        const fileType = FILE_TYPE_MAP[path.extname(filename)];
+        
+        if (fileType) {
+          // ✅ Return data objects for i18n-readiness
+          files[filename].metadata = {
+            type: fileType,
+            processedAt: Date.now(),
+            // Return structured data instead of formatted strings
+            stats: {
+              size: files[filename].contents.length,
+              estimatedReadTime: Math.ceil(files[filename].contents.length / config.wordsPerMinute)
+            }
+          };
+        }
+      });
+
+      callback();
+    } catch (error) {
+      callback(error);
+    }
   };
 }
 
@@ -264,16 +461,63 @@ function {{ camelCaseName }}(options = {}) {
 ### Async Processing Pattern
 
 ```javascript
+// ✅ Module-level constants for performance
+const DEFAULT_ASYNC_CONFIG = {
+  batchSize: 10,
+  maxConcurrency: 3,
+  timeout: 30000
+};
+
 function {{ camelCaseName }}(options = {}) {
+  // ✅ Configurable options with defaults
+  const config = { ...DEFAULT_ASYNC_CONFIG, ...options };
+  
   return async function(files, metalsmith) {
-    const batchSize = options.batchSize || 10;
+    const debug = metalsmith.debug('{{ name }}');
     const fileList = Object.keys(files);
     
-    for (let i = 0; i < fileList.length; i += batchSize) {
-      const batch = fileList.slice(i, i + batchSize);
-      await processBatch(batch, files, options);
+    debug('Processing %d files in batches of %d', fileList.length, config.batchSize);
+    
+    for (let i = 0; i < fileList.length; i += config.batchSize) {
+      const batch = fileList.slice(i, i + config.batchSize);
+      
+      // ✅ Return structured data for i18n compatibility
+      const results = await processBatch(batch, files, config);
+      
+      // Add batch processing metadata
+      batch.forEach((filename, index) => {
+        if (files[filename] && results[index]) {
+          files[filename].batchInfo = {
+            batchNumber: Math.floor(i / config.batchSize) + 1,
+            positionInBatch: index,
+            processedAt: results[index].timestamp,
+            // Return data, not formatted strings
+            performance: {
+              duration: results[index].duration,
+              memoryUsed: results[index].memoryUsed
+            }
+          };
+        }
+      });
     }
   };
+}
+
+async function processBatch(batch, files, config) {
+  // ✅ Example of processing that returns structured data
+  return Promise.all(batch.map(async (filename) => {
+    const startTime = Date.now();
+    const startMemory = process.memoryUsage().heapUsed;
+    
+    // Process the file...
+    
+    return {
+      filename,
+      timestamp: Date.now(),
+      duration: Date.now() - startTime,
+      memoryUsed: process.memoryUsage().heapUsed - startMemory
+    };
+  }));
 }
 ```
 {%- endif %}
@@ -315,6 +559,92 @@ This automatically:
 - Creates git tag
 - Pushes to GitHub
 - Creates GitHub release with clean, professional notes
+
+## Quality Standards Best Practices
+
+### Avoiding Common Validation Issues
+
+When developing this plugin, follow these patterns to pass enhanced quality validation:
+
+#### Documentation Writing
+```markdown
+<!-- ❌ Marketing language -->
+This intelligent plugin seamlessly transforms your content with cutting-edge algorithms.
+
+<!-- ✅ Technical description -->  
+Transforms markdown files to HTML with configurable syntax highlighting and custom template support.
+```
+
+#### README Examples
+```javascript
+// ❌ Mixed module systems (causes runtime errors when copy-pasted)
+const Metalsmith = require('metalsmith');
+import myPlugin from 'my-plugin';
+
+// ✅ Consistent module system
+import Metalsmith from 'metalsmith';
+import myPlugin from 'my-plugin';
+```
+
+#### Configuration Management
+```javascript
+// ❌ Hardcoded values
+function myPlugin() {
+  const wordsPerMinute = 200; // Should be configurable!
+  // ...
+}
+
+// ✅ Configurable with defaults
+function myPlugin(options = {}) {
+  const config = {
+    wordsPerMinute: 200,
+    ...options
+  };
+  // ...
+}
+```
+
+#### Performance Optimization
+```javascript
+// ❌ Object recreation (performance killer)
+function processFiles(files) {
+  const typeMap = { '.md': 'markdown' }; // Created every call!
+  // ...
+}
+
+// ✅ Module-level constants
+const TYPE_MAP = { '.md': 'markdown' };
+function processFiles(files) {
+  // Use TYPE_MAP
+}
+```
+
+#### Internationalization Support
+```javascript
+// ❌ English-only output
+function getReadingTime(wordCount) {
+  return `${Math.ceil(wordCount/200)} minute read`;
+}
+
+// ✅ Return data for template customization
+function getReadingTime(wordCount) {
+  return {
+    minutes: Math.ceil(wordCount/200),
+    words: wordCount,
+    estimatedSeconds: (wordCount/200) * 60
+  };
+}
+```
+
+### Pre-Development Checklist
+
+Before writing code, ensure you understand:
+
+1. **What configurable options should be available?** (Avoid hardcoded values)
+2. **What data should the plugin return?** (Avoid English-only strings)
+3. **What objects can be defined at module level?** (Avoid recreation in functions)
+4. **How will users actually use this plugin?** (Ensure consistent module examples)
+5. **What does this plugin actually do?** (Use technical language, not marketing speak)
 
 ## Common Development Tasks
 
