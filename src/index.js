@@ -157,7 +157,12 @@ ${aiInstructions ? `\n${aiInstructions}` : ''}`,
               'performance',
               'security',
               'integration',
-              'metalsmith-patterns'
+              'metalsmith-patterns',
+              'marketing-language',
+              'module-consistency',
+              'hardcoded-values',
+              'performance-patterns',
+              'i18n-readiness'
             ]
           },
           description: 'Specific checks to perform. Use metalsmith-patterns for plugin-specific validations',
@@ -169,7 +174,12 @@ ${aiInstructions ? `\n${aiInstructions}` : ''}`,
             'jsdoc',
             'performance',
             'security',
-            'metalsmith-patterns'
+            'metalsmith-patterns',
+            'marketing-language',
+            'module-consistency',
+            'hardcoded-values',
+            'performance-patterns',
+            'i18n-readiness'
           ]
         }
       },

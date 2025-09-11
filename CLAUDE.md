@@ -73,9 +73,27 @@ Focus on getting to successful results quickly:
 
 This is an MCP (Model Context Protocol) server for scaffolding and validating high-quality Metalsmith plugins. It provides tools for Claude to help users create, validate, and maintain Metalsmith plugins following best practices.
 
-## Current Status (v1.1.0 - Smart Validation Update)
+## Current Status (v1.4.0 - Enhanced Quality Standards)
 
-### Recent Major Work Completed (v1.1.0)
+### Recent Major Work Completed (v1.4.0 - Plugin Quality Validation Enhancements)
+
+**Addressing Metalsmith Maintainer Feedback** - Added comprehensive validation rules targeting real-world plugin quality issues:
+
+1. **Marketing Language Detection** - Identifies and flags buzzwords ("intelligent", "smart", "seamless") in documentation that should be replaced with technical descriptions
+2. **Module System Consistency Validation** - Detects dangerous CJS/ESM mixing in README examples that cause runtime errors when users copy-paste code
+3. **Hardcoded Values Detection** - Finds hardcoded configurations (wordsPerMinute, viewport settings, etc.) that should be user-configurable options
+4. **Performance Anti-Pattern Analysis** - Catches objects redefined inside functions, redundant utility functions (get, pick, identity), and other performance issues
+5. **Internationalization Readiness Checks** - Detects English-only text outputs that prevent global plugin adoption
+
+**Implementation Details:**
+
+- All new validations are included in default validation checks
+- Updated MCP server schema to expose new validation options
+- Enhanced validation reporting with actionable recommendations
+- Comprehensive test coverage for all new validation patterns
+- Updated documentation and examples
+
+### Previous Major Work (v1.3.0 - Release Notes Enhancement)
 
 1. **CLAUDE.md-Aware Validation** - Validation system now detects existing project standards from CLAUDE.md files and validates against them instead of imposing conflicting recommendations
 2. **Improved Section Detection** - Enhanced README validation to detect Examples sections at any header level (###, ####, etc.)
@@ -140,6 +158,18 @@ Uses exact strings only:
 - `.metalsmith-plugin-mcp` - Plugin scaffolding defaults
 - `.metalsmith-plugin-validation.json` - Validation rule customization
 
+### 4. Enhanced Quality Standards (v1.4.0)
+
+**New Validation Rules** addressing real-world plugin quality issues:
+
+- **Marketing Language Detection** (`marketing-language`): Flags non-technical buzzwords in documentation
+- **Module System Consistency** (`module-consistency`): Prevents CJS/ESM mixing that causes runtime errors
+- **Hardcoded Values Detection** (`hardcoded-values`): Identifies values that should be configurable options
+- **Performance Pattern Analysis** (`performance-patterns`): Catches objects recreated in functions, redundant utilities
+- **Internationalization Readiness** (`i18n-readiness`): Detects English-only outputs that limit global adoption
+
+These rules help create plugins that meet professional standards and avoid common pitfalls identified by Metalsmith maintainers.
+
 ## Important Implementation Details
 
 ### Default Behavior Changes
@@ -202,7 +232,7 @@ npx metalsmith-plugin-mcp-server config
 # Create modern plugin (includes async-processing by default)
 npx metalsmith-plugin-mcp-server scaffold my-plugin "Description here"
 
-# Validate with actual test runs
+# Validate with actual test runs (includes enhanced quality standards)
 npx metalsmith-plugin-mcp-server validate ./plugin --functional
 
 # Run comprehensive plugin audit (validation + linting + tests + coverage)
@@ -349,16 +379,25 @@ npm run release:major  # For breaking changes
 
 ## Release Information
 
-### Current Version: 0.13.0
+### Current Version: 1.4.0 (In Development)
 
-- **NEW**: show-template command for displaying recommended configuration templates
-- **FIXED**: configs command forEach error resolved
-- **ENHANCED**: .release-it.json template now includes proper tokenRef: "GH_TOKEN"
-- **IMPROVED**: comprehensive validation for token reference consistency between package.json and .release-it.json
-- **FIXED**: README template debug section uses correct metalsmith.env format
-- All UX issues from user feedback addressed
-- All tests passing
-- Ready for production use
+**NEW Plugin Quality Validation Enhancements** - Addressing metalsmith maintainer feedback:
+
+- **Marketing Language Detection**: Flags buzzwords like "intelligent", "smart", "seamless" in documentation
+- **Module System Consistency**: Detects CJS/ESM mixing in README examples that would cause runtime errors
+- **Hardcoded Values Detection**: Identifies values that should be configurable (wordsPerMinute, viewport, etc.)
+- **Performance Pattern Analysis**: Finds objects redefined in functions, redundant utilities (get, pick, identity)
+- **Internationalization Readiness**: Detects English-only outputs that prevent global usage
+
+These new validation rules help create plugins that meet professional standards and avoid common pitfalls identified by the Metalsmith maintainer.
+
+### Previous Version: 1.3.0
+
+- **NEW**: Comprehensive release notes improvement system addressing malformed GitHub releases
+- **IMPLEMENTED**: Clean, professional GitHub release notes with version-specific changes
+- **ENHANCED**: Automatic commit filtering (excludes chore, ci, dev commits)
+- **ADDED**: Custom release notes script template for cleaner GitHub releases
+- **IMPROVED**: Full changelog links for detailed comparisons
 
 ### Release Process Implementation
 
@@ -506,6 +545,35 @@ This replaces the previous auto-changelog approach with a more targeted solution
 2. "Create a plugin that..." → Use scaffold with exact name provided
 3. "Fix these warnings" → Convert to actionable recommendations
 4. "Make it modern" → Include async-processing features
+
+### Enhanced Quality Standards - Practical Benefits
+
+The new validation rules help users avoid common plugin quality issues identified by Metalsmith maintainers:
+
+**Marketing Language Issues:**
+
+- ❌ "This intelligent plugin seamlessly transforms content"
+- ✅ "Transforms markdown content to HTML with configurable options"
+
+**Module System Problems:**
+
+- ❌ Mixed CJS/ESM in examples causes runtime errors when users copy-paste
+- ✅ Consistent module syntax that actually works when implemented
+
+**Hardcoded Configuration:**
+
+- ❌ `const wordsPerMinute = 200;` prevents user customization
+- ✅ `const config = { wordsPerMinute: 200, ...options };` allows user control
+
+**Performance Anti-patterns:**
+
+- ❌ Object recreation inside functions kills performance
+- ✅ Module-level constants avoid unnecessary object creation
+
+**Internationalization Barriers:**
+
+- ❌ `return "5 minute read"` limits plugin to English sites
+- ✅ `return { minutes: 5, seconds: 20 }` allows template customization
 
 ## Development Environment Notes
 

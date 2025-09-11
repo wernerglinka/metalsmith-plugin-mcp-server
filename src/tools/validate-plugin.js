@@ -165,7 +165,12 @@ export async function validatePluginTool(args) {
       'jsdoc',
       'performance',
       'security',
-      'metalsmith-patterns'
+      'metalsmith-patterns',
+      'marketing-language',
+      'module-consistency',
+      'hardcoded-values',
+      'performance-patterns',
+      'i18n-readiness'
     ],
     functional = false
   } = args;
@@ -233,6 +238,21 @@ export async function validatePluginTool(args) {
           break;
         case 'metalsmith-patterns':
           await checkMetalsmithPatterns(pluginPath, results);
+          break;
+        case 'marketing-language':
+          await checkMarketingLanguage(pluginPath, results);
+          break;
+        case 'module-consistency':
+          await checkModuleConsistency(pluginPath, results);
+          break;
+        case 'hardcoded-values':
+          await checkHardcodedValues(pluginPath, results);
+          break;
+        case 'performance-patterns':
+          await checkPerformancePatterns(pluginPath, results);
+          break;
+        case 'i18n-readiness':
+          await checkI18nReadiness(pluginPath, results);
           break;
       }
     }
@@ -1723,6 +1743,350 @@ async function checkMetalsmithPatterns(pluginPath, results) {
     }
   } catch (error) {
     results.warnings.push(`⚠ Could not check Metalsmith patterns: ${error.message}`);
+  }
+}
+
+/**
+ * Check for marketing language in documentation
+ */
+async function checkMarketingLanguage(pluginPath, results) {
+  try {
+    const marketingWords = [
+      'intelligent',
+      'smart',
+      'seamless',
+      'advanced',
+      'powerful',
+      'cutting-edge',
+      'revolutionary',
+      'innovative',
+      'breakthrough',
+      'next-generation',
+      'state-of-the-art',
+      'enterprise-grade',
+      'world-class',
+      'industry-leading',
+      'game-changing'
+    ];
+
+    const filesToCheck = ['README.md', 'CHANGELOG.md', 'src/index.js'];
+    let foundMarketingLanguage = false;
+    const foundWords = new Set();
+
+    for (const file of filesToCheck) {
+      try {
+        const filePath = path.join(pluginPath, file);
+        const content = await fs.readFile(filePath, 'utf-8');
+
+        for (const word of marketingWords) {
+          const regex = new RegExp(`\\b${word}\\b`, 'gi');
+          if (regex.test(content)) {
+            foundMarketingLanguage = true;
+            foundWords.add(word);
+          }
+        }
+      } catch {
+        // File doesn't exist, skip
+      }
+    }
+
+    if (foundMarketingLanguage) {
+      results.warnings.push(
+        `⚠ Marketing language detected: ${Array.from(foundWords).join(', ')}. Consider replacing with technical descriptions`
+      );
+      results.recommendations.push(
+        '💡 Replace marketing words with specific technical descriptions of what the plugin actually does'
+      );
+    } else {
+      results.passed.push('✓ Documentation uses technical language without marketing buzzwords');
+    }
+  } catch (error) {
+    results.warnings.push(`⚠ Could not check marketing language: ${error.message}`);
+  }
+}
+
+/**
+ * Check for module system consistency (CJS vs ESM mixing)
+ */
+async function checkModuleConsistency(pluginPath, results) {
+  try {
+    const readmePath = path.join(pluginPath, 'README.md');
+
+    try {
+      const readme = await fs.readFile(readmePath, 'utf-8');
+
+      // Look for code blocks
+      const codeBlocks = readme.match(/```(?:javascript|js)?\n([\s\S]*?)\n```/g) || [];
+
+      let hasCJSPatterns = false;
+      let hasESMPatterns = false;
+      let hasMixedPatterns = false;
+
+      for (const block of codeBlocks) {
+        const content = block.replace(/```(?:javascript|js)?\n|\n```/g, '');
+
+        // Check for CJS patterns
+        if (/require\s*\(|module\.exports|exports\.|__dirname|__filename/.test(content)) {
+          hasCJSPatterns = true;
+        }
+
+        // Check for ESM patterns
+        if (/import\s+.*from|export\s+.*from|export\s+default|export\s+\{/.test(content)) {
+          hasESMPatterns = true;
+        }
+
+        // Check for mixed patterns in same block
+        if (
+          /require\s*\(.*import\s+.*from|import\s+.*from.*require\s*\(|__dirname.*import|import.*__dirname/.test(
+            content
+          )
+        ) {
+          hasMixedPatterns = true;
+        }
+      }
+
+      if (hasMixedPatterns) {
+        results.failed.push('✗ README examples mix CJS and ESM syntax - this will cause runtime errors');
+        results.recommendations.push(
+          '💡 Fix mixed module syntax in README examples. Choose either CJS or ESM consistently'
+        );
+      } else if (hasCJSPatterns && hasESMPatterns) {
+        results.warnings.push(
+          '⚠ README has both CJS and ESM examples - ensure they are clearly separated and labeled'
+        );
+        results.recommendations.push('💡 Label code examples clearly as "CommonJS" or "ES Modules" to avoid confusion');
+      } else if (hasCJSPatterns || hasESMPatterns) {
+        results.passed.push('✓ README examples use consistent module syntax');
+      }
+
+      // Check package.json type
+      try {
+        const packageJson = JSON.parse(await fs.readFile(path.join(pluginPath, 'package.json'), 'utf-8'));
+        const isESM = packageJson.type === 'module' || packageJson.exports;
+
+        if (isESM && hasCJSPatterns && !hasESMPatterns) {
+          results.recommendations.push(
+            '💡 Package uses ES modules but README shows CJS examples - update examples to ESM'
+          );
+        } else if (!isESM && hasESMPatterns && !hasCJSPatterns) {
+          results.recommendations.push(
+            '💡 Package uses CommonJS but README shows ESM examples - update examples to CJS or add "type": "module"'
+          );
+        }
+      } catch {
+        // Could not read package.json
+      }
+    } catch {
+      results.warnings.push('⚠ Could not read README.md to check module consistency');
+    }
+  } catch (error) {
+    results.warnings.push(`⚠ Could not check module consistency: ${error.message}`);
+  }
+}
+
+/**
+ * Check for hardcoded values that should be configurable
+ */
+async function checkHardcodedValues(pluginPath, results) {
+  try {
+    const mainFilePath = path.join(pluginPath, 'src/index.js');
+    const mainFileContent = await fs.readFile(mainFilePath, 'utf-8');
+
+    const hardcodedPatterns = [
+      {
+        pattern: /wordsPerMinute\s*[:=]\s*\d+/,
+        message: 'Hardcoded reading speed (wordsPerMinute) - should be configurable option'
+      },
+      {
+        pattern: /viewport.*width=device-width.*initial-scale=1\.0/,
+        message: 'Hardcoded viewport meta tag - should be configurable option'
+      },
+      {
+        pattern: /charset.*utf-8/i,
+        message: 'Hardcoded charset - consider making configurable'
+      },
+      {
+        pattern: /lang.*en(-US)?/,
+        message: 'Hardcoded language - should support internationalization'
+      },
+      {
+        pattern: /minute read|minutes read/,
+        message: 'Hardcoded English text for reading time - prevents internationalization'
+      },
+      {
+        pattern: /\b\d{2,4}\s*px\b|\b\d{1,3}%\b/,
+        message: 'Hardcoded CSS dimensions - consider making configurable'
+      }
+    ];
+
+    let foundHardcodedValues = false;
+
+    for (const check of hardcodedPatterns) {
+      if (check.pattern.test(mainFileContent)) {
+        foundHardcodedValues = true;
+        results.warnings.push(`⚠ ${check.message}`);
+      }
+    }
+
+    // Check for options handling patterns
+    const hasOptionsDefaults = /options\s*=\s*\{[\s\S]*\}|Object\.assign\(.*options|\.\.\.options/.test(
+      mainFileContent
+    );
+    const hasOptionsValidation = /options\?\.|options\s*\|\|\s*\{/.test(mainFileContent);
+
+    if (foundHardcodedValues) {
+      if (hasOptionsDefaults) {
+        results.recommendations.push('💡 Move hardcoded values to configurable options with sensible defaults');
+      } else {
+        results.recommendations.push(
+          '💡 Add options parameter with defaults: function plugin(options = {}) { const config = { defaults, ...options }; }'
+        );
+      }
+    } else if (hasOptionsDefaults || hasOptionsValidation) {
+      results.passed.push('✓ Plugin uses configurable options instead of hardcoded values');
+    }
+  } catch (error) {
+    results.warnings.push(`⚠ Could not check hardcoded values: ${error.message}`);
+  }
+}
+
+/**
+ * Check for performance anti-patterns specific to the feedback
+ */
+async function checkPerformancePatterns(pluginPath, results) {
+  try {
+    const jsFiles = await glob('src/**/*.js', { cwd: pluginPath });
+
+    for (const file of jsFiles) {
+      try {
+        const filePath = path.join(pluginPath, file);
+        const content = await fs.readFile(filePath, 'utf-8');
+
+        // Check for objects defined inside functions that should be module-level
+        const functionPattern = /function\s+\w+\s*\([^)]*\)\s*\{([\s\S]*?)\}/g;
+        let match;
+
+        while ((match = functionPattern.exec(content)) !== null) {
+          const functionBody = match[1];
+
+          // Look for object definitions inside functions
+          if (/const\s+\w*(?:Map|Dict|Config|Options)\s*=\s*\{/.test(functionBody)) {
+            results.warnings.push(
+              `⚠ Object defined inside function in ${file} - move to module level for better performance`
+            );
+            results.recommendations.push(
+              '💡 Move constant objects (typeMap, configMap, etc.) to module level to avoid recreation'
+            );
+          }
+        }
+
+        // Check for redundant utility functions
+        const utilityPatterns = [
+          { pattern: /function\s+get\s*\(/, name: 'get' },
+          { pattern: /function\s+pick\s*\(/, name: 'pick' },
+          { pattern: /function\s+identity\s*\(/, name: 'identity' },
+          { pattern: /const\s+get\s*=/, name: 'get' },
+          { pattern: /const\s+pick\s*=/, name: 'pick' },
+          { pattern: /const\s+identity\s*=/, name: 'identity' }
+        ];
+
+        const foundUtils = [];
+        for (const util of utilityPatterns) {
+          if (util.pattern.test(content) && !foundUtils.includes(util.name)) {
+            foundUtils.push(util.name);
+          }
+        }
+
+        if (foundUtils.length > 0) {
+          results.warnings.push(
+            `⚠ Custom utility functions (${foundUtils.join(', ')}) in ${file} - consider using established library like lodash`
+          );
+          results.recommendations.push('💡 Replace custom utilities with lodash or remove if only used once');
+        }
+
+        // Check for inefficient string building
+        if (/\+\s*['"`].*\n.*\+\s*['"`]/.test(content)) {
+          results.recommendations.push(
+            `💡 String concatenation detected in ${file} - consider template literals for better readability`
+          );
+        }
+      } catch {
+        // Skip files that can't be read
+      }
+    }
+
+    if (results.warnings.length === 0) {
+      results.passed.push('✓ No obvious performance anti-patterns detected');
+    }
+  } catch (error) {
+    results.warnings.push(`⚠ Could not check performance patterns: ${error.message}`);
+  }
+}
+
+/**
+ * Check for internationalization readiness
+ */
+async function checkI18nReadiness(pluginPath, results) {
+  try {
+    const mainFilePath = path.join(pluginPath, 'src/index.js');
+    const mainFileContent = await fs.readFile(mainFilePath, 'utf-8');
+
+    // Check for English-only text output
+    const englishOnlyPatterns = [
+      { pattern: /['"`]\d+\s+minutes?\s+read['"`]/, message: 'Returns English reading time text instead of data' },
+      { pattern: /['"`].*minute\s+read['"`]/, message: 'Hardcoded English time text' },
+      { pattern: /['"`](seconds?|minutes?|hours?)\s/, message: 'Hardcoded English time units' },
+      { pattern: /['"`](Loading|Error|Success|Failed)['"`]/, message: 'Hardcoded English status messages' },
+      { pattern: /console\.log\(['"`][A-Z].*['"`]\)/, message: 'English console messages' }
+    ];
+
+    let foundI18nIssues = false;
+
+    for (const check of englishOnlyPatterns) {
+      if (check.pattern.test(mainFileContent)) {
+        foundI18nIssues = true;
+        results.warnings.push(`⚠ I18n issue: ${check.message}`);
+      }
+    }
+
+    // Look for better patterns
+    const returnsDataPattern = /return\s*\{[\s\S]*(?:minutes|seconds|value)[\s\S]*\}/;
+    const usesConfigurableText = /options\.(?:text|message|label)/;
+
+    if (foundI18nIssues) {
+      if (returnsDataPattern.test(mainFileContent)) {
+        results.recommendations.push('💡 Good: Plugin returns data objects. Remove any remaining hardcoded text');
+      } else {
+        results.recommendations.push(
+          '💡 Return data objects instead of formatted text: { minutes: 5, seconds: 20 } instead of "5 minute read"'
+        );
+      }
+
+      if (!usesConfigurableText.test(mainFileContent)) {
+        results.recommendations.push(
+          '💡 Make text messages configurable via options: options.messages?.readingTime || "minute read"'
+        );
+      }
+    } else if (returnsDataPattern.test(mainFileContent)) {
+      results.passed.push('✓ Plugin returns data instead of hardcoded English text');
+    } else {
+      results.passed.push('✓ No obvious internationalization issues detected');
+    }
+
+    // Check for locale-specific assumptions
+    const localePatterns = [
+      { pattern: /MM\/DD\/YYYY|DD\/MM\/YYYY/, message: 'Hardcoded date format - use configurable format or ISO dates' },
+      { pattern: /\$\d+|\d+\s*USD/, message: 'Hardcoded currency format' },
+      { pattern: /\d{1,3},\d{3}/, message: 'Hardcoded number formatting (US style)' }
+    ];
+
+    for (const check of localePatterns) {
+      if (check.pattern.test(mainFileContent)) {
+        results.warnings.push(`⚠ Locale assumption: ${check.message}`);
+      }
+    }
+  } catch (error) {
+    results.warnings.push(`⚠ Could not check internationalization readiness: ${error.message}`);
   }
 }
 

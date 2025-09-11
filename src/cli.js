@@ -107,7 +107,7 @@ function showHelp() {
   console.warn('  server                        Start the MCP server (for AI assistants)');
   console.warn('  config                        Show current configuration and setup');
   console.warn('  scaffold [name] [description] [path] Create a new Metalsmith plugin');
-  console.warn('  validate [path] [--functional] Validate an existing plugin');
+  console.warn('  validate [path] [--functional] Validate plugin against enhanced quality standards');
   console.warn('  audit [path] [--fix] [--output=json|markdown] Run comprehensive plugin audit');
   console.warn('  batch-audit [path] [--fix] [--output=json|markdown] Run audit on multiple plugins');
   console.warn('  configs [path]                Generate configuration files');
@@ -124,7 +124,7 @@ function showHelp() {
   console.warn('  npx metalsmith-plugin-mcp-server config                    # Show current setup');
   console.warn('  npx metalsmith-plugin-mcp-server scaffold my-plugin "Processes my files" ./plugins');
   console.warn('  npx metalsmith-plugin-mcp-server scaffold                  # Guided mode');
-  console.warn('  npx metalsmith-plugin-mcp-server validate ./metalsmith-existing-plugin');
+  console.warn('  npx metalsmith-plugin-mcp-server validate ./metalsmith-existing-plugin # Enhanced quality checks');
   console.warn('  npx metalsmith-plugin-mcp-server validate ./ --functional # Run tests & coverage');
   console.warn('  npx metalsmith-plugin-mcp-server audit ./my-plugin       # Comprehensive plugin audit');
   console.warn('  npx metalsmith-plugin-mcp-server audit ./my-plugin --fix # Audit with automatic fixes');
@@ -139,6 +139,13 @@ function showHelp() {
   console.warn('  npx metalsmith-plugin-mcp-server update-deps ./plugins     # Update all plugins');
   console.warn('  npx metalsmith-plugin-mcp-server update-deps ./my-plugin   # Update single plugin');
   console.warn('  npx metalsmith-plugin-mcp-server update-deps ./ --install --test # Update, install & test\n');
+
+  console.warn(chalk.bold('Enhanced Validation Includes:'));
+  console.warn('  • Marketing language detection (flags buzzwords like "intelligent", "seamless")');
+  console.warn('  • Module system consistency (prevents CJS/ESM mixing that causes errors)');
+  console.warn('  • Hardcoded values detection (finds values that should be configurable)');
+  console.warn('  • Performance anti-patterns (objects in functions, redundant utilities)');
+  console.warn('  • Internationalization readiness (detects English-only outputs)\n');
 
   console.warn(chalk.bold('MCP Server Setup:'));
   console.warn('  For use with Claude Desktop or Claude Code, run:');

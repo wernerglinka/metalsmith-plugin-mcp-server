@@ -11,6 +11,18 @@ MCP server for scaffolding and validating high-quality Metalsmith plugins
 
 This MCP (Model Context Protocol) server provides tools for creating and maintaining Metalsmith plugins following enhanced quality standards. It encapsulates best practices from the Metalsmith ecosystem, such as `@metalsmith/core-plugin` and contributed plugins like `metalsmith-optimize-images`.
 
+## ✨ What's New in v1.4.0
+
+**Enhanced Plugin Quality Validation** - Addressing real-world feedback from Metalsmith maintainers:
+
+- **🚫 Marketing Language Detection**: Automatically flags buzzwords like "intelligent", "smart", "seamless" that add no technical value
+- **⚠️ Module System Consistency**: Prevents dangerous CJS/ESM mixing in documentation examples that cause runtime errors
+- **🔧 Hardcoded Values Detection**: Identifies configurations that should be user-customizable (reading speeds, viewport settings, etc.)
+- **⚡ Performance Anti-Pattern Analysis**: Catches objects recreated in functions, redundant utilities, inefficient patterns
+- **🌍 Internationalization Readiness**: Detects English-only outputs that prevent global plugin adoption
+
+These validations help create professional plugins that meet the quality standards expected by the Metalsmith community.
+
 ## Installation
 
 ```bash
@@ -25,7 +37,7 @@ npx metalsmith-plugin-mcp-server --help
 
 ## MCP Tools
 
-The MCP server provides six main tools:
+The MCP server provides eight main tools:
 
 ### 1. Plugin Scaffolding
 
@@ -69,7 +81,12 @@ await mcp.call('validate', {
     'performance',
     'security',
     'integration',
-    'metalsmith-patterns'
+    'metalsmith-patterns',
+    'marketing-language',
+    'module-consistency',
+    'hardcoded-values',
+    'performance-patterns',
+    'i18n-readiness'
   ]
 });
 ```
@@ -87,6 +104,14 @@ Validation checks include:
 - **Metalsmith Patterns**: Plugin factory patterns, function signatures, metadata handling, native methods usage
 - **ESLint**: Modern configuration presence
 - **Coverage**: Test coverage analysis
+
+**🆕 Enhanced Quality Standards** (addressing Metalsmith maintainer feedback):
+
+- **Marketing Language Detection**: Flags buzzwords like "intelligent", "smart", "seamless" in documentation
+- **Module System Consistency**: Detects dangerous CJS/ESM mixing in README examples that cause runtime errors
+- **Hardcoded Values Detection**: Identifies hardcoded configurations (wordsPerMinute, viewport, etc.) that should be options
+- **Performance Pattern Analysis**: Finds objects redefined in functions, redundant utilities (get, pick, identity)
+- **Internationalization Readiness**: Detects English-only outputs that prevent global plugin usage
 
 **🔍 Smart CLAUDE.md Integration**: The validation system automatically detects existing project standards from CLAUDE.md files and validates against them instead of imposing conflicting recommendations. For example, if your CLAUDE.md specifies npm script release patterns, the validator recognizes this as approved and doesn't suggest shell script alternatives.
 
