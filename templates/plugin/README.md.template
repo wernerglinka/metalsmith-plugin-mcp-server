@@ -143,6 +143,33 @@ open coverage/index.html
 
 This project maintains 80% code coverage across branches, lines, functions, and statements.
 
+## Automated CI/CD
+
+This plugin includes professional GitHub workflows for automated quality assurance:
+
+### GitHub Actions Workflows
+
+- **`.github/workflows/test.yml`**: Runs on every push and pull request
+  - Automated testing across Node.js versions
+  - Coverage calculation and badge updates
+  - Build verification
+  - Automatic README updates with coverage percentages
+
+- **`.github/workflows/claude-code.yml`**: AI-assisted code review
+  - Automatic code review on pull requests
+  - Integration with Claude Code for intelligent feedback
+  - Requires `ANTHROPIC_API_KEY` secret in repository settings
+
+### Coverage Badges
+
+Coverage badges are automatically updated by the test workflow. The badge color changes based on coverage percentage:
+- 90%+ = bright green
+- 80-89% = green  
+- 70-79% = yellow-green
+- 60-69% = yellow
+- 50-59% = orange
+- <50% = red
+
 ## Release Management
 
 This plugin uses an improved release system that generates professional GitHub releases:

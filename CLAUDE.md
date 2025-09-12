@@ -170,6 +170,39 @@ Uses exact strings only:
 
 These rules help create plugins that meet professional standards and avoid common pitfalls identified by Metalsmith maintainers.
 
+### 5. Complementary CI/CD Architecture
+
+**NEW (v1.4.1)**: Scaffolded plugins now include complementary GitHub workflows and release scripts for professional development workflows:
+
+**GitHub Workflows** (`.github/workflows/`):
+
+- **test.yml**: CI/CD automation with Node.js testing, coverage extraction, and automatic README badge updates
+- **claude-code.yml**: AI-assisted code review integration using Anthropic's Claude Code Action
+
+**Release Scripts** (`scripts/`):
+
+- **release.sh**: Manual release control with GitHub CLI authentication
+- **release-notes.sh**: Custom release notes generation for clean GitHub releases
+
+**Benefits of Complementary Architecture**:
+
+- ✅ **Automated Quality Gates** - Every PR/push runs tests and updates coverage
+- ✅ **Human Release Control** - Developers decide when to release, not CI
+- ✅ **Professional Standards** - Coverage badges, AI code review, secure token handling
+- ✅ **Clean GitHub Releases** - Proper release notes filtering out maintenance commits
+
+**Package.json Integration**:
+
+```json
+{
+  "release:patch": "./scripts/release.sh patch --ci",
+  "release:minor": "./scripts/release.sh minor --ci",
+  "release:major": "./scripts/release.sh major --ci"
+}
+```
+
+This architecture matches the pattern used in production plugins like `metalsmith-bundled-components` and `metalsmith-search`.
+
 ## Important Implementation Details
 
 ### Default Behavior Changes
@@ -379,17 +412,27 @@ npm run release:major  # For breaking changes
 
 ## Release Information
 
-### Current Version: 1.4.0 (In Development)
+### Current Version: 1.5.0 (In Development)
 
-**NEW Plugin Quality Validation Enhancements** - Addressing metalsmith maintainer feedback:
+**NEW Complementary CI/CD Architecture** - Professional development workflows for scaffolded plugins:
+
+- **GitHub Workflows**: Automated CI/CD with `test.yml` and AI code review with `claude-code.yml`
+- **Release Scripts**: Manual release control with `release.sh` and clean release notes with `release-notes.sh`
+- **Validation Integration**: Validation now checks for and recommends complementary architecture files
+- **Template System**: New workflow templates available via `get-template workflows/*`
+- **Documentation Updates**: All relevant docs updated with architecture information
+
+This provides scaffolded plugins with professional-grade development workflows combining automated quality gates with human-controlled releases.
+
+### Previous Version: 1.4.1
+
+**Plugin Quality Validation Enhancements** - Addressing metalsmith maintainer feedback:
 
 - **Marketing Language Detection**: Flags buzzwords like "intelligent", "smart", "seamless" in documentation
 - **Module System Consistency**: Detects CJS/ESM mixing in README examples that would cause runtime errors
 - **Hardcoded Values Detection**: Identifies values that should be configurable (wordsPerMinute, viewport, etc.)
 - **Performance Pattern Analysis**: Finds objects redefined in functions, redundant utilities (get, pick, identity)
 - **Internationalization Readiness**: Detects English-only outputs that prevent global usage
-
-These new validation rules help create plugins that meet professional standards and avoid common pitfalls identified by the Metalsmith maintainer.
 
 ### Previous Version: 1.3.0
 

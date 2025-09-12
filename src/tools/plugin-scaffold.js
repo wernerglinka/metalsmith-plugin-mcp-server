@@ -340,9 +340,33 @@ async function copyTemplates(pluginPath, data) {
     }
   );
 
+  // Copy GitHub workflow files
+  await copyGitHubWorkflows(pluginPath, data);
+
   // Make scripts executable
   await fs.chmod(path.join(pluginPath, 'scripts/release.sh'), 0o755);
   await fs.chmod(path.join(pluginPath, 'scripts/release-notes.sh'), 0o755);
+}
+
+/**
+ * Copy GitHub workflow files for complementary CI/CD architecture
+ */
+async function copyGitHubWorkflows(pluginPath, data) {
+  const workflowsDir = path.join(__dirname, '../../templates/workflows');
+  const targetWorkflowsDir = path.join(pluginPath, '.github/workflows');
+
+  // Create .github/workflows directory
+  await fs.mkdir(targetWorkflowsDir, { recursive: true });
+
+  // Copy test workflow (CI/CD automation)
+  await copyTemplate(path.join(workflowsDir, 'test.yml.template'), path.join(targetWorkflowsDir, 'test.yml'), data);
+
+  // Copy Claude Code workflow (AI code review)
+  await copyTemplate(
+    path.join(workflowsDir, 'claude-code.yml.template'),
+    path.join(targetWorkflowsDir, 'claude-code.yml'),
+    data
+  );
 }
 
 /**

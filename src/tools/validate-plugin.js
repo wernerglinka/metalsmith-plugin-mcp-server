@@ -24,8 +24,15 @@ async function loadValidationConfig(pluginPath) {
         enabled: true,
         requiredDirs: ['src', 'test'],
         requiredFiles: ['src/index.js', 'README.md', 'package.json'],
-        recommendedDirs: ['src/utils', 'src/processors', 'test/fixtures'],
-        recommendedFiles: ['.release-it.json', 'CLAUDE.md']
+        recommendedDirs: ['src/utils', 'src/processors', 'test/fixtures', '.github/workflows', 'scripts'],
+        recommendedFiles: [
+          '.release-it.json',
+          'CLAUDE.md',
+          '.github/workflows/test.yml',
+          '.github/workflows/claude-code.yml',
+          'scripts/release.sh',
+          'scripts/release-notes.sh'
+        ]
       },
       tests: {
         enabled: true,
@@ -328,6 +335,22 @@ async function checkStructure(pluginPath, results, functional = false, config) {
         results.recommendations.push(
           `💡 Consider adding ${file} for AI development context. Use: get-template plugin/CLAUDE.md`
         );
+      } else if (file === '.github/workflows/test.yml') {
+        results.recommendations.push(
+          `💡 Consider adding ${file} for CI/CD automation. Use: get-template workflows/test.yml`
+        );
+      } else if (file === '.github/workflows/claude-code.yml') {
+        results.recommendations.push(
+          `💡 Consider adding ${file} for AI code review. Use: get-template workflows/claude-code.yml`
+        );
+      } else if (file === 'scripts/release.sh') {
+        results.recommendations.push(
+          `💡 Consider adding ${file} for manual release control. Use: get-template plugin/scripts/release.sh`
+        );
+      } else if (file === 'scripts/release-notes.sh') {
+        results.recommendations.push(
+          `💡 Consider adding ${file} for clean release notes. Use: get-template scripts/release-notes.sh`
+        );
       } else {
         results.recommendations.push(`💡 Consider adding recommended file: ${file}`);
       }
@@ -342,7 +365,9 @@ async function checkStructure(pluginPath, results, functional = false, config) {
     const recommendedDirs = config?.rules?.structure?.recommendedDirs || [
       'src/utils',
       'src/processors',
-      'test/fixtures'
+      'test/fixtures',
+      '.github/workflows',
+      'scripts'
     ];
     for (const dir of recommendedDirs) {
       const dirPath = path.join(pluginPath, dir);
@@ -353,6 +378,14 @@ async function checkStructure(pluginPath, results, functional = false, config) {
         if (dir === 'test/fixtures') {
           results.recommendations.push(
             `💡 Consider adding ${dir}. Run: npx metalsmith-plugin-mcp-server scaffold ${pluginPath} test/fixtures/basic/sample.md basic`
+          );
+        } else if (dir === '.github/workflows') {
+          results.recommendations.push(
+            `💡 Consider adding ${dir} for CI/CD automation. Add GitHub workflow files for automated testing and coverage.`
+          );
+        } else if (dir === 'scripts') {
+          results.recommendations.push(
+            `💡 Consider adding ${dir} for release automation. Add release.sh and release-notes.sh for professional releases.`
           );
         } else {
           results.recommendations.push(`💡 Consider adding directory: ${dir}`);

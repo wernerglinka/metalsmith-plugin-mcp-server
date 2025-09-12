@@ -11,9 +11,20 @@ MCP server for scaffolding and validating high-quality Metalsmith plugins
 
 This MCP (Model Context Protocol) server provides tools for creating and maintaining Metalsmith plugins following enhanced quality standards. It encapsulates best practices from the Metalsmith ecosystem, such as `@metalsmith/core-plugin` and contributed plugins like `metalsmith-optimize-images`.
 
-## ✨ What's New in v1.4.0
+## ✨ What's New in v1.5.0
 
-**Enhanced Plugin Quality Validation** - Addressing real-world feedback from Metalsmith maintainers:
+**Complementary CI/CD Architecture** - Professional development workflows for all scaffolded plugins:
+
+- **🚀 GitHub Workflows**: Automatic CI/CD with `test.yml` and AI code review with `claude-code.yml`
+- **🔧 Release Scripts**: Manual release control with `release.sh` and clean release notes with `release-notes.sh`
+- **✅ Validation Integration**: Validation now checks for and recommends complementary architecture files
+- **📄 Template System**: New workflow templates available via `get-template workflows/*`
+
+This provides every scaffolded plugin with professional-grade development workflows that combine automated quality gates with human-controlled releases.
+
+## Enhanced Plugin Quality Validation (v1.4.1)
+
+**Real-world feedback from Metalsmith maintainers:**
 
 - **🚫 Marketing Language Detection**: Automatically flags buzzwords like "intelligent", "smart", "seamless" that add no technical value
 - **⚠️ Module System Consistency**: Prevents dangerous CJS/ESM mixing in documentation examples that cause runtime errors
@@ -57,6 +68,7 @@ This creates a fully-configured plugin with:
 - **Dual Module Support**: Both ESM and CommonJS builds using microbundle
 - **Native Metalsmith Methods**: Enforces `metalsmith.debug()`, `metalsmith.match()`, `metalsmith.env()`, `metalsmith.path()` over external packages
 - **Zero External Dependencies**: Self-contained utilities for pattern matching and config merging
+- **🆕 Complementary CI/CD Architecture**: GitHub workflows for automated testing + manual release scripts
 - Comprehensive test setup with both ESM and CJS testing
 - Production-ready documentation
 - ESLint 9.x flat config
@@ -64,6 +76,24 @@ This creates a fully-configured plugin with:
 - Release automation with GitHub integration
 - Deep configuration merging
 - Robust error handling
+
+#### 🚀 Professional Development Workflow
+
+**GitHub Workflows** (`.github/workflows/`):
+
+- **test.yml**: Automated CI/CD with Node.js testing, coverage extraction, and README badge updates
+- **claude-code.yml**: AI-assisted code review integration
+
+**Release Scripts** (`scripts/`):
+
+- **release.sh**: Manual release control with secure GitHub CLI authentication
+- **release-notes.sh**: Custom release notes generation filtering maintenance commits
+
+**Benefits**:
+
+- ✅ **Automated Quality Gates**: Every PR/push runs tests and updates coverage badges
+- ✅ **Human Release Control**: Developers control release timing, not automation
+- ✅ **Professional Standards**: Coverage tracking, AI code review, secure authentication
 
 ### 2. Plugin Validation
 

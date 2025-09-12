@@ -128,6 +128,31 @@ npm run release:major  # For breaking changes (X.0.0)
 
 ## Development Architecture
 
+### Complementary CI/CD Architecture
+
+This plugin includes professional GitHub workflows for automated quality assurance:
+
+**GitHub Workflows** (`.github/workflows/`):
+- **`test.yml`**: Automated CI/CD pipeline
+  - Runs on every push and pull request
+  - Tests across Node.js versions
+  - Automatic coverage calculation and README badge updates
+  - Build verification
+
+- **`claude-code.yml`**: AI-assisted code review
+  - Automatic code review on pull requests
+  - Integration with Claude Code for intelligent feedback
+  - Requires `ANTHROPIC_API_KEY` secret in repository settings
+
+**Release Scripts** (`scripts/`):
+- **`release.sh`**: Manual release control with secure GitHub CLI authentication
+- **`release-notes.sh`**: Custom release notes generation filtering maintenance commits
+
+**Benefits**:
+- ✅ **Automated Quality Gates**: Every PR/push runs tests and updates coverage
+- ✅ **Human Release Control**: Developers control release timing, not automation
+- ✅ **Professional Standards**: Coverage tracking, AI code review, secure authentication
+
 ### Dual Module Support
 
 This plugin supports both ESM and CommonJS:

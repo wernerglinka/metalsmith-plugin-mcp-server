@@ -29,11 +29,18 @@
   ```
   outputPath/
   └── pluginName/
+      ├── .github/
+      │   └── workflows/
+      │       ├── test.yml
+      │       └── claude-code.yml
       ├── src/
       │   └── index.js
       ├── test/
       │   ├── index.test.js
       │   └── index.test.cjs
+      ├── scripts/
+      │   ├── release.sh
+      │   └── release-notes.sh
       ├── package.json
       ├── README.md
       └── ... (other files)
@@ -92,6 +99,24 @@ AI: Calls plugin-scaffold with name="title-reverser", description="Reverses the 
 - Always use the latest templates provided by the MCP server
 - Don't cache or remember old template content
 - The templates are automatically updated and current
+
+### 9. Complementary CI/CD Architecture
+
+**NEW**: Scaffolded plugins now include professional GitHub workflows and release scripts:
+
+**What gets created automatically:**
+
+- **GitHub Workflows**: `.github/workflows/test.yml` (CI/CD) and `claude-code.yml` (AI code review)
+- **Release Scripts**: `scripts/release.sh` (manual releases) and `scripts/release-notes.sh` (clean release notes)
+
+**Benefits users get:**
+
+- ✅ **Automated Quality Gates**: Every PR/push runs tests and updates coverage badges
+- ✅ **Human Release Control**: Developers decide when to release, not automation
+- ✅ **Professional Standards**: Coverage tracking, AI code review, secure authentication
+- ✅ **Clean GitHub Releases**: Proper release notes filtering maintenance commits
+
+**When users ask about workflows**: Explain that this complementary architecture provides the best of both worlds - automated testing with human-controlled releases.
 
 ## Common Mistakes to Avoid
 
