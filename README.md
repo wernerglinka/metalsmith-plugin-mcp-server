@@ -11,28 +11,16 @@ MCP server for scaffolding and validating high-quality Metalsmith plugins
 
 This MCP (Model Context Protocol) server provides tools for creating and maintaining Metalsmith plugins following enhanced quality standards. It encapsulates best practices from the Metalsmith ecosystem, such as `@metalsmith/core-plugin` and contributed plugins like `metalsmith-optimize-images`.
 
-## ✨ What's New in v1.5.0
+## ✨ What's New in v1.6.0
 
-**Complementary CI/CD Architecture** - Professional development workflows for all scaffolded plugins:
+**IDE Compatibility Enhancement** - Release scripts now work seamlessly in all development environments:
 
-- **🚀 GitHub Workflows**: Automatic CI/CD with `test.yml` and AI code review with `claude-code.yml`
-- **🔧 Release Scripts**: Manual release control with `release.sh` and clean release notes with `release-notes.sh`
-- **✅ Validation Integration**: Validation now checks for and recommends complementary architecture files
-- **📄 Template System**: New workflow templates available via `get-template workflows/*`
+- **🔧 GITHUB_TOKEN Conflict Resolution**: Release scripts now clear IDE-set `GITHUB_TOKEN` variables before authentication
+- **💻 IDE Support**: Full compatibility with VSCode, Claude Code, and other modern IDEs
+- **🔒 Secure Authentication**: Ensures GitHub CLI keyring authentication works regardless of environment
+- **🚀 Robust Releases**: Prevents silent failures when IDEs inject invalid or insufficient tokens
 
-This provides every scaffolded plugin with professional-grade development workflows that combine automated quality gates with human-controlled releases.
-
-## Enhanced Plugin Quality Validation (v1.4.1)
-
-**Real-world feedback from Metalsmith maintainers:**
-
-- **🚫 Marketing Language Detection**: Automatically flags buzzwords like "intelligent", "smart", "seamless" that add no technical value
-- **⚠️ Module System Consistency**: Prevents dangerous CJS/ESM mixing in documentation examples that cause runtime errors
-- **🔧 Hardcoded Values Detection**: Identifies configurations that should be user-customizable (reading speeds, viewport settings, etc.)
-- **⚡ Performance Anti-Pattern Analysis**: Catches objects recreated in functions, redundant utilities, inefficient patterns
-- **🌍 Internationalization Readiness**: Detects English-only outputs that prevent global plugin adoption
-
-These validations help create professional plugins that meet the quality standards expected by the Metalsmith community.
+This defensive fix makes release workflows more robust across different development environments without breaking existing functionality.
 
 ## Installation
 

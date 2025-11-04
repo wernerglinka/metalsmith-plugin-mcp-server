@@ -73,7 +73,7 @@ Focus on getting to successful results quickly:
 
 This is an MCP (Model Context Protocol) server for scaffolding and validating high-quality Metalsmith plugins. It provides tools for Claude to help users create, validate, and maintain Metalsmith plugins following best practices.
 
-## Current Status (v1.4.0 - Enhanced Quality Standards)
+## Current Status (v1.6.0 - IDE Compatibility Enhancement)
 
 ### Recent Major Work Completed (v1.4.0 - Plugin Quality Validation Enhancements)
 
@@ -413,17 +413,26 @@ npm run release:major  # For breaking changes
 
 ## Release Information
 
-### Current Version: 1.5.0 (In Development)
+### Current Version: 1.6.0
 
-**NEW Complementary CI/CD Architecture** - Professional development workflows for scaffolded plugins:
+**IDE Compatibility Enhancement** - Release scripts now work seamlessly in all development environments:
+
+- **GITHUB_TOKEN Conflict Resolution**: Release scripts clear IDE-set `GITHUB_TOKEN` variables before authentication
+- **IDE Support**: Full compatibility with VSCode, Claude Code, and other modern IDEs
+- **Secure Authentication**: Ensures GitHub CLI keyring authentication works regardless of environment
+- **Robust Releases**: Prevents silent failures when IDEs inject invalid or insufficient tokens
+- **Template Updates**: Both project script and plugin template updated with defensive fix
+
+This defensive fix makes release workflows more robust across different development environments without breaking existing functionality.
+
+### Previous Version: 1.5.0
+
+**Complementary CI/CD Architecture** - Professional development workflows for scaffolded plugins:
 
 - **GitHub Workflows**: Automated CI/CD with `test.yml` and AI code review with `claude-code.yml`
 - **Release Scripts**: Manual release control with `release.sh` and clean release notes with `release-notes.sh`
 - **Validation Integration**: Validation now checks for and recommends complementary architecture files
 - **Template System**: New workflow templates available via `get-template workflows/*`
-- **Documentation Updates**: All relevant docs updated with architecture information
-
-This provides scaffolded plugins with professional-grade development workflows combining automated quality gates with human-controlled releases.
 
 ### Previous Version: 1.4.1
 
