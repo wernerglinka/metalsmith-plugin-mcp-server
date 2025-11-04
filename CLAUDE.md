@@ -225,6 +225,7 @@ This architecture matches the pattern used in production plugins like `metalsmit
 - **Benefit**: No more token issues, fully automated GitHub releases
 - **Requirement**: Developers need `gh CLI` installed and authenticated
 - **Key Fix**: Environment variable must be set at script level in package.json, not in hooks
+- **IDE Compatibility**: Script clears `GITHUB_TOKEN` environment variable before calling `gh auth token` to prevent conflicts with IDE-set tokens (VSCode, Claude Code, etc.)
 
 **IMPORTANT**: The release scripts now include the `--ci` flag automatically and use a secure shell script:
 
