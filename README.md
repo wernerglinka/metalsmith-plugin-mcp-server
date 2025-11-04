@@ -9,18 +9,18 @@ MCP server for scaffolding and validating high-quality Metalsmith plugins
 [![ESM/CommonJS][modules-badge]][npm-url]
 [![Known Vulnerabilities](https://snyk.io/test/npm/metalsmith-plugin-mcp-server/badge.svg)](https://snyk.io/test/npm/metalsmith-plugin-mcp-server)
 
-This MCP (Model Context Protocol) server provides tools for creating and maintaining Metalsmith plugins following enhanced quality standards. It encapsulates best practices from the Metalsmith ecosystem, such as `@metalsmith/core-plugin` and contributed plugins like `metalsmith-optimize-images`.
+This MCP (Model Context Protocol) server provides tools for creating and maintaining Metalsmith plugins following quality standards. It encapsulates patterns from the Metalsmith ecosystem, such as `@metalsmith/core-plugin` and contributed plugins like `metalsmith-optimize-images`.
 
-## ✨ What's New in v1.6.0
+## What's New in v1.6.0
 
-**IDE Compatibility Enhancement** - Release scripts now work seamlessly in all development environments:
+**IDE Compatibility Fix** - Release scripts handle environment-set GITHUB_TOKEN variables:
 
-- **🔧 GITHUB_TOKEN Conflict Resolution**: Release scripts now clear IDE-set `GITHUB_TOKEN` variables before authentication
-- **💻 IDE Support**: Full compatibility with VSCode, Claude Code, and other modern IDEs
-- **🔒 Secure Authentication**: Ensures GitHub CLI keyring authentication works regardless of environment
-- **🚀 Robust Releases**: Prevents silent failures when IDEs inject invalid or insufficient tokens
+- Clears IDE-set `GITHUB_TOKEN` environment variables before authentication
+- Supports VSCode, Claude Code, and other IDEs that automatically set GITHUB_TOKEN
+- Uses GitHub CLI keyring authentication regardless of environment variables
+- Prevents authentication failures when IDEs inject tokens with insufficient permissions
 
-This defensive fix makes release workflows more robust across different development environments without breaking existing functionality.
+The release script now includes `unset GITHUB_TOKEN` before calling `gh auth token` to ensure consistent authentication across development environments.
 
 ## Installation
 
@@ -63,7 +63,7 @@ This creates a fully-configured plugin with:
 - Prettier formatting
 - Release automation with GitHub integration
 - Deep configuration merging
-- Robust error handling
+- Error handling with proper propagation
 
 #### 🚀 Professional Development Workflow
 
@@ -131,7 +131,7 @@ Validation checks include:
 - **Performance Pattern Analysis**: Finds objects redefined in functions, redundant utilities (get, pick, identity)
 - **Internationalization Readiness**: Detects English-only outputs that prevent global plugin usage
 
-**🔍 Smart CLAUDE.md Integration**: The validation system automatically detects existing project standards from CLAUDE.md files and validates against them instead of imposing conflicting recommendations. For example, if your CLAUDE.md specifies npm script release patterns, the validator recognizes this as approved and doesn't suggest shell script alternatives.
+**CLAUDE.md Integration**: The validation system detects existing project standards from CLAUDE.md files and validates against them instead of imposing conflicting recommendations. For example, if your CLAUDE.md specifies npm script release patterns, the validator recognizes this as approved and doesn't suggest shell script alternatives.
 
 ### 3. Configuration Generation
 
@@ -159,7 +159,7 @@ await mcp.call('update-deps', {
 
 Features:
 
-- **Smart Plugin Detection**: Automatically finds Metalsmith plugins by checking for `metalsmith-` prefix
+- **Plugin Detection**: Finds Metalsmith plugins by checking for `metalsmith-` prefix
 - **Batch Processing**: Process all plugins in a directory when run from parent folder
 - **Safety First**: Only updates minor/patch versions by default (no breaking changes)
 - **Comprehensive Reporting**: Shows which plugins had updates, failures, and next steps
@@ -208,8 +208,8 @@ Features:
 
 You can use this tool in two ways:
 
-1. **Direct CLI Usage**: Run commands directly in your terminal using npx - perfect for one-off plugin creation or when you prefer manual control
-2. **MCP Server**: Set up the server for AI assistants (Claude Desktop/Code) - ideal for interactive plugin development with AI guidance and natural language requests
+1. **Direct CLI Usage**: Run commands directly in your terminal using npx for one-off plugin creation or manual control
+2. **MCP Server**: Set up the server for AI assistants (Claude Desktop/Code) for interactive plugin development with AI guidance and natural language requests
 
 ### Direct CLI Usage (with npx)
 
@@ -253,7 +253,7 @@ npx metalsmith-plugin-mcp-server list-templates
 npx metalsmith-plugin-mcp-server get-template plugin/CLAUDE.md
 npx metalsmith-plugin-mcp-server get-template configs/release-it.json
 
-# Install CLAUDE.md with AI assistant instructions (perfect for MCP workflow)
+# Install CLAUDE.md with AI assistant instructions
 npx metalsmith-plugin-mcp-server install-claude-md
 
 # Update dependencies
@@ -286,7 +286,7 @@ npx metalsmith-plugin-mcp-server scaffold my-awesome-plugin "Processes markdown 
 
 #### Enhanced Validation Features
 
-The `validate` command now supports functional validation that actually runs your tests and coverage, plus smart CLAUDE.md integration:
+The `validate` command supports functional validation that runs your tests and coverage, plus CLAUDE.md integration:
 
 **Standard Validation** (structure-based, respects CLAUDE.md standards):
 
@@ -548,7 +548,7 @@ In a new Claude Code session, the following tools should be available:
 - **update-deps** - Update plugin dependencies
 - **list-templates** - Show all available templates
 - **get-template** - Retrieve specific template content
-- **install-claude-md** - Install CLAUDE.md file with smart merge capabilities
+- **install-claude-md** - Install CLAUDE.md file with merge capabilities
 
 #### Optimal AI Workflow for Existing Plugins
 
@@ -563,7 +563,7 @@ For existing plugins that don't have CLAUDE.md yet, use this workflow:
 2. **Install CLAUDE.md with complete AI instructions**:
 
    ```bash
-   # Smart merge with existing CLAUDE.md (preserves your content)
+   # Merge with existing CLAUDE.md (preserves your content)
    npx metalsmith-plugin-mcp-server install-claude-md
 
    # Preview changes before applying
@@ -587,7 +587,7 @@ For existing plugins that don't have CLAUDE.md yet, use this workflow:
 
 This ensures Claude instances work consistently and follow the MCP server patterns rather than improvising their own solutions.
 
-**Smart Merge Feature**: The `install-claude-md` command intelligently merges MCP guidance with existing project-specific content:
+**Merge Feature**: The `install-claude-md` command merges MCP guidance with existing project-specific content:
 
 - **Preserves existing content**: Your custom development notes, architecture decisions, and team instructions stay intact
 - **Adds MCP section**: Inserts comprehensive AI assistant instructions without overwriting your content
@@ -648,7 +648,7 @@ Here are prompts that will trigger the MCP server's capabilities:
 
 > "Show me my current MCP server configuration and explain how it affects plugin creation."
 
-The AI assistant will automatically use the MCP server tools to scaffold, validate, and configure your Metalsmith plugins according to best practices.
+The AI assistant will use the MCP server tools to scaffold, validate, and configure your Metalsmith plugins according to documented patterns.
 
 ### Important: Following MCP Server Recommendations
 
@@ -858,9 +858,9 @@ The MCP server currently uses standard console output for logging. For troublesh
 ## Contributing
 
 1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
+2. Create your feature branch (`git checkout -b feature/feature-name`)
+3. Commit your changes (`git commit -m 'Add feature description'`)
+4. Push to the branch (`git push origin feature/feature-name`)
 5. Open a Pull Request
 
 ## Release Process
