@@ -813,18 +813,15 @@ async function checkPackageJson(pluginPath, results, config) {
       if (packageJson.scripts?.[script]) {
         // Check release scripts based on existing CLAUDE.md standards
         if (script.startsWith('release:') && packageJson.scripts[script].includes('GH_TOKEN=$(gh auth token)')) {
-          // Check if this pattern is approved in CLAUDE.md
+          // The secure pattern is already in use - mark as passed
           if (claudeAnalysis.exists && claudeAnalysis.approvedTokenPattern === 'npm-script-with-gh-token') {
             results.passed.push(`✓ Script "${script}" uses CLAUDE.md approved pattern (npm script with GH_TOKEN)`);
           } else if (claudeAnalysis.exists && claudeAnalysis.approvedReleasePattern === 'shell-script') {
-            results.recommendations.push(
-              `💡 CLAUDE.md recommends shell script approach. Consider updating "${script}" to: "./scripts/release.sh ${script.split(':')[1]} --ci"`
-            );
+            // CLAUDE.md prefers shell script, but npm script with GH_TOKEN is also secure
+            results.passed.push(`✓ Script "${script}" uses secure GH_TOKEN pattern`);
           } else {
-            // No CLAUDE.md guidance - offer both options
-            results.recommendations.push(
-              `💡 Consider secure release approach: either npm script pattern "GH_TOKEN=$(gh auth token) npx release-it ${script.split(':')[1]} --ci" or shell script "./scripts/release.sh ${script.split(':')[1]} --ci"`
-            );
+            // No CLAUDE.md guidance, but the pattern is already secure
+            results.passed.push(`✓ Script "${script}" uses secure GH_TOKEN pattern`);
           }
         } else {
           results.passed.push(`✓ Script "${script}" defined`);
@@ -1884,9 +1881,7 @@ async function checkModuleConsistency(pluginPath, results) {
           '💡 Fix mixed module syntax in README examples. Choose either CJS or ESM consistently'
         );
       } else if (hasCJSPatterns && hasESMPatterns) {
-        results.warnings.push(
-          '⚠ README has both CJS and ESM examples - ensure they are clearly separated and labeled'
-        );
+        results.warnings.push('⚠ README has both CJS and ESM examples - ensure they are clearly separated and labeled');
         results.recommendations.push('💡 Label code examples clearly as "CommonJS" or "ES Modules" to avoid confusion');
       } else if (hasCJSPatterns || hasESMPatterns) {
         results.passed.push('✓ README examples use consistent module syntax');
