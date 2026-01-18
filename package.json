@@ -53,13 +53,13 @@
     "README.md"
   ],
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.25.1",
+    "@modelcontextprotocol/sdk": "^1.25.2",
     "chalk": "^5.6.2",
     "glob": "^13.0.0",
     "js-yaml": "^4.1.1",
     "nunjucks": "^3.2.4",
     "ora": "^9.0.0",
-    "validate-npm-package-name": "^7.0.1"
+    "validate-npm-package-name": "^7.0.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
@@ -68,11 +68,11 @@
     "chai": "^6.2.2",
     "depcheck": "^1.4.7",
     "eslint": "^9.39.2",
-    "globals": "^16.5.0",
+    "globals": "^17.0.0",
     "metalsmith": "^2.6.3",
     "mocha": "^11.7.5",
-    "prettier": "^3.7.4",
-    "release-it": "^19.2.2",
+    "prettier": "^3.8.0",
+    "release-it": "^19.2.3",
     "sinon": "^21.0.1"
   },
   "repository": {
