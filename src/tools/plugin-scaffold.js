@@ -329,23 +329,11 @@ async function copyTemplates(pluginPath, data) {
     data
   );
 
-  // Copy release notes script
-  await copyTemplate(
-    path.join(__dirname, '../../templates/scripts/release-notes.sh.template'),
-    path.join(pluginPath, 'scripts/release-notes.sh'),
-    {
-      ...data,
-      GITHUB_USERNAME: 'your-username', // Template placeholder
-      PLUGIN_NAME: data.pluginName
-    }
-  );
-
   // Copy GitHub workflow files
   await copyGitHubWorkflows(pluginPath, data);
 
   // Make scripts executable
   await fs.chmod(path.join(pluginPath, 'scripts/release.sh'), 0o755);
-  await fs.chmod(path.join(pluginPath, 'scripts/release-notes.sh'), 0o755);
 }
 
 /**

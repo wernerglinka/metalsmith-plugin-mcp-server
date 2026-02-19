@@ -30,8 +30,7 @@ async function loadValidationConfig(pluginPath) {
           'CLAUDE.md',
           '.github/workflows/test.yml',
           '.github/workflows/claude-code.yml',
-          'scripts/release.sh',
-          'scripts/release-notes.sh'
+          'scripts/release.sh'
         ]
       },
       tests: {
@@ -347,10 +346,6 @@ async function checkStructure(pluginPath, results, functional = false, config) {
         results.recommendations.push(
           `💡 Consider adding ${file} for manual release control. Use: get-template plugin/scripts/release.sh`
         );
-      } else if (file === 'scripts/release-notes.sh') {
-        results.recommendations.push(
-          `💡 Consider adding ${file} for clean release notes. Use: get-template scripts/release-notes.sh`
-        );
       } else {
         results.recommendations.push(`💡 Consider adding recommended file: ${file}`);
       }
@@ -385,7 +380,7 @@ async function checkStructure(pluginPath, results, functional = false, config) {
           );
         } else if (dir === 'scripts') {
           results.recommendations.push(
-            `💡 Consider adding ${dir} for release automation. Add release.sh and release-notes.sh for professional releases.`
+            `💡 Consider adding ${dir} for release automation. Add release.sh for manual release control.`
           );
         } else {
           results.recommendations.push(`💡 Consider adding directory: ${dir}`);
@@ -2123,70 +2118,59 @@ async function checkI18nReadiness(pluginPath, results) {
  */
 async function checkReleaseNotes(pluginPath, results) {
   try {
-    // Check for release notes script
-    const scriptPath = path.join(pluginPath, 'scripts', 'release-notes.sh');
-    try {
-      const scriptStat = await fs.stat(scriptPath);
-      const isExecutable = scriptStat.mode & 0o111;
-
-      if (isExecutable) {
-        results.passed.push('✓ Release notes script exists and is executable');
-      } else {
-        results.warnings.push(
-          '⚠ Release notes script exists but is not executable. Run: chmod +x scripts/release-notes.sh'
-        );
-      }
-    } catch (error) {
-      if (error.code === 'ENOENT') {
-        results.recommendations.push(
-          '💡 Consider adding release notes script for professional GitHub releases. Run: npx metalsmith-plugin-mcp-server configs . release-it'
-        );
-      }
-    }
-
-    // Check release-it configuration for custom release notes
+    // Check release-it configuration
     try {
       const releaseItPath = path.join(pluginPath, '.release-it.json');
       const releaseItContent = await fs.readFile(releaseItPath, 'utf-8');
       const releaseItConfig = JSON.parse(releaseItContent);
 
-      const releaseNotes = releaseItConfig.github?.releaseNotes;
-      if (releaseNotes && releaseNotes.includes('./scripts/release-notes.sh')) {
-        results.passed.push('✓ Release-it configured to use custom release notes script');
-      } else if (releaseNotes && releaseNotes.includes('auto-changelog')) {
+      // Check for correct autoGenerate setting (should be true)
+      if (releaseItConfig.github?.autoGenerate === true) {
+        results.passed.push('✓ Release-it configured with GitHub auto-generated release notes');
+      } else {
+        // Recommend when autoGenerate is false or not set
         results.recommendations.push(
-          '💡 Consider upgrading to custom release notes script for cleaner GitHub releases. Update .release-it.json releaseNotes to: "./scripts/release-notes.sh ${latestTag}"'
-        );
-      } else if (releaseItConfig.github?.autoGenerate === true) {
-        results.recommendations.push(
-          '💡 Using GitHub auto-generated release notes. For more control, consider custom release notes script'
+          '💡 Consider setting github.autoGenerate to true in .release-it.json for automatic release notes'
         );
       }
 
-      // Check for autoGenerate setting
-      if (releaseItConfig.github?.autoGenerate === false && !releaseNotes) {
-        results.warnings.push(
-          '⚠ GitHub release notes disabled but no custom releaseNotes configured. Add "releaseNotes": "./scripts/release-notes.sh ${latestTag}" to github section'
+      // Check for correct commit message format
+      if (releaseItConfig.git?.commitMessage === 'Release ${version}') {
+        results.passed.push('✓ Release-it commit message format is correct');
+      } else if (releaseItConfig.git?.commitMessage) {
+        results.recommendations.push(
+          '💡 Consider using "Release ${version}" as the git.commitMessage in .release-it.json'
         );
-      }
-    } catch (error) {
-      if (error.code !== 'ENOENT') {
-        results.warnings.push(`⚠ Could not validate .release-it.json release notes configuration: ${error.message}`);
-      }
-    }
-
-    // Check for scripts directory
-    try {
-      const scriptsDirStat = await fs.stat(path.join(pluginPath, 'scripts'));
-      if (!scriptsDirStat.isDirectory()) {
-        results.recommendations.push('💡 Create scripts directory for release automation: mkdir scripts');
       }
     } catch (error) {
       if (error.code === 'ENOENT') {
-        results.recommendations.push('💡 Create scripts directory for release automation: mkdir scripts');
+        results.recommendations.push(
+          '💡 Consider adding .release-it.json for release automation. Run: npx metalsmith-plugin-mcp-server configs . release-it'
+        );
+      } else {
+        results.warnings.push(`⚠ Could not validate .release-it.json configuration: ${error.message}`);
+      }
+    }
+
+    // Check for scripts directory with release.sh
+    try {
+      const releaseScriptPath = path.join(pluginPath, 'scripts', 'release.sh');
+      const scriptStat = await fs.stat(releaseScriptPath);
+      const isExecutable = scriptStat.mode & 0o111;
+
+      if (isExecutable) {
+        results.passed.push('✓ Release script exists and is executable');
+      } else {
+        results.warnings.push('⚠ Release script exists but is not executable. Run: chmod +x scripts/release.sh');
+      }
+    } catch (error) {
+      if (error.code === 'ENOENT') {
+        results.recommendations.push(
+          '💡 Consider adding scripts/release.sh for secure GitHub releases. Use: get-template plugin/scripts/release.sh'
+        );
       }
     }
   } catch (error) {
-    results.warnings.push(`⚠ Could not check release notes system: ${error.message}`);
+    results.warnings.push(`⚠ Could not check release configuration: ${error.message}`);
   }
 }

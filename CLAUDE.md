@@ -179,17 +179,16 @@ These rules help create plugins that meet professional standards and avoid commo
 - **test.yml**: CI/CD automation with Node.js testing, coverage extraction, and automatic README badge updates
 - **claude-code.yml**: AI-assisted code review integration using Anthropic's Claude Code Action
 
-**Release Scripts** (`scripts/`):
+**Release Script** (`scripts/`):
 
-- **release.sh**: Manual release control with GitHub CLI authentication
-- **release-notes.sh**: Custom release notes generation for clean GitHub releases
+- **release.sh**: Secure manual release control with GitHub CLI authentication
 
 **Benefits of Complementary Architecture**:
 
 - ✅ **Automated Quality Gates** - Every PR/push runs tests and updates coverage
 - ✅ **Human Release Control** - Developers decide when to release, not CI
 - ✅ **Professional Standards** - Coverage badges, AI code review, secure token handling
-- ✅ **Clean GitHub Releases** - Proper release notes filtering out maintenance commits
+- ✅ **GitHub Auto-Generated Release Notes** - Uses GitHub's automatic release notes feature
 
 **Package.json Integration**:
 
@@ -430,7 +429,7 @@ This defensive fix makes release workflows more robust across different developm
 **Complementary CI/CD Architecture** - Professional development workflows for scaffolded plugins:
 
 - **GitHub Workflows**: Automated CI/CD with `test.yml` and AI code review with `claude-code.yml`
-- **Release Scripts**: Manual release control with `release.sh` and clean release notes with `release-notes.sh`
+- **Release Script**: Manual release control with `release.sh` using GitHub auto-generated release notes
 - **Validation Integration**: Validation now checks for and recommends complementary architecture files
 - **Template System**: New workflow templates available via `get-template workflows/*`
 
@@ -540,48 +539,32 @@ Based on successful plugin implementations, consider these enhancements to .rele
    ```
    Provides clear feedback when release completes successfully.
 
-### Improved Release Notes System (v1.2.0)
+### GitHub Auto-Generated Release Notes
 
-**IMPLEMENTED**: Complete release notes improvement system addressing malformed GitHub releases.
+**Current Approach**: Uses GitHub's built-in `autoGenerate: true` feature for release notes.
 
-**New System Features:**
+**Benefits:**
 
 - ✅ Clean, professional GitHub release notes
-- ✅ Version-specific changes (no "Unreleased" sections)
-- ✅ Automatic commit filtering (excludes chore, ci, dev commits)
-- ✅ Proper GitHub markdown formatting with commit links
-- ✅ Full changelog links for detailed comparisons
+- ✅ Automatic categorization of changes
+- ✅ Consistent formatting with GitHub's native release system
+- ✅ No custom script maintenance required
+- ✅ Works seamlessly with the release.sh workflow
 
-**Implementation Changes:**
+**Configuration:**
 
-1. **Custom Release Notes Script**: New `scripts/release-notes.sh` template generates clean, focused release notes
-2. **Updated Release-It Configuration**: Template now uses `"releaseNotes": "./scripts/release-notes.sh ${latestTag}"`
-3. **Scaffold Integration**: Automatically creates and installs release notes script in new plugins
-4. **Configs Command Enhancement**: Includes release notes script when generating release-it configuration
-5. **Validation Checks**: New validation rules ensure release notes system is properly configured
-6. **Documentation Updates**: Both plugin templates and main documentation updated with release management info
+```json
+{
+  "github": {
+    "release": true,
+    "releaseName": "${name} ${version}",
+    "tokenRef": "GH_TOKEN",
+    "autoGenerate": true
+  }
+}
+```
 
-**Template Changes:**
-
-- `templates/scripts/release-notes.sh.template` - Custom release notes generation script
-- `templates/configs/release-it.json.template` - Updated to use custom release notes
-- `templates/plugin/CLAUDE.md.template` - Added release system documentation
-- `templates/plugin/README.md.template` - Added release management section
-
-**Validation Integration:**
-
-- New `checkReleaseNotes` validation function
-- Checks for script existence and executability
-- Validates .release-it.json configuration
-- Provides upgrade paths for existing plugins
-
-This replaces the previous auto-changelog approach with a more targeted solution that generates clean, professional GitHub releases.
-
-### Next Release Preparation
-
-- GitHub releases will now properly show meaningful commits and features
-- Monitor that release notes include our actual changes, not just Snyk updates
-- The changelog generation is working correctly and ignores maintenance commits
+This approach replaced the earlier custom release-notes.sh script approach for simpler, more reliable releases.
 
 ## Communication Style
 

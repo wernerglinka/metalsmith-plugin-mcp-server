@@ -1285,28 +1285,15 @@ MIT
       // Should test various error handling paths
     });
 
-    it('should validate release notes system', async function () {
+    it('should validate GitHub auto-generated release notes', async function () {
       const pluginDir = path.join(fixturesDir, 'release-notes-test');
       await createTestPlugin('release-notes-test');
 
-      // Create scripts directory and release notes script
-      await fs.mkdir(path.join(pluginDir, 'scripts'), { recursive: true });
-
-      const releaseNotesScript = `#!/bin/bash
-# Generate release notes for the current version only
-set -e
-echo "## Changes"
-echo "- Initial release"`;
-
-      await fs.writeFile(path.join(pluginDir, 'scripts/release-notes.sh'), releaseNotesScript);
-      await fs.chmod(path.join(pluginDir, 'scripts/release-notes.sh'), 0o755);
-
-      // Create .release-it.json with custom release notes
+      // Create .release-it.json with GitHub auto-generated release notes
       const releaseItConfig = {
         github: {
           release: true,
-          releaseNotes: './scripts/release-notes.sh ${latestTag}',
-          autoGenerate: false
+          autoGenerate: true
         }
       };
       await fs.writeFile(path.join(pluginDir, '.release-it.json'), JSON.stringify(releaseItConfig, null, 2));
@@ -1318,13 +1305,20 @@ echo "- Initial release"`;
 
       expect(result.isError).to.not.be.true;
       const text = result.content[0].text;
-      expect(text).to.include('✓ Release notes script exists and is executable');
-      expect(text).to.include('✓ Release-it configured to use custom release notes script');
+      expect(text).to.include('✓ Release-it configured with GitHub auto-generated release notes');
     });
 
-    it('should detect missing release notes system', async function () {
+    it('should detect missing autoGenerate configuration', async function () {
       const pluginDir = path.join(fixturesDir, 'no-release-notes');
       await createTestPlugin('no-release-notes');
+
+      // Create .release-it.json without autoGenerate
+      const releaseItConfig = {
+        github: {
+          release: true
+        }
+      };
+      await fs.writeFile(path.join(pluginDir, '.release-it.json'), JSON.stringify(releaseItConfig, null, 2));
 
       const result = await validatePluginTool({
         path: pluginDir,
@@ -1333,7 +1327,9 @@ echo "- Initial release"`;
 
       expect(result.isError).to.not.be.true;
       const text = result.content[0].text;
-      expect(text).to.include('💡 Consider adding release notes script for professional GitHub releases');
+      expect(text).to.include(
+        '💡 Consider setting github.autoGenerate to true in .release-it.json for automatic release notes'
+      );
     });
   });
 });

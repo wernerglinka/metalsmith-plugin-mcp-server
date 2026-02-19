@@ -57,13 +57,6 @@ describe('generate-configs tool', function () {
     expect(eslintExists).to.be.true;
     expect(releaseItExists).to.be.true;
 
-    // Check that release notes script was created with release-it
-    const releaseNotesExists = await fs
-      .access(path.join(tmpDir, 'scripts/release-notes.sh'))
-      .then(() => true)
-      .catch(() => false);
-    expect(releaseNotesExists).to.be.true;
-
     // Check that prettier was not created
     const prettierExists = await fs
       .access(path.join(tmpDir, 'prettier.config.js'))
@@ -200,7 +193,7 @@ describe('generate-configs tool', function () {
     await fs.chmod(readOnlyPath, 0o755);
   });
 
-  it('should generate release-it config with custom release notes', async function () {
+  it('should generate release-it config with GitHub auto-generated release notes', async function () {
     const result = await generateConfigsTool({
       outputPath: tmpDir,
       configs: ['release-it']
@@ -213,20 +206,9 @@ describe('generate-configs tool', function () {
     const releaseItContent = await fs.readFile(releaseItPath, 'utf-8');
     const releaseItConfig = JSON.parse(releaseItContent);
 
-    expect(releaseItConfig.github.releaseNotes).to.equal('./scripts/release-notes.sh ${latestTag}');
-    expect(releaseItConfig.github.autoGenerate).to.be.false;
+    // Should use GitHub's auto-generated release notes
+    expect(releaseItConfig.github.autoGenerate).to.be.true;
     expect(releaseItConfig.npm.publish).to.be.false;
-
-    // Check release notes script content
-    const releaseNotesPath = path.join(tmpDir, 'scripts/release-notes.sh');
-    const releaseNotesContent = await fs.readFile(releaseNotesPath, 'utf-8');
-
-    expect(releaseNotesContent).to.include('#!/bin/bash');
-    expect(releaseNotesContent).to.include('Generate release notes for the current version only');
-    expect(releaseNotesContent).to.include('./scripts/release-notes.sh <previous-tag>');
-
-    // Check script is executable
-    const releaseNotesStats = await fs.stat(releaseNotesPath);
-    expect(releaseNotesStats.mode & 0o111).to.be.greaterThan(0);
+    expect(releaseItConfig.github.releaseNotes).to.be.undefined;
   });
 });

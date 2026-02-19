@@ -39,8 +39,7 @@
       │   ├── index.test.js
       │   └── index.test.cjs
       ├── scripts/
-      │   ├── release.sh
-      │   └── release-notes.sh
+      │   └── release.sh
       ├── package.json
       ├── README.md
       └── ... (other files)
@@ -107,14 +106,14 @@ AI: Calls plugin-scaffold with name="title-reverser", description="Reverses the 
 **What gets created automatically:**
 
 - **GitHub Workflows**: `.github/workflows/test.yml` (CI/CD) and `claude-code.yml` (AI code review)
-- **Release Scripts**: `scripts/release.sh` (manual releases) and `scripts/release-notes.sh` (clean release notes)
+- **Release Script**: `scripts/release.sh` (secure manual releases via GitHub CLI)
 
 **Benefits users get:**
 
 - ✅ **Automated Quality Gates**: Every PR/push runs tests and updates coverage badges
 - ✅ **Human Release Control**: Developers decide when to release, not automation
 - ✅ **Professional Standards**: Coverage tracking, AI code review, secure authentication
-- ✅ **Clean GitHub Releases**: Proper release notes filtering maintenance commits
+- ✅ **GitHub Auto-Generated Release Notes**: Uses GitHub's automatic release notes feature
 
 **When users ask about workflows**: Explain that this complementary architecture provides the best of both worlds - automated testing with human-controlled releases.
 

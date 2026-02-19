@@ -54,8 +54,7 @@ describe('plugin-scaffold tool', function () {
       'prettier.config.js',
       '.editorconfig',
       '.gitignore',
-      'scripts/release.sh',
-      'scripts/release-notes.sh'
+      'scripts/release.sh'
     ];
 
     for (const file of requiredFiles) {
@@ -271,7 +270,7 @@ describe('plugin-scaffold tool', function () {
     }
   });
 
-  it('should create executable release scripts', async function () {
+  it('should create executable release script', async function () {
     const pluginName = 'metalsmith-scripts-test';
     const result = await pluginScaffoldTool({
       name: pluginName,
@@ -283,22 +282,17 @@ describe('plugin-scaffold tool', function () {
 
     const pluginPath = path.join(tmpDir, pluginName);
 
-    // Check that release scripts exist and are executable
+    // Check that release script exists and is executable
     const releaseScript = path.join(pluginPath, 'scripts/release.sh');
-    const releaseNotesScript = path.join(pluginPath, 'scripts/release-notes.sh');
-
     const releaseStats = await fs.stat(releaseScript);
-    const releaseNotesStats = await fs.stat(releaseNotesScript);
 
     // Check executable permissions (0o111 = executable by user, group, other)
     expect(releaseStats.mode & 0o111).to.be.greaterThan(0);
-    expect(releaseNotesStats.mode & 0o111).to.be.greaterThan(0);
 
     // Check script content contains expected patterns
-    const releaseNotesContent = await fs.readFile(releaseNotesScript, 'utf-8');
-    expect(releaseNotesContent).to.include('#!/bin/bash');
-    expect(releaseNotesContent).to.include('Generate release notes for the current version only');
-    expect(releaseNotesContent).to.include('PREV_TAG=');
-    expect(releaseNotesContent).to.include('REPO_URL=');
+    const releaseContent = await fs.readFile(releaseScript, 'utf-8');
+    expect(releaseContent).to.include('#!/bin/bash');
+    expect(releaseContent).to.include('gh auth status');
+    expect(releaseContent).to.include('GH_TOKEN');
   });
 });

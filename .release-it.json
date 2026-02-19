@@ -1,32 +1,20 @@
 {
+  "hooks": {
+    "before:init": ["npm run lint", "npm test"],
+    "after:bump": "npx auto-changelog -p --commit-limit false --ignore-commit-pattern '^((dev|chore|ci):|Release)' && git add CHANGELOG.md",
+    "after:release": "echo Successfully released ${name} v${version} to ${repo.repository}."
+  },
   "git": {
-    "commitMessage": "chore: release v${version}",
-    "requireCleanWorkingDir": true,
-    "requireBranch": "main",
-    "tag": true,
-    "tagName": "v${version}",
-    "push": true,
-    "changelog": "npx auto-changelog --stdout --commit-limit false --unreleased --ignore-commit-pattern '^((dev|chore|ci):|Release)' --template https://raw.githubusercontent.com/release-it/release-it/main/templates/changelog-compact.hbs"
+    "commitMessage": "Release ${version}",
+    "tagAnnotation": "Release ${version}"
+  },
+  "npm": {
+    "publish": false
   },
   "github": {
     "release": true,
-    "releaseName": "v${version}",
-    "draft": false,
-    "autoGenerate": false,
-    "releaseNotes": "npx auto-changelog --stdout --commit-limit false --unreleased --ignore-commit-pattern '^((dev|chore|ci):|Release)' --template https://raw.githubusercontent.com/release-it/release-it/main/templates/changelog-compact.hbs",
-    "tokenRef": "GH_TOKEN"
-  },
-  "npm": {
-    "publish": false,
-    "publishPath": "."
-  },
-  "hooks": {
-    "before:init": ["git pull", "npm test", "npm run lint", "npm run format"],
-    "before:git": [
-      "gh --version || (echo 'GitHub CLI not found. Install with: brew install gh' && exit 1)",
-      "gh auth status || (echo 'GitHub CLI not authenticated. Run: gh auth login' && exit 1)"
-    ],
-    "after:bump": "npx auto-changelog -p --commit-limit false --ignore-commit-pattern '^((dev|chore|ci):|Release)' && git add CHANGELOG.md",
-    "after:release": "echo Successfully released ${name} v${version} to ${repo.repository}."
+    "releaseName": "metalsmith-plugin-mcp-server ${version}",
+    "tokenRef": "GH_TOKEN",
+    "autoGenerate": true
   }
 }

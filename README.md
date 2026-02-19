@@ -55,7 +55,7 @@ This creates a fully-configured plugin with:
 - **Dual Module Support**: Both ESM and CommonJS builds using microbundle
 - **Native Metalsmith Methods**: Enforces `metalsmith.debug()`, `metalsmith.match()`, `metalsmith.env()`, `metalsmith.path()` over external packages
 - **Zero External Dependencies**: Self-contained utilities for pattern matching and config merging
-- **🆕 Complementary CI/CD Architecture**: GitHub workflows for automated testing + manual release scripts
+- **Complementary CI/CD Architecture**: GitHub workflows for automated testing + manual release scripts
 - Comprehensive test setup with both ESM and CJS testing
 - Production-ready documentation
 - ESLint 9.x flat config
@@ -64,23 +64,23 @@ This creates a fully-configured plugin with:
 - Deep configuration merging
 - Error handling with proper propagation
 
-#### 🚀 Professional Development Workflow
+#### Professional Development Workflow
 
 **GitHub Workflows** (`.github/workflows/`):
 
 - **test.yml**: Automated CI/CD with Node.js testing, coverage extraction, and README badge updates
 - **claude-code.yml**: AI-assisted code review integration
 
-**Release Scripts** (`scripts/`):
+**Release Script** (`scripts/`):
 
-- **release.sh**: Manual release control with secure GitHub CLI authentication
-- **release-notes.sh**: Custom release notes generation filtering maintenance commits
+- **release.sh**: Secure manual release control with GitHub CLI authentication
 
 **Benefits**:
 
-- ✅ **Automated Quality Gates**: Every PR/push runs tests and updates coverage badges
-- ✅ **Human Release Control**: Developers control release timing, not automation
-- ✅ **Professional Standards**: Coverage tracking, AI code review, secure authentication
+- **Automated Quality Gates**: Every PR/push runs tests and updates coverage badges
+- **Human Release Control**: Developers control release timing, not automation
+- **Professional Standards**: Coverage tracking, AI code review, secure authentication
+- **GitHub Auto-Generated Release Notes**: Uses GitHub's automatic release notes feature
 
 ### 2. Plugin Validation
 
@@ -122,7 +122,7 @@ Validation checks include:
 - **ESLint**: Modern configuration presence
 - **Coverage**: Test coverage analysis
 
-**🆕 Enhanced Quality Standards** (addressing Metalsmith maintainer feedback):
+**Enhanced Quality Standards** (addressing Metalsmith maintainer feedback):
 
 - **Marketing Language Detection**: Flags buzzwords like "intelligent", "smart", "seamless" in documentation
 - **Module System Consistency**: Detects dangerous CJS/ESM mixing in README examples that cause runtime errors
@@ -303,20 +303,20 @@ npx metalsmith-plugin-mcp-server validate ./my-plugin --functional
 
 **Understanding Validation Output:**
 
-- ✓ **Passed**: Requirements that are met
-- ✗ **Failed**: Critical issues that must be fixed
-- ⚠ **Warnings**: Quality concerns (e.g., low test coverage)
-- 💡 **Recommendations**: Optional improvements with actionable commands
+- **Passed**: Requirements that are met
+- **Failed**: Critical issues that must be fixed
+- **Warnings**: Quality concerns (e.g., low test coverage)
+- **Recommendations**: Optional improvements with actionable commands
 
 **Example Recommendations:**
 
 ```
-💡 Consider adding a LICENSE file. Generate one with: npx metalsmith-plugin-mcp-server scaffold ./my-plugin LICENSE MIT
-💡 Consider adding ESLint configuration. Generate with: npx metalsmith-plugin-mcp-server scaffold ./my-plugin eslint.config.js eslint
-💡 Consider adding script: lint. Example: "lint": "eslint src test"
-💡 Use metalsmith.debug() instead of debug package. Replace debug() calls with metalsmith.debug()
-💡 Use metalsmith.match() instead of minimatch package for file pattern matching
-💡 Remove debug dependency from package.json since you're using metalsmith.debug()
+Consider adding a LICENSE file. Generate one with: npx metalsmith-plugin-mcp-server scaffold ./my-plugin LICENSE MIT
+Consider adding ESLint configuration. Generate with: npx metalsmith-plugin-mcp-server scaffold ./my-plugin eslint.config.js eslint
+Consider adding script: lint. Example: "lint": "eslint src test"
+Use metalsmith.debug() instead of debug package. Replace debug() calls with metalsmith.debug()
+Use metalsmith.match() instead of minimatch package for file pattern matching
+Remove debug dependency from package.json since you're using metalsmith.debug()
 ```
 
 **Native Methods Validation**
@@ -383,11 +383,11 @@ npx metalsmith-plugin-mcp-server batch-audit ./plugins --output=json
 
 **Audit Health Scores**:
 
-- ✅ **EXCELLENT** (90%+): Plugin meets all quality standards
-- ✅ **GOOD** (80-89%): Minor improvements recommended
-- ⚠️ **FAIR** (70-79%): Some issues need attention
-- ⚠️ **NEEDS IMPROVEMENT** (60-69%): Multiple issues to address
-- ❌ **POOR** (<60%): Significant problems requiring fixes
+- **EXCELLENT** (90%+): Plugin meets all quality standards
+- **GOOD** (80-89%): Minor improvements recommended
+- **FAIR** (70-79%): Some issues need attention
+- **NEEDS IMPROVEMENT** (60-69%): Multiple issues to address
+- **POOR** (<60%): Significant problems requiring fixes
 
 **What Gets Audited**:
 

@@ -76,34 +76,23 @@ npx release-it "$@"
 
 ```json
 {
+  "hooks": {
+    "before:init": ["npm run lint", "npm test"],
+    "after:bump": "npx auto-changelog -p --commit-limit false --ignore-commit-pattern '^((dev|chore|ci):|Release)' && git add CHANGELOG.md",
+    "after:release": "echo Successfully released ${name} v${version} to ${repo.repository}."
+  },
   "git": {
-    "commitMessage": "chore: release v${version}",
-    "requireCleanWorkingDir": true,
-    "requireBranch": "main",
-    "tag": true,
-    "tagName": "v${version}",
-    "push": true,
-    "changelog": "npx auto-changelog -u --commit-limit false --ignore-commit-pattern '^((dev|chore|ci):|Release)' --stdout"
+    "commitMessage": "Release ${version}",
+    "tagAnnotation": "Release ${version}"
+  },
+  "npm": {
+    "publish": false
   },
   "github": {
     "release": true,
-    "releaseName": "v${version}",
-    "draft": false,
-    "autoGenerate": false,
-    "tokenRef": "GH_TOKEN"
-  },
-  "npm": {
-    "publish": false,
-    "publishPath": "."
-  },
-  "hooks": {
-    "before:init": ["npm test", "npm run lint"],
-    "before:git": [
-      "gh --version || (echo 'GitHub CLI not found. Install with: brew install gh' && exit 1)",
-      "gh auth status || (echo 'GitHub CLI not authenticated. Run: gh auth login' && exit 1)"
-    ],
-    "after:bump": "npx auto-changelog -p --commit-limit false --ignore-commit-pattern '^((dev|chore|ci):|Release)' && git add CHANGELOG.md",
-    "after:release": "echo Successfully released ${name} v${version} to ${repo.repository}."
+    "releaseName": "${name} ${version}",
+    "tokenRef": "GH_TOKEN",
+    "autoGenerate": true
   }
 }
 ```
@@ -242,15 +231,15 @@ gh auth token
    - Generates changelog entry for this version
 
 3. **Git operations**
-   - Creates commit: "chore: release vX.Y.Z"
-   - Creates tag: "vX.Y.Z"
+   - Creates commit: "Release X.Y.Z"
+   - Creates tag with annotation: "Release X.Y.Z"
    - Pushes commit and tag to GitHub
 
 4. **GitHub release creation**
    - Uses the GH_TOKEN to authenticate
    - Creates a GitHub release with:
-     - Title: "vX.Y.Z"
-     - Body: Changelog for this version
+     - Title: "plugin-name X.Y.Z"
+     - Body: Auto-generated from commits since last tag
      - Attached to the git tag
 
 5. **Success message**
