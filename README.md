@@ -11,15 +11,14 @@ MCP server for scaffolding and validating high-quality Metalsmith plugins
 
 This MCP (Model Context Protocol) server provides tools for creating and maintaining Metalsmith plugins following quality standards. It encapsulates patterns from the Metalsmith ecosystem, such as `@metalsmith/core-plugin` and contributed plugins like `metalsmith-optimize-images`.
 
-## What's New in v1.7.0
+## What's New in v1.8.0
 
-**Validator Fix** - Recognizes secure release patterns without CLAUDE.md guidance:
+**Simplified Release Architecture** - Streamlined release process using GitHub's native features:
 
-- Validator no longer recommends secure release patterns when they're already implemented
-- Scripts using `GH_TOKEN=$(gh auth token)` are correctly marked as passed
-- Works regardless of whether CLAUDE.md exists or what patterns it approves
-
-Fixes [#11](https://github.com/wernerglinka/metalsmith-plugin-mcp-server/issues/11)
+- Removed custom release-notes.sh script in favor of GitHub's auto-generated release notes
+- Simplified .release-it.json configuration with `autoGenerate: true`
+- IDE compatibility fix: release scripts clear `GITHUB_TOKEN` to prevent conflicts with VSCode/Claude Code
+- Reduced maintenance burden with fewer custom scripts to manage
 
 ## Installation
 
