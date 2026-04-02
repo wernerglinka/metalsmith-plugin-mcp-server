@@ -81,14 +81,14 @@ function getUsageNotes(template) {
       return [
         '  • Uses GH_TOKEN environment variable for GitHub authentication',
         '  • Requires GitHub CLI (gh) to be installed and authenticated',
-        '  • Use with secure release scripts that export GH_TOKEN=$(gh auth token)',
+        '  • Use with secure release scripts that export GH_TOKEN="$(gh auth token)"',
         '  • The tokenRef: "GH_TOKEN" matches the environment variable name'
       ];
 
     case 'package-scripts':
       return [
         '  • Scripts use secure shell script for GitHub token handling',
-        '  • ./scripts/release.sh should export GH_TOKEN=$(gh auth token)',
+        '  • ./scripts/release.sh should export GH_TOKEN="$(gh auth token)"',
         '  • --ci flag bypasses interactive prompts for automated releases',
         '  • Requires release-it and GitHub CLI to be installed'
       ];
@@ -185,7 +185,7 @@ ${JSON.stringify({ scripts }, null, 2)}
 And create ./scripts/release.sh:
 
 #!/bin/bash
-export GH_TOKEN=$(gh auth token)
+export GH_TOKEN="$(gh auth token)"
 npx release-it $1 $2`;
 }
 

@@ -66,7 +66,7 @@ if ! gh auth status >/dev/null 2>&1; then
 fi
 
 # Set the GitHub token securely
-export GH_TOKEN=$(gh auth token)
+export GH_TOKEN="$(gh auth token)"
 
 # Run release-it with the specified type
 npx release-it "$@"

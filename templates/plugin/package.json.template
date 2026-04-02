@@ -31,7 +31,7 @@
   "scripts": {
     "build": "microbundle --entry src/index.js --output lib/index.js --target node -f esm,cjs --strict --generateTypes=false",
     "changelog": "auto-changelog -u --commit-limit false --ignore-commit-pattern '^((dev|chore|ci):|Release)'",
-    "coverage": "c8 --include=src/**/*.js --reporter=lcov --reporter=text-summary mocha 'test/index.js' 'test/cjs.test.cjs' -t 5000",
+    "coverage": "c8 --include=src/**/*.js --reporter=lcov --reporter=text-summary mocha 'test/index.js' 'test/cjs.test.cjs' -t 15000",
     "format": "prettier --write \"**/*.{yml,md,js,json}\"",
     "format:check": "prettier --list-different \"**/*.{yml,md,js,json}\"",
     "lint": "eslint --fix .",

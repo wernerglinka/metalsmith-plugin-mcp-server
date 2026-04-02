@@ -36,7 +36,7 @@ echo "Starting $RELEASE_TYPE release..."
 unset GITHUB_TOKEN
 
 # Set the GitHub token securely from gh CLI
-export GH_TOKEN=$(gh auth token)
+export GH_TOKEN="$(gh auth token)"
 
 # Run release-it with the specified type and pass through all remaining args
 npx release-it "$RELEASE_TYPE" "$@"

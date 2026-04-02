@@ -123,7 +123,8 @@ async function analyzeClaudeStandards(pluginPath) {
     // Shell script pattern
     else if (
       claudeContent.includes('./scripts/release.sh') &&
-      claudeContent.includes('export GH_TOKEN=$(gh auth token)')
+      (claudeContent.includes('export GH_TOKEN="$(gh auth token)"') ||
+        claudeContent.includes('export GH_TOKEN=$(gh auth token)'))
     ) {
       analysis.hasReleasePatterns = true;
       analysis.hasTokenPatterns = true;
