@@ -1,6 +1,6 @@
-import { promises as fs } from 'fs';
-import { spawn } from 'child_process';
-import path from 'path';
+import { promises as fs } from 'node:fs';
+import { spawn } from 'node:child_process';
+import path from 'node:path';
 import chalk from 'chalk';
 import { sanitizePath } from '../utils/path-security.js';
 
@@ -270,8 +270,8 @@ async function updatePluginDeps(pluginPath, options) {
       const latest = info.latest;
 
       // Determine if this is a major update
-      const currentMajor = current ? parseInt(current.split('.')[0]) : 0;
-      const latestMajor = latest ? parseInt(latest.split('.')[0]) : 0;
+      const currentMajor = current ? parseInt(current.split('.')[0], 10) : 0;
+      const latestMajor = latest ? parseInt(latest.split('.')[0], 10) : 0;
       const isMajor = latestMajor > currentMajor;
 
       if (major || !isMajor) {
