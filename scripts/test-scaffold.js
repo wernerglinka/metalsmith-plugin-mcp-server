@@ -5,8 +5,8 @@
  * This creates a test plugin and shows the output
  */
 
-import { spawn } from 'child_process';
-import { promises as fs } from 'fs';
+import { spawn } from 'node:child_process';
+import { promises as fs } from 'node:fs';
 
 const testRequest = {
   jsonrpc: '2.0',

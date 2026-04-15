@@ -10,8 +10,8 @@
  * 3. Write the rendered content to the target location
  */
 
-import { promises as fs } from 'fs'; // File system operations
-import path from 'path'; // Path manipulation
+import { promises as fs } from 'node:fs'; // File system operations
+import path from 'node:path'; // Path manipulation
 import { render } from './render.js'; // Our template rendering functions
 
 /**

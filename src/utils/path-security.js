@@ -5,8 +5,8 @@
  * path traversal vulnerabilities.
  */
 
-import path from 'path';
-import { promises as fs } from 'fs';
+import path from 'node:path';
+import { promises as fs } from 'node:fs';
 
 /**
  * Sanitize a file path to prevent path traversal attacks

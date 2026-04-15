@@ -5,7 +5,7 @@
  * This script tests all four tools in sequence
  */
 
-import { spawn } from 'child_process';
+import { spawn } from 'node:child_process';
 
 async function runTest(testName, scriptPath) {
   console.log(`\n${'='.repeat(50)}`);

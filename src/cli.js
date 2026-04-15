@@ -7,13 +7,13 @@
  * without requiring an AI assistant setup.
  */
 
-import { spawn } from 'child_process';
-import { fileURLToPath } from 'url';
-import path, { dirname, join } from 'path';
-import { promises as fs } from 'fs';
-import { homedir } from 'os';
+import { spawn } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+import path, { dirname, join } from 'node:path';
+import { promises as fs } from 'node:fs';
+import { homedir } from 'node:os';
 import chalk from 'chalk';
-import readline from 'readline';
+import readline from 'node:readline';
 import { sanitizePath } from './utils/path-security.js';
 
 const __filename = fileURLToPath(import.meta.url);

@@ -4,8 +4,8 @@
  * Lint, format, add, commit with message prompt, and push
  */
 
-import { spawn } from 'child_process';
-import { createInterface } from 'readline';
+import { spawn } from 'node:child_process';
+import { createInterface } from 'node:readline';
 
 function runCommand(command, args = []) {
   return new Promise((resolve, reject) => {
@@ -36,10 +36,7 @@ function promptCommitMessage() {
 
 async function main() {
   try {
-    console.log('🎨 Formatting code...');
-    await runCommand('npm', ['run', 'format']);
-
-    console.log('🔍 Linting code...');
+    console.log('🎨 Formatting and linting code...');
     await runCommand('npm', ['run', 'lint']);
 
     console.log('📝 Adding changes (including formatted files)...');

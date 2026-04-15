@@ -5,8 +5,8 @@
  * a summary report showing the health status of all plugins.
  */
 
-import { resolve, basename } from 'path';
-import { promises as fs } from 'fs';
+import { resolve, basename } from 'node:path';
+import { promises as fs } from 'node:fs';
 import { glob } from 'glob';
 import chalk from 'chalk';
 import ora from 'ora';

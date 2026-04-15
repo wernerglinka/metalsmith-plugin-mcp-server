@@ -13,9 +13,9 @@
  * metalsmith-optimize-images, ensuring consistency and maintainability.
  */
 
-import { promises as fs } from 'fs'; // File system operations (async/await style)
-import path from 'path'; // Path manipulation utilities
-import { fileURLToPath } from 'url'; // Convert import.meta.url to file path
+import { promises as fs } from 'node:fs'; // File system operations (async/await style)
+import path from 'node:path'; // Path manipulation utilities
+import { fileURLToPath } from 'node:url'; // Convert import.meta.url to file path
 import validateNpmPackageName from 'validate-npm-package-name'; // Validate npm package names
 import chalk from 'chalk'; // Colored terminal output
 
@@ -434,8 +434,8 @@ async function generateConfigs(pluginPath) {
  * Initialize git repository
  */
 async function initGitRepo(pluginPath) {
-  const { exec } = await import('child_process');
-  const { promisify } = await import('util');
+  const { exec } = await import('node:child_process');
+  const { promisify } = await import('node:util');
   const execAsync = promisify(exec);
 
   try {
