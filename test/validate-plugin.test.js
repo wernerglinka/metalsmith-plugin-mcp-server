@@ -1,7 +1,7 @@
 import { expect } from 'chai';
-import { promises as fs } from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import { promises as fs } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { validatePluginTool } from '../src/tools/validate-plugin.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -1217,7 +1217,7 @@ MIT
       // Should handle spawn errors gracefully
     });
 
-    it('should test complexity analysis edge cases', async function () {
+    it('should test complexity analysis with file iteration edge cases', async function () {
       const pluginDir = path.join(fixturesDir, 'complexity-edges');
       await fs.mkdir(pluginDir, { recursive: true });
       await fs.mkdir(path.join(pluginDir, 'src'), { recursive: true });

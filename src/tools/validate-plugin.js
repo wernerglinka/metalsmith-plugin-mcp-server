@@ -1,7 +1,7 @@
-import { promises as fs } from 'fs';
-import path from 'path';
+import { promises as fs } from 'node:fs';
+import path from 'node:path';
 import { glob } from 'glob';
-import { spawn } from 'child_process';
+import { spawn } from 'node:child_process';
 import chalk from 'chalk';
 import { sanitizePath } from '../utils/path-security.js';
 
@@ -1417,7 +1417,7 @@ async function checkForOrderingDocumentation(pluginPath) {
  * Check test coverage
  */
 // eslint-disable-next-line no-unused-vars
-async function checkCoverage(pluginPath, results, functional = false, config) {
+async function checkCoverage(pluginPath, results, _functional = false, config) {
   try {
     // Check if this is a new plugin (no node_modules = no tests run yet)
     const isNewPlugin = !(await fs

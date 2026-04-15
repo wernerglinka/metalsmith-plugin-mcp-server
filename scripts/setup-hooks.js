@@ -4,18 +4,15 @@
  * Setup git hooks for automatic formatting and linting
  */
 
-import { writeFileSync } from 'fs';
-import { execSync } from 'child_process';
-import { join } from 'path';
+import { writeFileSync } from 'node:fs';
+import { execSync } from 'node:child_process';
+import { join } from 'node:path';
 
 const preCommitHook = `#!/bin/sh
 
 # Pre-commit hook to format and lint code before committing
 
-echo "🎨 Running Prettier formatting..."
-npm run format
-
-echo "🔍 Running ESLint..."
+echo "🎨 Running Biome (format + lint)..."
 npm run lint
 
 # Re-add any files that were formatted

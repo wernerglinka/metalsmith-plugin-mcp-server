@@ -5,9 +5,9 @@
  * This creates a simple plugin structure and validates it
  */
 
-import { spawn } from 'child_process';
-import { promises as fs } from 'fs';
-import path from 'path';
+import { spawn } from 'node:child_process';
+import { promises as fs } from 'node:fs';
+import path from 'node:path';
 
 async function createTestPlugin() {
   const pluginDir = './test-validation-plugin';

@@ -7,9 +7,9 @@
 
 import { expect } from 'chai';
 import { auditPlugin } from '../src/tools/audit-plugin.js';
-import { promises as fs } from 'fs';
-import path from 'path';
-import { tmpdir } from 'os';
+import { promises as fs } from 'node:fs';
+import path from 'node:path';
+import { tmpdir } from 'node:os';
 
 describe('audit-plugin tool', () => {
   let tempDir;

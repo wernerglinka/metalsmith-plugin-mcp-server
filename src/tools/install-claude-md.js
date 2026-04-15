@@ -1,6 +1,6 @@
-import { promises as fs } from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import { promises as fs } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import nunjucks from 'nunjucks';
 import { sanitizePath } from '../utils/path-security.js';
 
@@ -31,8 +31,8 @@ export async function installClaudeMdTool(args) {
         pluginName = packageJson.name;
         camelCaseName = pluginName
           .replace(/^metalsmith-/, '') // Remove metalsmith- prefix
-          .replace(/-([a-z])/g, (match, letter) => letter.toUpperCase())
-          .replace(/^([a-z])/, (match, letter) => letter.toLowerCase());
+          .replace(/-([a-z])/g, (_match, letter) => letter.toUpperCase())
+          .replace(/^([a-z])/, (_match, letter) => letter.toLowerCase());
       }
 
       if (packageJson.description) {
@@ -49,7 +49,7 @@ export async function installClaudeMdTool(args) {
       const packageJson = JSON.parse(await fs.readFile(packageJsonPath, 'utf8'));
       const allDeps = { ...(packageJson.dependencies || {}), ...(packageJson.devDependencies || {}) };
 
-      if (allDeps['worker_threads'] || pluginName.includes('worker')) {
+      if (allDeps.worker_threads || pluginName.includes('worker')) {
         features.push('background-processing');
       }
 

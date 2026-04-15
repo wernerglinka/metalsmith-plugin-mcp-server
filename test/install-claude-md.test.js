@@ -1,12 +1,12 @@
 import { describe, it, before, after } from 'mocha';
 import { expect } from 'chai';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
-import fs from 'fs/promises';
-import os from 'os';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
+import fs from 'node:fs/promises';
+import os from 'node:os';
 
 // Import the smartMergeClaudeMd function from cli.js
-import { readFile } from 'fs/promises';
+import { readFile } from 'node:fs/promises';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 

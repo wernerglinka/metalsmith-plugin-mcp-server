@@ -3,10 +3,10 @@
  */
 
 import { expect } from 'chai';
-import path from 'path';
-import os from 'os';
+import path from 'node:path';
+import os from 'node:os';
 import { sanitizePath, sanitizeTemplateName, validatePath, createPathResolver } from '../src/utils/path-security.js';
-import { promises as fs } from 'fs';
+import { promises as fs } from 'node:fs';
 
 describe('Path Security Utilities', () => {
   const testBase = '/test/base/directory';

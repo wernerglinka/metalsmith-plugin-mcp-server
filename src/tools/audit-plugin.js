@@ -5,9 +5,9 @@
  * tests, and coverage checks in a single command.
  */
 
-import { resolve, basename } from 'path';
-import { execSync } from 'child_process';
-import { existsSync, readFileSync } from 'fs';
+import { resolve, basename } from 'node:path';
+import { execSync } from 'node:child_process';
+import { existsSync, readFileSync } from 'node:fs';
 import chalk from 'chalk';
 import ora from 'ora';
 import { validatePluginTool } from './validate-plugin.js';
