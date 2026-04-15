@@ -9,13 +9,13 @@
   },
   "scripts": {
     "start": "node src/index.js",
-    "test": "mocha test/**/*.test.js",
+    "test": "node --test --test-timeout=30000 'test/*.test.js'",
     "test:mcp": "node scripts/test-all.js",
     "test:scaffold": "node scripts/test-scaffold.js",
     "test:validate": "node scripts/test-validate.js",
     "test:configs": "node scripts/test-configs.js",
-    "test:unit": "mocha test/**/*.test.js -t 5000",
-    "coverage": "c8 --include=src/**/*.js --reporter=lcov --reporter=text-summary mocha test/**/*.test.js -t 15000",
+    "test:unit": "node --test --test-timeout=30000 'test/*.test.js'",
+    "coverage": "node --test --experimental-test-coverage --test-reporter=spec --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=coverage/lcov.info --test-timeout=30000 'test/*.test.js'",
     "format": "biome format --write .",
     "format:check": "biome format .",
     "lint": "biome check --write .",
@@ -64,11 +64,8 @@
   "devDependencies": {
     "@biomejs/biome": "2.4.12",
     "auto-changelog": "^2.5.0",
-    "c8": "^10.1.3",
-    "chai": "^6.2.2",
     "depcheck": "^1.4.7",
     "metalsmith": "2.6.3",
-    "mocha": "^11.7.5",
     "release-it": "^20.0.0"
   },
   "repository": {

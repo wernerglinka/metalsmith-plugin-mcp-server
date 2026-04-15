@@ -1,4 +1,5 @@
-import { expect } from 'chai';
+import { strict as assert } from 'node:assert';
+import { describe, it, beforeEach, afterEach } from 'node:test';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -27,7 +28,7 @@ describe('template utilities', function () {
       await copyTemplate(templatePath, targetPath, data);
 
       const result = await fs.readFile(targetPath, 'utf-8');
-      expect(result).to.equal('const name = "test-plugin";');
+      assert.equal(result, 'const name = "test-plugin";');
     });
 
     it('should create target directory if it does not exist', async function () {
@@ -42,7 +43,7 @@ describe('template utilities', function () {
         .access(targetPath)
         .then(() => true)
         .catch(() => false);
-      expect(exists).to.be.true;
+      assert.equal(exists, true);
     });
 
     it('should handle templates with conditionals', async function () {
@@ -61,7 +62,7 @@ const config = {
       await copyTemplate(templatePath, targetPath, data);
 
       const result = await fs.readFile(targetPath, 'utf-8');
-      expect(result).to.include('feature: true');
+      assert.ok(result.includes('feature: true'));
     });
   });
 
@@ -81,15 +82,15 @@ const config = {
       const file1 = await fs.readFile(path.join(targetDir, 'file1.js'), 'utf-8');
       const file2 = await fs.readFile(path.join(targetDir, 'file2.md'), 'utf-8');
 
-      expect(file1).to.equal('export const name = "test";');
-      expect(file2).to.equal('# Test Title');
+      assert.equal(file1, 'export const name = "test";');
+      assert.equal(file2, '# Test Title');
 
       // Non-template file should not be copied
       const nonTemplateExists = await fs
         .access(path.join(targetDir, 'non-template.js'))
         .then(() => true)
         .catch(() => false);
-      expect(nonTemplateExists).to.be.false;
+      assert.equal(nonTemplateExists, false);
     });
 
     it('should handle recursive directory copying', async function () {
@@ -109,8 +110,8 @@ const config = {
       const rootFile = await fs.readFile(path.join(targetDir, 'root.txt'), 'utf-8');
       const nestedFile = await fs.readFile(path.join(targetDir, 'subdir', 'nested.txt'), 'utf-8');
 
-      expect(rootFile).to.equal('root: test');
-      expect(nestedFile).to.equal('nested: test');
+      assert.equal(rootFile, 'root: test');
+      assert.equal(nestedFile, 'nested: test');
     });
 
     it('should handle empty directory', async function () {
@@ -126,7 +127,7 @@ const config = {
         .access(targetDir)
         .then(() => true)
         .catch(() => false);
-      expect(targetExists).to.be.false; // Target should not be created if no files to copy
+      assert.equal(targetExists, false); // Target should not be created if no files to copy
     });
   });
 });

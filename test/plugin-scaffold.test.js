@@ -1,4 +1,5 @@
-import { expect } from 'chai';
+import { strict as assert } from 'node:assert';
+import { describe, it, beforeEach, afterEach } from 'node:test';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -24,8 +25,8 @@ describe('plugin-scaffold tool', function () {
       outputPath: tmpDir
     });
 
-    expect(result.isError).to.be.true;
-    expect(result.content[0].text).to.include('Plugin description is required');
+    assert.equal(result.isError, true);
+    assert.ok(result.content[0].text.includes('Plugin description is required'));
   });
 
   it('should create plugin structure', async function () {
@@ -37,12 +38,12 @@ describe('plugin-scaffold tool', function () {
       outputPath: tmpDir
     });
 
-    expect(result.isError).to.not.be.true;
+    assert.notEqual(result.isError, true);
 
     // Check directory structure
     const pluginPath = path.join(tmpDir, pluginName);
     const stats = await fs.stat(pluginPath);
-    expect(stats.isDirectory()).to.be.true;
+    assert.equal(stats.isDirectory(), true);
 
     // Check required files
     const requiredFiles = [
@@ -63,7 +64,7 @@ describe('plugin-scaffold tool', function () {
         .access(filePath)
         .then(() => true)
         .catch(() => false);
-      expect(exists).to.be.true;
+      assert.equal(exists, true);
     }
   });
 
@@ -79,8 +80,8 @@ describe('plugin-scaffold tool', function () {
       outputPath: tmpDir
     });
 
-    expect(result.isError).to.be.true;
-    expect(result.content[0].text).to.include('Plugin description is required');
+    assert.equal(result.isError, true);
+    assert.ok(result.content[0].text.includes('Plugin description is required'));
   });
 
   it('should create basic plugin structure without types', async function () {
@@ -92,7 +93,7 @@ describe('plugin-scaffold tool', function () {
       outputPath: tmpDir
     });
 
-    expect(result.isError).to.not.be.true;
+    assert.notEqual(result.isError, true);
 
     // Check basic directory structure exists
     const pluginPath = path.join(tmpDir, pluginName);
@@ -108,8 +109,8 @@ describe('plugin-scaffold tool', function () {
       .then(() => true)
       .catch(() => false);
 
-    expect(srcExists).to.be.true;
-    expect(testExists).to.be.true;
+    assert.equal(srcExists, true);
+    assert.equal(testExists, true);
   });
 
   it('should handle additional features', async function () {
@@ -123,7 +124,7 @@ describe('plugin-scaffold tool', function () {
       outputPath: tmpDir
     });
 
-    expect(result.isError).to.not.be.true;
+    assert.notEqual(result.isError, true);
 
     // Check feature-specific directories
     const pluginPath = path.join(tmpDir, pluginName);
@@ -134,7 +135,7 @@ describe('plugin-scaffold tool', function () {
       .access(asyncDir)
       .then(() => true)
       .catch(() => false);
-    expect(hasAsync).to.be.true;
+    assert.equal(hasAsync, true);
 
     // Background processing adds workers
     const workersDir = path.join(pluginPath, 'src', 'workers');
@@ -142,7 +143,7 @@ describe('plugin-scaffold tool', function () {
       .access(workersDir)
       .then(() => true)
       .catch(() => false);
-    expect(hasWorkers).to.be.true;
+    assert.equal(hasWorkers, true);
 
     // Metadata generation adds metadata
     const metadataDir = path.join(pluginPath, 'src', 'metadata');
@@ -150,7 +151,7 @@ describe('plugin-scaffold tool', function () {
       .access(metadataDir)
       .then(() => true)
       .catch(() => false);
-    expect(hasMetadata).to.be.true;
+    assert.equal(hasMetadata, true);
   });
 
   it('should handle template rendering errors gracefully', async function () {
@@ -177,8 +178,8 @@ describe('plugin-scaffold tool', function () {
     // Restore original function
     fs.writeFile = originalWriteFile;
 
-    expect(result.isError).to.be.true;
-    expect(result.content[0].text).to.include('Plugin description is required');
+    assert.equal(result.isError, true);
+    assert.ok(result.content[0].text.includes('Plugin description is required'));
 
     // Verify cleanup happened - directory should not exist
     const pluginPath = path.join(tmpDir, pluginName);
@@ -186,7 +187,7 @@ describe('plugin-scaffold tool', function () {
       .access(pluginPath)
       .then(() => true)
       .catch(() => false);
-    expect(exists).to.be.false;
+    assert.equal(exists, false);
   });
 
   it('should handle git initialization failure gracefully', async function () {
@@ -201,15 +202,15 @@ describe('plugin-scaffold tool', function () {
     });
 
     // Plugin should still be created successfully even if git fails
-    expect(result.isError).to.not.be.true;
-    expect(result.content[0].text).to.include('Successfully created');
+    assert.notEqual(result.isError, true);
+    assert.ok(result.content[0].text.includes('Successfully created'));
 
     const pluginPath = path.join(tmpDir, pluginName);
     const exists = await fs
       .access(pluginPath)
       .then(() => true)
       .catch(() => false);
-    expect(exists).to.be.true;
+    assert.equal(exists, true);
   });
 
   it('should create feature-specific directories when requested', async function () {
@@ -221,7 +222,7 @@ describe('plugin-scaffold tool', function () {
       outputPath: tmpDir
     });
 
-    expect(result.isError).to.not.be.true;
+    assert.notEqual(result.isError, true);
 
     // Check if feature-specific directories were created
     const pluginPath = path.join(tmpDir, pluginName);
@@ -237,8 +238,8 @@ describe('plugin-scaffold tool', function () {
       .then(() => true)
       .catch(() => false);
 
-    expect(processorsExists).to.be.true;
-    expect(workersExists).to.be.true;
+    assert.equal(processorsExists, true);
+    assert.equal(workersExists, true);
   });
 
   it('should handle missing template files gracefully', async function () {
@@ -257,8 +258,8 @@ describe('plugin-scaffold tool', function () {
         outputPath: tmpDir
       });
 
-      expect(result.isError).to.be.true;
-      expect(result.content[0].text).to.include('Plugin description is required');
+      assert.equal(result.isError, true);
+      assert.ok(result.content[0].text.includes('Plugin description is required'));
     } finally {
       // Restore the template file
       try {
@@ -278,7 +279,7 @@ describe('plugin-scaffold tool', function () {
       outputPath: tmpDir
     });
 
-    expect(result.isError).to.not.be.true;
+    assert.notEqual(result.isError, true);
 
     const pluginPath = path.join(tmpDir, pluginName);
 
@@ -287,12 +288,12 @@ describe('plugin-scaffold tool', function () {
     const releaseStats = await fs.stat(releaseScript);
 
     // Check executable permissions (0o111 = executable by user, group, other)
-    expect(releaseStats.mode & 0o111).to.be.greaterThan(0);
+    assert.ok(releaseStats.mode & (0o111 > 0));
 
     // Check script content contains expected patterns
     const releaseContent = await fs.readFile(releaseScript, 'utf-8');
-    expect(releaseContent).to.include('#!/bin/bash');
-    expect(releaseContent).to.include('gh auth status');
-    expect(releaseContent).to.include('GH_TOKEN');
+    assert.ok(releaseContent.includes('#!/bin/bash'));
+    assert.ok(releaseContent.includes('gh auth status'));
+    assert.ok(releaseContent.includes('GH_TOKEN'));
   });
 });
