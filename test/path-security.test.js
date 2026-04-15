@@ -2,7 +2,8 @@
  * Tests for path security utilities
  */
 
-import { expect } from 'chai';
+import { strict as assert } from 'node:assert';
+import { describe, it, before, after } from 'node:test';
 import path from 'node:path';
 import os from 'node:os';
 import { sanitizePath, sanitizeTemplateName, validatePath, createPathResolver } from '../src/utils/path-security.js';
@@ -14,102 +15,135 @@ describe('Path Security Utilities', () => {
   describe('sanitizePath', () => {
     it('should allow valid relative paths', () => {
       const result = sanitizePath('subdir/file.js', testBase);
-      expect(result).to.equal(path.resolve(testBase, 'subdir/file.js'));
+      assert.equal(result, path.resolve(testBase, 'subdir/file.js'));
     });
 
     it('should allow valid absolute paths without traversal', () => {
       const validPath = '/usr/local/lib/node_modules';
       const result = sanitizePath(validPath, testBase);
-      expect(result).to.equal(path.normalize(validPath));
+      assert.equal(result, path.normalize(validPath));
     });
 
     it('should allow current directory reference', () => {
       const result = sanitizePath('.', testBase);
-      expect(result).to.equal(path.resolve(testBase));
+      assert.equal(result, path.resolve(testBase));
     });
 
     it('should allow simple filenames', () => {
       const result = sanitizePath('file.txt', testBase);
-      expect(result).to.equal(path.resolve(testBase, 'file.txt'));
+      assert.equal(result, path.resolve(testBase, 'file.txt'));
     });
 
     it('should prevent relative path traversal with ../', () => {
-      expect(() => sanitizePath('../../../etc/passwd', testBase)).to.throw('Path traversal attempt detected');
+      assert.throws(
+        () => sanitizePath('../../../etc/passwd', testBase),
+        new RegExp('Path traversal attempt detected'.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+      );
     });
 
     it('should prevent relative path traversal with ..\\', () => {
-      expect(() => sanitizePath('..\\\\..\\\\..\\\\etc\\\\passwd', testBase)).to.throw(
-        'Path traversal attempt detected'
+      assert.throws(
+        () => sanitizePath('..\\\\..\\\\..\\\\etc\\\\passwd', testBase),
+        new RegExp('Path traversal attempt detected'.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
       );
     });
 
     it('should prevent absolute path with traversal patterns', () => {
-      expect(() => sanitizePath('/usr/local/../../../etc/passwd', testBase)).to.throw(
-        'Path traversal attempt detected'
+      assert.throws(
+        () => sanitizePath('/usr/local/../../../etc/passwd', testBase),
+        new RegExp('Path traversal attempt detected'.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
       );
     });
 
     it('should prevent Windows-style traversal', () => {
-      expect(() => sanitizePath('C:\\\\..\\\\..\\\\Windows\\\\System32', testBase)).to.throw(
-        'Path traversal attempt detected'
+      assert.throws(
+        () => sanitizePath('C:\\\\..\\\\..\\\\Windows\\\\System32', testBase),
+        new RegExp('Path traversal attempt detected'.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
       );
     });
 
     it('should reject invalid input types', () => {
-      expect(() => sanitizePath(null, testBase)).to.throw('Invalid path provided');
-      expect(() => sanitizePath(undefined, testBase)).to.throw('Invalid path provided');
-      expect(() => sanitizePath(123, testBase)).to.throw('Invalid path provided');
+      assert.throws(
+        () => sanitizePath(null, testBase),
+        new RegExp('Invalid path provided'.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+      );
+      assert.throws(
+        () => sanitizePath(undefined, testBase),
+        new RegExp('Invalid path provided'.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+      );
+      assert.throws(
+        () => sanitizePath(123, testBase),
+        new RegExp('Invalid path provided'.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+      );
     });
 
     it('should handle empty string', () => {
-      expect(() => sanitizePath('', testBase)).to.throw('Invalid path provided');
+      assert.throws(
+        () => sanitizePath('', testBase),
+        new RegExp('Invalid path provided'.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+      );
     });
 
     it('should normalize paths correctly', () => {
       const result = sanitizePath('subdir//file.js', testBase);
-      expect(result).to.equal(path.resolve(testBase, 'subdir/file.js'));
+      assert.equal(result, path.resolve(testBase, 'subdir/file.js'));
     });
 
     it('should handle temp directory paths used in tests', () => {
       const tempPath = path.join(os.tmpdir(), 'test-plugin');
       const result = sanitizePath(tempPath, testBase);
-      expect(result).to.equal(path.normalize(tempPath));
+      assert.equal(result, path.normalize(tempPath));
     });
   });
 
   describe('sanitizeTemplateName', () => {
     it('should allow valid template names', () => {
-      expect(sanitizeTemplateName('plugin/index')).to.equal('plugin/index');
-      expect(sanitizeTemplateName('configs/eslint')).to.equal('configs/eslint');
+      assert.equal(sanitizeTemplateName('plugin/index'), 'plugin/index');
+      assert.equal(sanitizeTemplateName('configs/eslint'), 'configs/eslint');
     });
 
     it('should remove path traversal attempts', () => {
-      expect(sanitizeTemplateName('../../../etc/passwd')).to.equal('etc/passwd');
-      expect(sanitizeTemplateName('../../template')).to.equal('template');
+      assert.equal(sanitizeTemplateName('../../../etc/passwd'), 'etc/passwd');
+      assert.equal(sanitizeTemplateName('../../template'), 'template');
     });
 
     it('should remove leading slashes', () => {
-      expect(sanitizeTemplateName('/absolute/path')).to.equal('absolute/path');
-      expect(sanitizeTemplateName('\\windows\\path')).to.equal('windows/path');
+      assert.equal(sanitizeTemplateName('/absolute/path'), 'absolute/path');
+      assert.equal(sanitizeTemplateName('\\windows\\path'), 'windows/path');
     });
 
     it('should normalize path separators', () => {
-      expect(sanitizeTemplateName('folder\\\\file')).to.equal('folder/file');
-      expect(sanitizeTemplateName('folder//file')).to.equal('folder/file');
+      assert.equal(sanitizeTemplateName('folder\\\\file'), 'folder/file');
+      assert.equal(sanitizeTemplateName('folder//file'), 'folder/file');
     });
 
     it('should reject null bytes', () => {
-      expect(() => sanitizeTemplateName('file\x00name')).to.throw('Invalid template name: contains null bytes');
+      assert.throws(
+        () => sanitizeTemplateName('file\x00name'),
+        new RegExp('Invalid template name: contains null bytes'.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+      );
     });
 
     it('should reject invalid input types', () => {
-      expect(() => sanitizeTemplateName(null)).to.throw('Invalid template name provided');
-      expect(() => sanitizeTemplateName(undefined)).to.throw('Invalid template name provided');
-      expect(() => sanitizeTemplateName(123)).to.throw('Invalid template name provided');
+      assert.throws(
+        () => sanitizeTemplateName(null),
+        new RegExp('Invalid template name provided'.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+      );
+      assert.throws(
+        () => sanitizeTemplateName(undefined),
+        new RegExp('Invalid template name provided'.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+      );
+      assert.throws(
+        () => sanitizeTemplateName(123),
+        new RegExp('Invalid template name provided'.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+      );
     });
 
     it('should handle empty string', () => {
-      expect(() => sanitizeTemplateName('')).to.throw('Invalid template name provided');
+      assert.throws(
+        () => sanitizeTemplateName(''),
+        new RegExp('Invalid template name provided'.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+      );
     });
   });
 
@@ -128,24 +162,24 @@ describe('Path Security Utilities', () => {
 
     it('should validate existing paths', async () => {
       const result = await validatePath('test.txt', tempDir);
-      expect(result).to.equal(path.join(tempDir, 'test.txt'));
+      assert.equal(result, path.join(tempDir, 'test.txt'));
     });
 
     it('should reject non-existent paths', async () => {
       try {
         await validatePath('nonexistent.txt', tempDir);
-        expect.fail('Should have thrown an error');
+        assert.fail('Should have thrown an error');
       } catch (error) {
-        expect(error.message).to.include('Path does not exist');
+        assert.ok(error.message.includes('Path does not exist'));
       }
     });
 
     it('should prevent traversal in validation', async () => {
       try {
         await validatePath('../../../etc/passwd', tempDir);
-        expect.fail('Should have thrown an error');
+        assert.fail('Should have thrown an error');
       } catch (error) {
-        expect(error.message).to.include('Path traversal attempt detected');
+        assert.ok(error.message.includes('Path traversal attempt detected'));
       }
     });
   });
@@ -153,18 +187,21 @@ describe('Path Security Utilities', () => {
   describe('createPathResolver', () => {
     it('should create a resolver with the correct base path', () => {
       const resolver = createPathResolver('/base/path');
-      expect(resolver.getBase()).to.equal(path.resolve('/base/path'));
+      assert.equal(resolver.getBase(), path.resolve('/base/path'));
     });
 
     it('should resolve paths relative to base', () => {
       const resolver = createPathResolver('/base/path');
       const resolved = resolver.resolve('subdir/file.js');
-      expect(resolved).to.equal(path.resolve('/base/path', 'subdir/file.js'));
+      assert.equal(resolved, path.resolve('/base/path', 'subdir/file.js'));
     });
 
     it('should prevent traversal through resolver', () => {
       const resolver = createPathResolver('/base/path');
-      expect(() => resolver.resolve('../../../etc/passwd')).to.throw('Path traversal attempt detected');
+      assert.throws(
+        () => resolver.resolve('../../../etc/passwd'),
+        new RegExp('Path traversal attempt detected'.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+      );
     });
 
     it('should validate paths through resolver', async () => {
@@ -175,13 +212,13 @@ describe('Path Security Utilities', () => {
       const resolver = createPathResolver(tempDir);
 
       const validPath = await resolver.validate('exists.txt');
-      expect(validPath).to.equal(path.join(tempDir, 'exists.txt'));
+      assert.equal(validPath, path.join(tempDir, 'exists.txt'));
 
       try {
         await resolver.validate('notfound.txt');
-        expect.fail('Should have thrown an error');
+        assert.fail('Should have thrown an error');
       } catch (error) {
-        expect(error.message).to.include('Path does not exist');
+        assert.ok(error.message.includes('Path does not exist'));
       }
 
       await fs.rm(tempDir, { recursive: true, force: true });

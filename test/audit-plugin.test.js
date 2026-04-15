@@ -5,7 +5,8 @@
  * attempting to stub ES modules, which is problematic.
  */
 
-import { expect } from 'chai';
+import { strict as assert } from 'node:assert';
+import { describe, it, beforeEach, afterEach } from 'node:test';
 import { auditPlugin } from '../src/tools/audit-plugin.js';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
@@ -84,7 +85,7 @@ console.log('Test file exists');
         output: 'console'
       });
 
-      expect(result).to.be.a('string');
+      assert.equal(typeof result, 'string');
     });
 
     it('should support JSON output format', async () => {
@@ -93,17 +94,17 @@ console.log('Test file exists');
         output: 'json'
       });
 
-      expect(result).to.be.a('string');
+      assert.equal(typeof result, 'string');
 
       const parsed = JSON.parse(result);
-      expect(parsed).to.have.property('pluginName');
-      expect(parsed).to.have.property('results');
-      expect(parsed).to.have.property('overallHealth');
-      expect(parsed.results).to.have.property('validation');
-      expect(parsed.results).to.have.property('linting');
-      expect(parsed.results).to.have.property('formatting');
-      expect(parsed.results).to.have.property('tests');
-      expect(parsed.results).to.have.property('coverage');
+      assert.ok('pluginName' in parsed);
+      assert.ok('results' in parsed);
+      assert.ok('overallHealth' in parsed);
+      assert.ok('validation' in parsed.results);
+      assert.ok('linting' in parsed.results);
+      assert.ok('formatting' in parsed.results);
+      assert.ok('tests' in parsed.results);
+      assert.ok('coverage' in parsed.results);
     });
 
     it('should support markdown output format', async () => {
@@ -112,9 +113,9 @@ console.log('Test file exists');
         output: 'markdown'
       });
 
-      expect(result).to.be.a('string');
-      expect(result).to.include('# Audit Report:');
-      expect(result).to.include('| Check | Status | Details |');
+      assert.equal(typeof result, 'string');
+      assert.ok(result.includes('# Audit Report:'));
+      assert.ok(result.includes('| Check | Status | Details |'));
     });
 
     it('should handle non-existent plugin directory', async () => {
@@ -123,7 +124,7 @@ console.log('Test file exists');
         // If it doesn't throw, that's fine - it should handle gracefully
       } catch (error) {
         // If it does throw, that's also acceptable behavior
-        expect(error).to.be.an('error');
+        assert.ok(error instanceof Error);
       }
     });
 
@@ -134,7 +135,7 @@ console.log('Test file exists');
       });
 
       const parsed = JSON.parse(result);
-      expect(parsed.overallHealth).to.be.oneOf(['EXCELLENT', 'GOOD', 'FAIR', 'NEEDS IMPROVEMENT', 'POOR']);
+      assert.ok(['EXCELLENT', 'GOOD', 'FAIR', 'NEEDS IMPROVEMENT', 'POOR'].includes(parsed.overallHealth));
     });
   });
 
@@ -146,8 +147,8 @@ console.log('Test file exists');
       });
 
       const parsed = JSON.parse(result);
-      expect(parsed.results.validation).to.have.property('score');
-      expect(parsed.results.validation).to.have.property('passed');
+      assert.ok('score' in parsed.results.validation);
+      assert.ok('passed' in parsed.results.validation);
     });
 
     it('should include test results', async () => {
@@ -157,8 +158,8 @@ console.log('Test file exists');
       });
 
       const parsed = JSON.parse(result);
-      expect(parsed.results.tests).to.have.property('passed');
-      expect(parsed.results.tests).to.have.property('stats');
+      assert.ok('passed' in parsed.results.tests);
+      assert.ok('stats' in parsed.results.tests);
     });
 
     it('should include linting and formatting results', async () => {
@@ -168,8 +169,8 @@ console.log('Test file exists');
       });
 
       const parsed = JSON.parse(result);
-      expect(parsed.results.linting).to.have.property('passed');
-      expect(parsed.results.formatting).to.have.property('passed');
+      assert.ok('passed' in parsed.results.linting);
+      assert.ok('passed' in parsed.results.formatting);
     });
   });
 });

@@ -1,4 +1,5 @@
-import { expect } from 'chai';
+import { strict as assert } from 'node:assert';
+import { describe, it, before, after } from 'node:test';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -26,9 +27,9 @@ describe('validate-plugin tool', function () {
       checks: ['structure', 'tests', 'docs', 'package-json']
     });
 
-    expect(result.isError).to.not.be.true;
+    assert.notEqual(result.isError, true);
     const text = result.content[0].text;
-    expect(text).to.include('Plugin meets quality standards');
+    assert.ok(text.includes('Plugin meets quality standards'));
   });
 
   it('should detect missing required files', async function () {
@@ -38,7 +39,7 @@ describe('validate-plugin tool', function () {
     });
 
     const text = result.content[0].text;
-    expect(text).to.include('Missing required');
+    assert.ok(text.includes('Missing required'));
   });
 
   it('should check test coverage', async function () {
@@ -48,7 +49,7 @@ describe('validate-plugin tool', function () {
     });
 
     const text = result.content[0].text;
-    expect(text).to.include('test');
+    assert.ok(text.includes('test'));
   });
 
   it('should validate package.json standards', async function () {
@@ -58,8 +59,8 @@ describe('validate-plugin tool', function () {
     });
 
     const text = result.content[0].text;
-    expect(text).to.include('package.json');
-    expect(text).to.include('follows convention');
+    assert.ok(text.includes('package.json'));
+    assert.ok(text.includes('follows convention'));
   });
 
   it('should handle non-existent plugin directory', async function () {
@@ -68,8 +69,8 @@ describe('validate-plugin tool', function () {
       checks: ['structure']
     });
 
-    expect(result.isError).to.be.true;
-    expect(result.content[0].text).to.include('Failed to validate');
+    assert.equal(result.isError, true);
+    assert.ok(result.content[0].text.includes('Failed to validate'));
   });
 
   it('should check ESLint configuration', async function () {
@@ -79,8 +80,8 @@ describe('validate-plugin tool', function () {
     });
 
     const text = result.content[0].text;
-    expect(text).to.include('ESLint configuration found');
-    expect(text).to.include('modern ESLint flat config');
+    assert.ok(text.includes('ESLint configuration found'));
+    assert.ok(text.includes('modern ESLint flat config'));
   });
 
   it('should handle missing ESLint configuration', async function () {
@@ -90,7 +91,7 @@ describe('validate-plugin tool', function () {
     });
 
     const text = result.content[0].text;
-    expect(text).to.include('Consider adding ESLint configuration');
+    assert.ok(text.includes('Consider adding ESLint configuration'));
   });
 
   it('should check coverage reports when available', async function () {
@@ -112,8 +113,8 @@ describe('validate-plugin tool', function () {
     });
 
     const text = result.content[0].text;
-    expect(text).to.include('Coverage reports found');
-    expect(text).to.include('95.5%');
+    assert.ok(text.includes('Coverage reports found'));
+    assert.ok(text.includes('95.5%'));
   });
 
   it('should handle all check types in one validation', async function () {
@@ -122,10 +123,10 @@ describe('validate-plugin tool', function () {
       checks: ['structure', 'tests', 'docs', 'package-json', 'eslint', 'coverage']
     });
 
-    expect(result.isError).to.not.be.true;
+    assert.notEqual(result.isError, true);
     const text = result.content[0].text;
-    expect(text).to.include('Quality score');
-    expect(text).to.include('Passed');
+    assert.ok(text.includes('Quality score'));
+    assert.ok(text.includes('Passed'));
   });
 
   it('should provide quality score and summary', async function () {
@@ -135,9 +136,9 @@ describe('validate-plugin tool', function () {
     });
 
     const text = result.content[0].text;
-    expect(text).to.include('Quality score:');
-    expect(text).to.include('%');
-    expect(text).to.include('Total checks:');
+    assert.ok(text.includes('Quality score:'));
+    assert.ok(text.includes('%'));
+    assert.ok(text.includes('Total checks:'));
   });
 
   it('should handle plugins with missing recommended directories', async function () {
@@ -147,7 +148,7 @@ describe('validate-plugin tool', function () {
     });
 
     const text = result.content[0].text;
-    expect(text).to.include('Consider adding directory');
+    assert.ok(text.includes('Consider adding directory'));
   });
 
   it('should validate package.json name convention', async function () {
@@ -157,7 +158,7 @@ describe('validate-plugin tool', function () {
     });
 
     const text = result.content[0].text;
-    expect(text).to.include('Plugin name follows convention');
+    assert.ok(text.includes('Plugin name follows convention'));
   });
 
   describe('Performance validation', function () {
@@ -177,9 +178,9 @@ describe('validate-plugin tool', function () {
       });
 
       const text = result.content[0].text;
-      expect(text).to.include('Proper files object iteration detected');
-      expect(text).to.include('RegExp patterns appear optimally placed');
-      expect(text).to.include('Efficient Buffer handling');
+      assert.ok(text.includes('Proper files object iteration detected'));
+      assert.ok(text.includes('RegExp patterns appear optimally placed'));
+      assert.ok(text.includes('Efficient Buffer handling'));
     });
 
     it('should detect performance issues', async function () {
@@ -197,9 +198,9 @@ describe('validate-plugin tool', function () {
       });
 
       const text = result.content[0].text;
-      expect(text).to.include('Pre-compile RegExp patterns outside loops');
-      expect(text).to.include('Use Buffer methods instead of string concatenation');
-      expect(text).to.include('Avoid cloning the entire files object');
+      assert.ok(text.includes('Pre-compile RegExp patterns outside loops'));
+      assert.ok(text.includes('Use Buffer methods instead of string concatenation'));
+      assert.ok(text.includes('Avoid cloning the entire files object'));
     });
 
     it('should validate async plugin patterns', async function () {
@@ -215,7 +216,7 @@ describe('validate-plugin tool', function () {
       });
 
       const text = result.content[0].text;
-      expect(text).to.include('Proper async plugin pattern with done() callback');
+      assert.ok(text.includes('Proper async plugin pattern with done() callback'));
     });
   });
 
@@ -234,9 +235,9 @@ describe('validate-plugin tool', function () {
       });
 
       const text = result.content[0].text;
-      expect(text).to.include('eval() usage detected');
-      expect(text).to.include('Shell execution without input validation');
-      expect(text).to.include('Hardcoded secrets detected');
+      assert.ok(text.includes('eval() usage detected'));
+      assert.ok(text.includes('Shell execution without input validation'));
+      assert.ok(text.includes('Hardcoded secrets detected'));
     });
 
     it('should validate secure patterns', async function () {
@@ -253,9 +254,9 @@ describe('validate-plugin tool', function () {
       });
 
       const text = result.content[0].text;
-      expect(text).to.include('Error handling detected');
-      expect(text).to.include('File content validation detected');
-      expect(text).to.include('Security audit script defined');
+      assert.ok(text.includes('Error handling detected'));
+      assert.ok(text.includes('File content validation detected'));
+      assert.ok(text.includes('Security audit script defined'));
     });
 
     it('should check dependency security', async function () {
@@ -271,8 +272,8 @@ describe('validate-plugin tool', function () {
       });
 
       const text = result.content[0].text;
-      expect(text).to.include('Some dependencies use pinned versions');
-      expect(text).to.include('Security audit script defined');
+      assert.ok(text.includes('Some dependencies use pinned versions'));
+      assert.ok(text.includes('Security audit script defined'));
     });
   });
 
@@ -292,10 +293,10 @@ describe('validate-plugin tool', function () {
       });
 
       const text = result.content[0].text;
-      expect(text).to.include('Proper two-phase plugin factory pattern detected');
-      expect(text).to.include('Correct Metalsmith plugin function signature detected');
-      expect(text).to.include('Plugin properly interacts with files object');
-      expect(text).to.include('Plugin works with file metadata');
+      assert.ok(text.includes('Proper two-phase plugin factory pattern detected'));
+      assert.ok(text.includes('Correct Metalsmith plugin function signature detected'));
+      assert.ok(text.includes('Plugin properly interacts with files object'));
+      assert.ok(text.includes('Plugin works with file metadata'));
     });
 
     it('should detect plugin pattern issues', async function () {
@@ -312,8 +313,8 @@ describe('validate-plugin tool', function () {
       });
 
       const text = result.content[0].text;
-      expect(text).to.include('Consider using factory pattern');
-      expect(text).to.include('Plugin should interact with the files object');
+      assert.ok(text.includes('Consider using factory pattern'));
+      assert.ok(text.includes('Plugin should interact with the files object'));
     });
 
     it('should validate content processing patterns', async function () {
@@ -331,9 +332,9 @@ describe('validate-plugin tool', function () {
       });
 
       const text = result.content[0].text;
-      expect(text).to.include('Proper Buffer validation for file.contents');
-      expect(text).to.include('Plugin filters files by type/pattern');
-      expect(text).to.include('Plugin handles options properly');
+      assert.ok(text.includes('Proper Buffer validation for file.contents'));
+      assert.ok(text.includes('Plugin filters files by type/pattern'));
+      assert.ok(text.includes('Plugin handles options properly'));
     });
   });
 
@@ -343,10 +344,10 @@ describe('validate-plugin tool', function () {
       checks: ['structure', 'tests', 'docs', 'package-json', 'performance', 'security', 'metalsmith-patterns']
     });
 
-    expect(result.isError).to.not.be.true;
+    assert.notEqual(result.isError, true);
     const text = result.content[0].text;
-    expect(text).to.include('Quality score');
-    expect(text).to.include('Plugin meets quality standards');
+    assert.ok(text.includes('Quality score'));
+    assert.ok(text.includes('Plugin meets quality standards'));
   });
 
   describe('Edge cases and error handling', function () {
@@ -364,8 +365,8 @@ describe('validate-plugin tool', function () {
       });
 
       const text = result.content[0].text;
-      expect(text).to.include('JSDoc @typedef for Options found');
-      expect(text).to.include('Main export function has JSDoc documentation');
+      assert.ok(text.includes('JSDoc @typedef for Options found'));
+      assert.ok(text.includes('Main export function has JSDoc documentation'));
     });
 
     it('should handle integration validation', async function () {
@@ -378,7 +379,7 @@ describe('validate-plugin tool', function () {
       });
 
       const text = result.content[0].text;
-      expect(text).to.include('Plugin accesses global metadata');
+      assert.ok(text.includes('Plugin accesses global metadata'));
     });
 
     it('should handle functional validation mode', async function () {
@@ -388,9 +389,9 @@ describe('validate-plugin tool', function () {
         functional: true
       });
 
-      expect(result.isError).to.not.be.true;
+      assert.notEqual(result.isError, true);
       const text = result.content[0].text;
-      expect(text).to.include('appropriate'); // Should include "complexity is appropriate"
+      assert.ok(text.includes('appropriate')); // Should include "complexity is appropriate"
     });
 
     it('should handle missing files gracefully in performance validation', async function () {
@@ -404,7 +405,7 @@ describe('validate-plugin tool', function () {
         checks: ['performance']
       });
 
-      expect(result.isError).to.not.be.true;
+      assert.notEqual(result.isError, true);
     });
 
     it('should handle plugins with async operations but missing done callback', async function () {
@@ -420,7 +421,7 @@ describe('validate-plugin tool', function () {
       });
 
       const text = result.content[0].text;
-      expect(text).to.include('may cause build issues');
+      assert.ok(text.includes('may cause build issues'));
     });
 
     it('should validate security with environment variable logging', async function () {
@@ -435,7 +436,7 @@ describe('validate-plugin tool', function () {
       });
 
       const text = result.content[0].text;
-      expect(text).to.include('Environment variables in logging');
+      assert.ok(text.includes('Environment variables in logging'));
     });
 
     it('should validate plugin function name setting', async function () {
@@ -450,7 +451,7 @@ describe('validate-plugin tool', function () {
       });
 
       const text = result.content[0].text;
-      expect(text).to.include('Plugin function name set for debugging');
+      assert.ok(text.includes('Plugin function name set for debugging'));
     });
 
     it('should validate chainability patterns', async function () {
@@ -467,7 +468,7 @@ describe('validate-plugin tool', function () {
       });
 
       const text = result.content[0].text;
-      expect(text).to.include('return metalsmith instance');
+      assert.ok(text.includes('return metalsmith instance'));
     });
 
     it('should validate error propagation in async plugins', async function () {
@@ -484,7 +485,7 @@ describe('validate-plugin tool', function () {
       });
 
       const text = result.content[0].text;
-      expect(text).to.include('Proper error propagation in async plugin');
+      assert.ok(text.includes('Proper error propagation in async plugin'));
     });
 
     it('should warn about missing error propagation', async function () {
@@ -501,7 +502,7 @@ describe('validate-plugin tool', function () {
       });
 
       const text = result.content[0].text;
-      expect(text).to.include('should propagate errors via done(err)');
+      assert.ok(text.includes('should propagate errors via done(err)'));
     });
 
     it('should handle validation errors gracefully', async function () {
@@ -519,7 +520,7 @@ describe('validate-plugin tool', function () {
         checks: ['metalsmith-patterns']
       });
 
-      expect(result.isError).to.not.be.true;
+      assert.notEqual(result.isError, true);
       // Should handle errors gracefully
     });
 
@@ -537,9 +538,9 @@ describe('validate-plugin tool', function () {
       });
 
       const text = result.content[0].text;
-      expect(text).to.include('Add default options handling');
-      expect(text).to.include('Set function name for better debugging');
-      expect(text).to.include('Consider using metalsmith.metadata()');
+      assert.ok(text.includes('Add default options handling'));
+      assert.ok(text.includes('Set function name for better debugging'));
+      assert.ok(text.includes('Consider using metalsmith.metadata()'));
     });
 
     it('should handle edge cases in checkStructure', async function () {
@@ -550,7 +551,7 @@ describe('validate-plugin tool', function () {
       });
 
       const text = result.content[0].text;
-      expect(text).to.include('Directory');
+      assert.ok(text.includes('Directory'));
     });
 
     it('should test functional mode complexities', async function () {
@@ -564,7 +565,7 @@ describe('validate-plugin tool', function () {
         functional: true
       });
 
-      expect(result.isError).to.not.be.true;
+      assert.notEqual(result.isError, true);
     });
 
     it('should test deepMerge function with custom validation config', async function () {
@@ -601,7 +602,7 @@ describe('validate-plugin tool', function () {
         checks: ['tests', 'docs']
       });
 
-      expect(result.isError).to.not.be.true;
+      assert.notEqual(result.isError, true);
       // The deepMerge function should have been called to merge the custom config
       // Just check that the validation ran without errors - this will call deepMerge
     });
@@ -631,7 +632,7 @@ describe('validate-plugin tool', function () {
         functional: true
       });
 
-      expect(result.isError).to.not.be.true;
+      assert.notEqual(result.isError, true);
       // The runCommand function should have been called to run the test scripts
     });
 
@@ -660,7 +661,7 @@ describe('validate-plugin tool', function () {
         functional: true
       });
 
-      expect(result.isError).to.not.be.true;
+      assert.notEqual(result.isError, true);
       // Should handle command failures gracefully
     });
 
@@ -719,7 +720,7 @@ describe('validate-plugin tool', function () {
         checks: ['structure']
       });
 
-      expect(result.isError).to.not.be.true;
+      assert.notEqual(result.isError, true);
       // Should analyze complexity correctly
     });
 
@@ -739,7 +740,7 @@ describe('validate-plugin tool', function () {
         checks: ['structure', 'tests', 'docs', 'eslint', 'jsdoc', 'performance', 'security']
       });
 
-      expect(result.isError).to.not.be.true;
+      assert.notEqual(result.isError, true);
       // Should handle missing files gracefully across all check types
     });
 
@@ -761,9 +762,9 @@ describe('validate-plugin tool', function () {
         checks: ['structure']
       });
 
-      expect(result.isError).to.not.be.true;
+      assert.notEqual(result.isError, true);
       const text = result.content[0].text;
-      expect(text).to.include('Recommended file .release-it.json exists');
+      assert.ok(text.includes('Recommended file .release-it.json exists'));
     });
 
     it('should test runCommand with process exit codes', async function () {
@@ -791,7 +792,7 @@ describe('validate-plugin tool', function () {
         functional: true
       });
 
-      expect(result.isError).to.not.be.true;
+      assert.notEqual(result.isError, true);
       // Should handle different command exit codes
     });
 
@@ -821,7 +822,7 @@ describe('validate-plugin tool', function () {
         functional: true
       });
 
-      expect(result.isError).to.not.be.true;
+      assert.notEqual(result.isError, true);
       // Should handle stderr output gracefully
     });
 
@@ -874,7 +875,7 @@ describe('validate-plugin tool', function () {
         checks: ['structure']
       });
 
-      expect(result.isError).to.not.be.true;
+      assert.notEqual(result.isError, true);
       // Should detect and report high complexity
     });
 
@@ -895,7 +896,7 @@ describe('validate-plugin tool', function () {
         checks: ['structure', 'performance', 'security', 'metalsmith-patterns']
       });
 
-      expect(result.isError).to.not.be.true;
+      assert.notEqual(result.isError, true);
       // Should handle missing main file gracefully in all validation checks
     });
 
@@ -913,9 +914,9 @@ describe('validate-plugin tool', function () {
         checks: ['tests']
       });
 
-      expect(result.isError).to.not.be.true;
+      assert.notEqual(result.isError, true);
       const text = result.content[0].text;
-      expect(text).to.include('Test fixtures present');
+      assert.ok(text.includes('Test fixtures present'));
     });
 
     it('should test functional validation with coverage output', async function () {
@@ -943,9 +944,9 @@ describe('validate-plugin tool', function () {
         functional: true
       });
 
-      expect(result.isError).to.not.be.true;
+      assert.notEqual(result.isError, true);
       const text = result.content[0].text;
-      expect(text).to.include('Coverage generated successfully');
+      assert.ok(text.includes('Coverage generated successfully'));
     });
 
     it('should test documentation with all required sections', async function () {
@@ -992,11 +993,11 @@ MIT
         checks: ['docs']
       });
 
-      expect(result.isError).to.not.be.true;
+      assert.notEqual(result.isError, true);
       const text = result.content[0].text;
-      expect(text).to.include('Installation');
-      expect(text).to.include('Usage');
-      expect(text).to.include('Options');
+      assert.ok(text.includes('Installation'));
+      assert.ok(text.includes('Usage'));
+      assert.ok(text.includes('Options'));
     });
 
     it('should test package.json with all recommended fields', async function () {
@@ -1042,9 +1043,9 @@ MIT
         checks: ['package-json']
       });
 
-      expect(result.isError).to.not.be.true;
+      assert.notEqual(result.isError, true);
       const text = result.content[0].text;
-      expect(text).to.include('Plugin name follows convention'); // Should validate the name
+      assert.ok(text.includes('Plugin name follows convention')); // Should validate the name
     });
 
     it('should test all validation with comprehensive plugin', async function () {
@@ -1153,7 +1154,7 @@ MIT
         functional: true // Test all checks in functional mode
       });
 
-      expect(result.isError).to.not.be.true;
+      assert.notEqual(result.isError, true);
       // This comprehensive test should trigger many of the uncovered code paths
     });
 
@@ -1167,7 +1168,7 @@ MIT
         functional: false // Explicitly test non-functional mode
       });
 
-      expect(result.isError).to.not.be.true;
+      assert.notEqual(result.isError, true);
       // Should check recommended directories in traditional mode
     });
 
@@ -1183,9 +1184,9 @@ MIT
         checks: ['structure']
       });
 
-      expect(result.isError).to.not.be.true;
+      assert.notEqual(result.isError, true);
       const text = result.content[0].text;
-      expect(text).to.include('Consider adding'); // Should have recommendations
+      assert.ok(text.includes('Consider adding')); // Should have recommendations
     });
 
     it('should test runCommand spawn error handling', async function () {
@@ -1213,7 +1214,7 @@ MIT
         functional: true
       });
 
-      expect(result.isError).to.not.be.true;
+      assert.notEqual(result.isError, true);
       // Should handle spawn errors gracefully
     });
 
@@ -1266,7 +1267,7 @@ MIT
         functional: true
       });
 
-      expect(result.isError).to.not.be.true;
+      assert.notEqual(result.isError, true);
       // Should analyze complexity and hit edge case paths
     });
 
@@ -1281,7 +1282,7 @@ MIT
         functional: false // Use non-functional mode to trigger different paths
       });
 
-      expect(result.isError).to.not.be.true;
+      assert.notEqual(result.isError, true);
       // Should test various error handling paths
     });
 
@@ -1303,9 +1304,9 @@ MIT
         checks: ['release-notes']
       });
 
-      expect(result.isError).to.not.be.true;
+      assert.notEqual(result.isError, true);
       const text = result.content[0].text;
-      expect(text).to.include('✓ Release-it configured with GitHub auto-generated release notes');
+      assert.ok(text.includes('✓ Release-it configured with GitHub auto-generated release notes'));
     });
 
     it('should detect missing autoGenerate configuration', async function () {
@@ -1325,10 +1326,10 @@ MIT
         checks: ['release-notes']
       });
 
-      expect(result.isError).to.not.be.true;
+      assert.notEqual(result.isError, true);
       const text = result.content[0].text;
-      expect(text).to.include(
-        '💡 Consider setting github.autoGenerate to true in .release-it.json for automatic release notes'
+      assert.ok(
+        text.includes('💡 Consider setting github.autoGenerate to true in .release-it.json for automatic release notes')
       );
     });
   });
@@ -1431,7 +1432,7 @@ import plugin from '../src/index.js';
 
 describe('plugin', () => {
   it('should export a function', () => {
-    expect(plugin).to.be.a('function');
+    assert.equal(typeof plugin, 'function');
   });
 });`
   );

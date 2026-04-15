@@ -424,10 +424,13 @@ For development of the MCP server itself, you can run the unit tests:
 npm test
 
 # Run with coverage
-npm run test:coverage
+npm run coverage
 
-# Run specific test files
-npm test -- --grep "plugin-scaffold"
+# Run a specific test file
+node --test test/plugin-scaffold.test.js
+
+# Filter by test name
+node --test --test-name-pattern="plugin-scaffold" test/*.test.js
 ```
 
-This will run the Mocha test suite and show you detailed test results and coverage information.
+This runs the Node.js native test runner and shows detailed test results and coverage information.

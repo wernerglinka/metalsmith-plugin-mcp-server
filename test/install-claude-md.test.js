@@ -1,5 +1,5 @@
-import { describe, it, before, after } from 'mocha';
-import { expect } from 'chai';
+import { strict as assert } from 'node:assert';
+import { describe, it, before, after } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import fs from 'node:fs/promises';
@@ -99,15 +99,15 @@ This plugin creates blog pagination metadata.`;
     const result = smartMergeClaudeMd(existingContent, templateContent, { hasMcpSection: false });
 
     // Verify the MCP section was added
-    expect(result).to.include('## MCP Server Integration (CRITICAL)');
-    expect(result).to.include('### Essential MCP Commands');
-    expect(result).to.include('### CRITICAL RULES for AI Assistants');
-    expect(result).to.include('list-templates');
+    assert.ok(result.includes('## MCP Server Integration (CRITICAL)'));
+    assert.ok(result.includes('### Essential MCP Commands'));
+    assert.ok(result.includes('### CRITICAL RULES for AI Assistants'));
+    assert.ok(result.includes('list-templates'));
 
     // Verify existing content is preserved
-    expect(result).to.include('Metalsmith Sectioned Blog Pagination - Development Guide');
-    expect(result).to.include('This plugin generates paginated blog landing pages');
-    expect(result).to.include('## Plugin Overview');
+    assert.ok(result.includes('Metalsmith Sectioned Blog Pagination - Development Guide'));
+    assert.ok(result.includes('This plugin generates paginated blog landing pages'));
+    assert.ok(result.includes('## Plugin Overview'));
   });
 
   it('should update existing MCP section correctly', function () {
@@ -142,14 +142,14 @@ My quick commands.`;
     const result = smartMergeClaudeMd(existingContent, templateContent, { hasMcpSection: true });
 
     // Verify MCP section was replaced with new content
-    expect(result).to.include('**IMPORTANT**: Updated MCP content');
-    expect(result).to.include('### Essential MCP Commands');
-    expect(result).to.include('New commands here');
-    expect(result).to.not.include('Old MCP content');
+    assert.ok(result.includes('**IMPORTANT**: Updated MCP content'));
+    assert.ok(result.includes('### Essential MCP Commands'));
+    assert.ok(result.includes('New commands here'));
+    assert.ok(!result.includes('Old MCP content'));
 
     // Verify other sections are preserved
-    expect(result).to.include('## Quick Commands');
-    expect(result).to.include('My quick commands');
+    assert.ok(result.includes('## Quick Commands'));
+    assert.ok(result.includes('My quick commands'));
   });
 
   it('should handle complete MCP section with all subsections', function () {
@@ -210,15 +210,15 @@ This plugin creates blog pagination metadata that works with sectioned/modular p
     const result = smartMergeClaudeMd(beforeContent, templateContent, { hasMcpSection: false });
 
     // The entire MCP section should be present
-    expect(result).to.include('## MCP Server Integration (CRITICAL)');
-    expect(result).to.include('### Essential MCP Commands');
-    expect(result).to.include('list-templates');
-    expect(result).to.include('get-template plugin/CLAUDE.md');
-    expect(result).to.include('### CRITICAL RULES for AI Assistants');
-    expect(result).to.include('**ALWAYS use MCP server templates verbatim**');
+    assert.ok(result.includes('## MCP Server Integration (CRITICAL)'));
+    assert.ok(result.includes('### Essential MCP Commands'));
+    assert.ok(result.includes('list-templates'));
+    assert.ok(result.includes('get-template plugin/CLAUDE.md'));
+    assert.ok(result.includes('### CRITICAL RULES for AI Assistants'));
+    assert.ok(result.includes('**ALWAYS use MCP server templates verbatim**'));
 
     // Original content should still be there
-    expect(result).to.include('Metalsmith Sectioned Blog Pagination - Development Guide');
-    expect(result).to.include('npm test           # Run all tests');
+    assert.ok(result.includes('Metalsmith Sectioned Blog Pagination - Development Guide'));
+    assert.ok(result.includes('npm test           # Run all tests'));
   });
 });

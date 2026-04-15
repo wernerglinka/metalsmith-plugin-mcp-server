@@ -1,4 +1,5 @@
-import { expect } from 'chai';
+import { strict as assert } from 'node:assert';
+import { describe, it, beforeEach, afterEach } from 'node:test';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -21,7 +22,7 @@ describe('generate-configs tool', function () {
       outputPath: tmpDir
     });
 
-    expect(result.isError).to.not.be.true;
+    assert.notEqual(result.isError, true);
 
     // Check default configs were created
     const expectedFiles = ['eslint.config.js', 'prettier.config.js', '.editorconfig', '.gitignore'];
@@ -32,7 +33,7 @@ describe('generate-configs tool', function () {
         .access(filePath)
         .then(() => true)
         .catch(() => false);
-      expect(exists).to.be.true;
+      assert.equal(exists, true);
     }
   });
 
@@ -42,7 +43,7 @@ describe('generate-configs tool', function () {
       configs: ['eslint', 'release-it']
     });
 
-    expect(result.isError).to.not.be.true;
+    assert.notEqual(result.isError, true);
 
     // Check specific configs
     const eslintExists = await fs
@@ -54,15 +55,15 @@ describe('generate-configs tool', function () {
       .then(() => true)
       .catch(() => false);
 
-    expect(eslintExists).to.be.true;
-    expect(releaseItExists).to.be.true;
+    assert.equal(eslintExists, true);
+    assert.equal(releaseItExists, true);
 
     // Check that prettier was not created
     const prettierExists = await fs
       .access(path.join(tmpDir, 'prettier.config.js'))
       .then(() => true)
       .catch(() => false);
-    expect(prettierExists).to.be.false;
+    assert.equal(prettierExists, false);
   });
 
   it('should not overwrite existing files', async function () {
@@ -77,11 +78,11 @@ describe('generate-configs tool', function () {
 
     // Should report error for existing file
     const text = result.content[0].text;
-    expect(text).to.include('already exists');
+    assert.ok(text.includes('already exists'));
 
     // Check file wasn't overwritten
     const content = await fs.readFile(path.join(tmpDir, 'eslint.config.js'), 'utf-8');
-    expect(content).to.equal(existingContent);
+    assert.equal(content, existingContent);
   });
 
   it('should validate ESLint config content', async function () {
@@ -93,10 +94,10 @@ describe('generate-configs tool', function () {
     const content = await fs.readFile(path.join(tmpDir, 'eslint.config.js'), 'utf-8');
 
     // Check for modern flat config structure
-    expect(content).to.include('export default');
-    expect(content).to.include('@eslint/js');
-    expect(content).to.include('languageOptions');
-    expect(content).to.include('ecmaVersion: 2024');
+    assert.ok(content.includes('export default'));
+    assert.ok(content.includes('@eslint/js'));
+    assert.ok(content.includes('languageOptions'));
+    assert.ok(content.includes('ecmaVersion: 2024'));
   });
 
   it('should validate Prettier config content', async function () {
@@ -108,10 +109,10 @@ describe('generate-configs tool', function () {
     const content = await fs.readFile(path.join(tmpDir, 'prettier.config.js'), 'utf-8');
 
     // Check for key prettier options
-    expect(content).to.include('printWidth');
-    expect(content).to.include('singleQuote');
-    expect(content).to.include('trailingComma');
-    expect(content).to.include('endOfLine');
+    assert.ok(content.includes('printWidth'));
+    assert.ok(content.includes('singleQuote'));
+    assert.ok(content.includes('trailingComma'));
+    assert.ok(content.includes('endOfLine'));
   });
 
   it('should handle unknown config types', async function () {
@@ -121,7 +122,7 @@ describe('generate-configs tool', function () {
     });
 
     const text = result.content[0].text;
-    expect(text).to.include('Unknown config type');
+    assert.ok(text.includes('Unknown config type'));
   });
 
   it('should create output directory if it does not exist', async function () {
@@ -132,13 +133,13 @@ describe('generate-configs tool', function () {
       configs: ['gitignore']
     });
 
-    expect(result.isError).to.not.be.true;
+    assert.notEqual(result.isError, true);
 
     const gitignoreExists = await fs
       .access(path.join(nestedPath, '.gitignore'))
       .then(() => true)
       .catch(() => false);
-    expect(gitignoreExists).to.be.true;
+    assert.equal(gitignoreExists, true);
   });
 
   it('should handle mix of valid and invalid config types', async function () {
@@ -148,11 +149,11 @@ describe('generate-configs tool', function () {
     });
 
     const text = result.content[0].text;
-    expect(text).to.include('Generated files:');
-    expect(text).to.include('eslint.config.js');
-    expect(text).to.include('prettier.config.js');
-    expect(text).to.include('Errors:');
-    expect(text).to.include('Unknown config type: invalid-config');
+    assert.ok(text.includes('Generated files:'));
+    assert.ok(text.includes('eslint.config.js'));
+    assert.ok(text.includes('prettier.config.js'));
+    assert.ok(text.includes('Errors:'));
+    assert.ok(text.includes('Unknown config type: invalid-config'));
   });
 
   it('should generate all available config types', async function () {
@@ -161,7 +162,7 @@ describe('generate-configs tool', function () {
       configs: ['eslint', 'prettier', 'editorconfig', 'gitignore', 'release-it']
     });
 
-    expect(result.isError).to.not.be.true;
+    assert.notEqual(result.isError, true);
 
     const expectedFiles = ['eslint.config.js', 'prettier.config.js', '.editorconfig', '.gitignore', '.release-it.json'];
 
@@ -170,7 +171,7 @@ describe('generate-configs tool', function () {
         .access(path.join(tmpDir, file))
         .then(() => true)
         .catch(() => false);
-      expect(exists).to.be.true;
+      assert.equal(exists, true);
     }
   });
 
@@ -187,7 +188,7 @@ describe('generate-configs tool', function () {
 
     // Should handle the error gracefully
     const text = result.content[0].text;
-    expect(text).to.include('Failed to generate eslint');
+    assert.ok(text.includes('Failed to generate eslint'));
 
     // Restore permissions for cleanup
     await fs.chmod(readOnlyPath, 0o755);
@@ -199,7 +200,7 @@ describe('generate-configs tool', function () {
       configs: ['release-it']
     });
 
-    expect(result.isError).to.not.be.true;
+    assert.notEqual(result.isError, true);
 
     // Check release-it config content
     const releaseItPath = path.join(tmpDir, '.release-it.json');
@@ -207,8 +208,8 @@ describe('generate-configs tool', function () {
     const releaseItConfig = JSON.parse(releaseItContent);
 
     // Should use GitHub's auto-generated release notes
-    expect(releaseItConfig.github.autoGenerate).to.be.true;
-    expect(releaseItConfig.npm.publish).to.be.false;
-    expect(releaseItConfig.github.releaseNotes).to.be.undefined;
+    assert.equal(releaseItConfig.github.autoGenerate, true);
+    assert.equal(releaseItConfig.npm.publish, false);
+    assert.equal(releaseItConfig.github.releaseNotes, undefined);
   });
 });
