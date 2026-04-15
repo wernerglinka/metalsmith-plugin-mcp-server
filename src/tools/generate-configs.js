@@ -11,7 +11,7 @@ import { sanitizePath } from '../utils/path-security.js';
  * @returns {Promise<Object>} Tool response
  */
 export async function generateConfigsTool(args) {
-  const { outputPath: userPath = '.', configs = ['eslint', 'prettier', 'editorconfig', 'gitignore'] } = args;
+  const { outputPath: userPath = '.', configs = ['biome', 'editorconfig', 'gitignore'] } = args;
 
   // Sanitize the output path to prevent traversal attacks
   const outputPath = sanitizePath(userPath, process.cwd());
@@ -27,14 +27,9 @@ export async function generateConfigsTool(args) {
     for (const config of configs) {
       try {
         switch (config) {
-          case 'eslint':
-            await generateEslintConfig(outputPath);
-            generated.push('eslint.config.js');
-            break;
-
-          case 'prettier':
-            await generatePrettierConfig(outputPath);
-            generated.push('prettier.config.js');
+          case 'biome':
+            await generateBiomeConfig(outputPath);
+            generated.push('biome.json');
             break;
 
           case 'editorconfig':
@@ -102,154 +97,102 @@ export async function generateConfigsTool(args) {
 }
 
 /**
- * Generate modern ESLint flat config
+ * Generate Biome config (lint + format in one tool)
  */
-async function generateEslintConfig(outputPath) {
-  const configPath = path.join(outputPath, 'eslint.config.js');
+async function generateBiomeConfig(outputPath) {
+  const configPath = path.join(outputPath, 'biome.json');
 
-  // Check if already exists
   try {
     await fs.access(configPath);
-    throw new Error('eslint.config.js already exists');
+    throw new Error('biome.json already exists');
   } catch (error) {
     if (error.code !== 'ENOENT') {
       throw error;
     }
   }
 
-  const config = `import js from '@eslint/js';
-import globals from 'globals';
-
-export default [
-  js.configs.recommended,
-  {
-    languageOptions: {
-      ecmaVersion: 2024,
-      sourceType: 'module',
-      globals: {
-        ...globals.node,
-        ...globals.mocha,
-      },
+  const config = {
+    $schema: 'https://biomejs.dev/schemas/2.4.12/schema.json',
+    vcs: {
+      enabled: true,
+      clientKind: 'git',
+      useIgnoreFile: true
     },
-    rules: {
-      // Error prevention
-      'no-console': ['error', { allow: ['warn', 'error'] }],
-      'no-debugger': 'error',
-      'no-alert': 'error',
-      
-      // Best practices
-      'curly': ['error', 'all'],
-      'eqeqeq': ['error', 'always'],
-      'no-eval': 'error',
-      'no-implied-eval': 'error',
-      'no-new-func': 'error',
-      'no-return-await': 'error',
-      'prefer-promise-reject-errors': 'error',
-      'require-await': 'error',
-      
-      // Code style
-      'array-bracket-spacing': ['error', 'never'],
-      'brace-style': ['error', '1tbs', { allowSingleLine: true }],
-      'comma-dangle': ['error', 'always-multiline'],
-      'comma-spacing': ['error', { before: false, after: true }],
-      'func-call-spacing': ['error', 'never'],
-      'indent': ['error', 2],
-      'key-spacing': ['error', { beforeColon: false, afterColon: true }],
-      'keyword-spacing': ['error', { before: true, after: true }],
-      'linebreak-style': ['error', 'unix'],
-      'no-trailing-spaces': 'error',
-      'object-curly-spacing': ['error', 'always'],
-      'quotes': ['error', 'single', { avoidEscape: true }],
-      'semi': ['error', 'always'],
-      'space-before-blocks': ['error', 'always'],
-      'space-before-function-paren': ['error', {
-        anonymous: 'always',
-        named: 'never',
-        asyncArrow: 'always',
-      }],
-      'space-in-parens': ['error', 'never'],
-      'space-infix-ops': 'error',
-      
-      // ES6+
-      'arrow-spacing': ['error', { before: true, after: true }],
-      'no-var': 'error',
-      'prefer-const': ['error', { destructuring: 'all' }],
-      'prefer-template': 'error',
-      'template-curly-spacing': ['error', 'never'],
+    files: {
+      ignoreUnknown: false,
+      includes: [
+        '**',
+        '!**/node_modules',
+        '!**/coverage',
+        '!**/lib',
+        '!**/test/fixtures',
+        '!**/package-lock.json',
+        '!**/CHANGELOG.md'
+      ]
     },
-  },
-  {
-    files: ['test/**/*.js'],
-    rules: {
-      'no-unused-expressions': 'off', // For chai assertions
+    formatter: {
+      enabled: true,
+      indentStyle: 'space',
+      indentWidth: 2,
+      lineEnding: 'lf',
+      lineWidth: 120
     },
-  },
-];
-`;
-
-  await fs.writeFile(configPath, config);
-}
-
-/**
- * Generate Prettier config
- */
-async function generatePrettierConfig(outputPath) {
-  const configPath = path.join(outputPath, 'prettier.config.js');
-
-  try {
-    await fs.access(configPath);
-    throw new Error('prettier.config.js already exists');
-  } catch (error) {
-    if (error.code !== 'ENOENT') {
-      throw error;
-    }
-  }
-
-  const config = `export default {
-  // Line length
-  printWidth: 100,
-  
-  // Indentation
-  tabWidth: 2,
-  useTabs: false,
-  
-  // Semicolons
-  semi: true,
-  
-  // Quotes
-  singleQuote: true,
-  quoteProps: 'as-needed',
-  
-  // Trailing commas
-  trailingComma: 'es5',
-  
-  // Brackets
-  bracketSpacing: true,
-  bracketSameLine: false,
-  
-  // Arrow functions
-  arrowParens: 'always',
-  
-  // Line endings
-  endOfLine: 'lf',
-  
-  // HTML/Markdown
-  proseWrap: 'preserve',
-  htmlWhitespaceSensitivity: 'css',
-  
-  // Special files
-  overrides: [
-    {
-      files: '*.md',
-      options: {
-        proseWrap: 'always',
-      },
+    javascript: {
+      formatter: {
+        quoteStyle: 'single',
+        trailingCommas: 'none',
+        semicolons: 'always',
+        bracketSpacing: true,
+        arrowParentheses: 'always'
+      }
     },
-  ],
-};
-`;
+    linter: {
+      enabled: true,
+      rules: {
+        recommended: true,
+        complexity: {
+          useArrowFunction: 'off',
+          useOptionalChain: 'off'
+        },
+        suspicious: {
+          noConsole: {
+            level: 'error',
+            options: { allow: ['warn', 'error'] }
+          },
+          noDebugger: 'error',
+          noDoubleEquals: 'error'
+        },
+        security: {
+          noGlobalEval: 'error'
+        },
+        style: {
+          useConst: 'error',
+          useTemplate: 'error',
+          useBlockStatements: 'error'
+        }
+      }
+    },
+    assist: {
+      enabled: true,
+      actions: {
+        source: {
+          organizeImports: 'off'
+        }
+      }
+    },
+    overrides: [
+      {
+        includes: ['test/**/*.js', 'test/**/*.cjs'],
+        linter: {
+          rules: {
+            suspicious: { noConsole: 'off' }
+          }
+        }
+      }
+    ]
+  };
 
-  await fs.writeFile(configPath, config);
+  await fs.writeFile(configPath, `${JSON.stringify(config, null, 2)}\n`);
 }
 
 /**
@@ -280,7 +223,7 @@ insert_final_newline = true
 trim_trailing_whitespace = true
 
 # JavaScript/JSON files
-[*.{js,json}]
+[*.{js,cjs,mjs,json}]
 indent_style = space
 indent_size = 2
 
@@ -294,7 +237,7 @@ indent_style = space
 indent_size = 2
 
 # Package files
-[{package.json,.prettierrc,.eslintrc}]
+[{package.json,biome.json}]
 indent_style = space
 indent_size = 2
 
@@ -327,11 +270,11 @@ node_modules/
 # Build output
 dist/
 build/
+lib/
 out/
 
 # Test coverage
 coverage/
-.nyc_output/
 
 # Logs
 logs/
@@ -369,8 +312,6 @@ temp/
 
 # Cache
 .cache/
-.eslintcache
-.prettierignore
 
 # Test artifacts
 test-results/
@@ -396,7 +337,7 @@ async function generateReleaseItConfig(outputPath) {
 
   const config = {
     hooks: {
-      'before:init': ['npm run lint', 'npm test'],
+      'before:init': ['npm run lint:check', 'npm test'],
       'after:bump':
         "npx auto-changelog -p --commit-limit false --ignore-commit-pattern '^((dev|chore|ci):|Release)' && git add CHANGELOG.md",
       'after:release': 'echo Successfully released ${name} v${version} to ${repo.repository}.'

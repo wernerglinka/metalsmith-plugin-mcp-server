@@ -1,24 +1,24 @@
-const { describe, it } = require('mocha');
-const assert = require('node:assert');
+const { describe, it } = require('node:test');
+const assert = require('node:assert/strict');
 const {{ camelCase(pluginNameShort) }} = require('../lib/index.cjs');
 
-describe('{{ pluginName }} (CommonJS)', function() {
-  it('should be a function', function() {
-    assert.strictEqual(typeof {{ camelCase(pluginNameShort) }}, 'function');
-  });
-  
-  it('should return a function', function() {
-    const plugin = {{ camelCase(pluginNameShort) }}();
-    assert.strictEqual(typeof plugin, 'function');
-    assert.strictEqual(plugin.length, 3); // files, metalsmith, done
+describe('{{ pluginName }} (CommonJS)', () => {
+  it('should be a function', () => {
+    assert.equal(typeof {{ camelCase(pluginNameShort) }}, 'function');
   });
 
-  it('should work with default options', function() {
+  it('should return a function', () => {
+    const plugin = {{ camelCase(pluginNameShort) }}();
+    assert.equal(typeof plugin, 'function');
+    assert.equal(plugin.length, 3); // files, metalsmith, done
+  });
+
+  it('should work with default options', () => {
     const plugin = {{ camelCase(pluginNameShort) }}();
     assert.ok(plugin);
   });
 
-  it('should accept options', function() {
+  it('should accept options', () => {
     const plugin = {{ camelCase(pluginNameShort) }}({ pattern: '*.md' });
     assert.ok(plugin);
   });

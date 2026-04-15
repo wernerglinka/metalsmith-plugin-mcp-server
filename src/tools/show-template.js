@@ -55,11 +55,8 @@ function getTemplate(template) {
     case 'package-scripts':
       return getPackageScriptsTemplate();
 
-    case 'eslint':
-      return getEslintTemplate();
-
-    case 'prettier':
-      return getPrettierTemplate();
+    case 'biome':
+      return getBiomeTemplate();
 
     case 'gitignore':
       return getGitignoreTemplate();
@@ -87,26 +84,19 @@ function getUsageNotes(template) {
 
     case 'package-scripts':
       return [
-        '  • Scripts use secure shell script for GitHub token handling',
-        '  • ./scripts/release.sh should export GH_TOKEN="$(gh auth token)"',
-        '  • --ci flag bypasses interactive prompts for automated releases',
-        '  • Requires release-it and GitHub CLI to be installed'
+        '  • Tests run via the native node:test runner (no mocha/chai required)',
+        '  • Coverage uses --experimental-test-coverage (Node >= 22)',
+        '  • Lint + format handled by a single tool: @biomejs/biome',
+        '  • Release script handles GitHub token securely via gh CLI',
+        '  • --ci flag bypasses interactive prompts for automated releases'
       ];
 
-    case 'eslint':
+    case 'biome':
       return [
-        '  • Uses modern ESLint flat config format (eslint.config.js)',
-        '  • Configured for Node.js and Mocha test environments',
-        '  • Includes comprehensive style and best practice rules',
-        '  • Special rules for test files to allow Chai assertions'
-      ];
-
-    case 'prettier':
-      return [
-        '  • Consistent formatting across JavaScript and Markdown files',
-        '  • Uses single quotes and trailing commas for ES5 compatibility',
-        '  • Special Markdown formatting rules for better readability',
-        '  • Integrates well with ESLint configuration'
+        '  • Single tool replaces both ESLint and Prettier',
+        '  • Run `npx biome check --write .` to lint + format in one pass',
+        '  • Run `npx biome format .` for format-only checks',
+        '  • Respects .gitignore via vcs.useIgnoreFile'
       ];
 
     case 'gitignore':
@@ -155,7 +145,7 @@ function getReleaseItTemplate() {
       publishPath: '.'
     },
     hooks: {
-      'before:init': ['gh auth status', 'npm test', 'npm run lint'],
+      'before:init': ['gh auth status', 'npm test', 'npm run lint:check'],
       'after:release': 'echo "✅ Successfully released ${name} v${version}"'
     }
   };
@@ -164,18 +154,25 @@ function getReleaseItTemplate() {
 }
 
 /**
- * Get package.json scripts template with secure release handling
+ * Get package.json scripts template with native test runner and biome
  */
 function getPackageScriptsTemplate() {
   const scripts = {
+    build:
+      'microbundle --entry src/index.js --output lib/index.js --target node -f esm,cjs --strict --generateTypes=false',
+    test: "node --test --test-timeout=15000 'test/**/*.test.js' 'test/**/*.test.cjs'",
+    'test:esm': "node --test --test-timeout=15000 'test/**/*.test.js'",
+    'test:cjs': "npm run build && node --test --test-timeout=15000 'test/**/*.test.cjs'",
+    coverage:
+      "node --test --experimental-test-coverage --test-reporter=spec --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=coverage/lcov.info --test-timeout=15000 'test/**/*.test.js' 'test/**/*.test.cjs'",
+    lint: 'biome check --write .',
+    'lint:check': 'biome check .',
+    format: 'biome format --write .',
+    'format:check': 'biome format .',
     'release:patch': './scripts/release.sh patch --ci',
     'release:minor': './scripts/release.sh minor --ci',
     'release:major': './scripts/release.sh major --ci',
-    'release:check': 'npm run lint:check && ./scripts/release.sh patch --dry-run',
-    lint: 'eslint --fix .',
-    'lint:check': 'eslint --fix-dry-run .',
-    test: 'mocha test/**/*.test.js',
-    coverage: 'c8 --include=src/**/*.js --reporter=lcov --reporter=text-summary mocha test/**/*.test.js'
+    'release:check': 'npm run lint:check && npm run build && release-it --dry-run'
   };
 
   return `Add these scripts to your package.json:
@@ -190,125 +187,75 @@ npx release-it $1 $2`;
 }
 
 /**
- * Get ESLint flat config template
+ * Get Biome config template
  */
-function getEslintTemplate() {
-  return `import js from '@eslint/js';
-import globals from 'globals';
+function getBiomeTemplate() {
+  const config = {
+    $schema: 'https://biomejs.dev/schemas/2.4.12/schema.json',
+    vcs: {
+      enabled: true,
+      clientKind: 'git',
+      useIgnoreFile: true
+    },
+    files: {
+      ignoreUnknown: false,
+      includes: [
+        '**',
+        '!**/node_modules',
+        '!**/coverage',
+        '!**/lib',
+        '!**/test/fixtures',
+        '!**/package-lock.json',
+        '!**/CHANGELOG.md'
+      ]
+    },
+    formatter: {
+      enabled: true,
+      indentStyle: 'space',
+      indentWidth: 2,
+      lineEnding: 'lf',
+      lineWidth: 120
+    },
+    javascript: {
+      formatter: {
+        quoteStyle: 'single',
+        trailingCommas: 'none',
+        semicolons: 'always',
+        bracketSpacing: true,
+        arrowParentheses: 'always'
+      }
+    },
+    linter: {
+      enabled: true,
+      rules: {
+        recommended: true,
+        suspicious: {
+          noConsole: {
+            level: 'error',
+            options: { allow: ['warn', 'error'] }
+          },
+          noDebugger: 'error',
+          noDoubleEquals: 'error'
+        },
+        security: {
+          noGlobalEval: 'error'
+        },
+        style: {
+          useConst: 'error',
+          useTemplate: 'error',
+          useBlockStatements: 'error'
+        }
+      }
+    },
+    overrides: [
+      {
+        includes: ['test/**/*.js', 'test/**/*.cjs'],
+        linter: { rules: { suspicious: { noConsole: 'off' } } }
+      }
+    ]
+  };
 
-export default [
-  js.configs.recommended,
-  {
-    languageOptions: {
-      ecmaVersion: 2024,
-      sourceType: 'module',
-      globals: {
-        ...globals.node,
-        ...globals.mocha,
-      },
-    },
-    rules: {
-      // Error prevention
-      'no-console': ['error', { allow: ['warn', 'error'] }],
-      'no-debugger': 'error',
-      'no-alert': 'error',
-      
-      // Best practices
-      'curly': ['error', 'all'],
-      'eqeqeq': ['error', 'always'],
-      'no-eval': 'error',
-      'no-implied-eval': 'error',
-      'no-new-func': 'error',
-      'no-return-await': 'error',
-      'prefer-promise-reject-errors': 'error',
-      'require-await': 'error',
-      
-      // Code style
-      'array-bracket-spacing': ['error', 'never'],
-      'brace-style': ['error', '1tbs', { allowSingleLine: true }],
-      'comma-dangle': ['error', 'always-multiline'],
-      'comma-spacing': ['error', { before: false, after: true }],
-      'func-call-spacing': ['error', 'never'],
-      'indent': ['error', 2],
-      'key-spacing': ['error', { beforeColon: false, afterColon: true }],
-      'keyword-spacing': ['error', { before: true, after: true }],
-      'linebreak-style': ['error', 'unix'],
-      'no-trailing-spaces': 'error',
-      'object-curly-spacing': ['error', 'always'],
-      'quotes': ['error', 'single', { avoidEscape: true }],
-      'semi': ['error', 'always'],
-      'space-before-blocks': ['error', 'always'],
-      'space-before-function-paren': ['error', {
-        anonymous: 'always',
-        named: 'never',
-        asyncArrow: 'always',
-      }],
-      'space-in-parens': ['error', 'never'],
-      'space-infix-ops': 'error',
-      
-      // ES6+
-      'arrow-spacing': ['error', { before: true, after: true }],
-      'no-var': 'error',
-      'prefer-const': ['error', { destructuring: 'all' }],
-      'prefer-template': 'error',
-      'template-curly-spacing': ['error', 'never'],
-    },
-  },
-  {
-    files: ['test/**/*.js'],
-    rules: {
-      'no-unused-expressions': 'off', // For chai assertions
-    },
-  },
-];`;
-}
-
-/**
- * Get Prettier config template
- */
-function getPrettierTemplate() {
-  return `export default {
-  // Line length
-  printWidth: 100,
-  
-  // Indentation
-  tabWidth: 2,
-  useTabs: false,
-  
-  // Semicolons
-  semi: true,
-  
-  // Quotes
-  singleQuote: true,
-  quoteProps: 'as-needed',
-  
-  // Trailing commas
-  trailingComma: 'es5',
-  
-  // Brackets
-  bracketSpacing: true,
-  bracketSameLine: false,
-  
-  // Arrow functions
-  arrowParens: 'always',
-  
-  // Line endings
-  endOfLine: 'lf',
-  
-  // HTML/Markdown
-  proseWrap: 'preserve',
-  htmlWhitespaceSensitivity: 'css',
-  
-  // Special files
-  overrides: [
-    {
-      files: '*.md',
-      options: {
-        proseWrap: 'always',
-      },
-    },
-  ],
-};`;
+  return JSON.stringify(config, null, 2);
 }
 
 /**
@@ -321,11 +268,11 @@ node_modules/
 # Build output
 dist/
 build/
+lib/
 out/
 
 # Test coverage
 coverage/
-.nyc_output/
 
 # Logs
 logs/
@@ -363,8 +310,6 @@ temp/
 
 # Cache
 .cache/
-.eslintcache
-.prettierignore
 
 # Test artifacts
 test-results/`;
@@ -387,7 +332,7 @@ insert_final_newline = true
 trim_trailing_whitespace = true
 
 # JavaScript/JSON files
-[*.{js,json}]
+[*.{js,cjs,mjs,json}]
 indent_style = space
 indent_size = 2
 
@@ -401,7 +346,7 @@ indent_style = space
 indent_size = 2
 
 # Package files
-[{package.json,.prettierrc,.eslintrc}]
+[{package.json,biome.json}]
 indent_style = space
 indent_size = 2
 

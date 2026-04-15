@@ -31,42 +31,34 @@
   "scripts": {
     "build": "microbundle --entry src/index.js --output lib/index.js --target node -f esm,cjs --strict --generateTypes=false",
     "changelog": "auto-changelog -u --commit-limit false --ignore-commit-pattern '^((dev|chore|ci):|Release)'",
-    "coverage": "c8 --include=src/**/*.js --reporter=lcov --reporter=text-summary mocha 'test/index.js' 'test/cjs.test.cjs' -t 15000",
-    "format": "prettier --write \"**/*.{yml,md,js,json}\"",
-    "format:check": "prettier --list-different \"**/*.{yml,md,js,json}\"",
-    "lint": "eslint --fix .",
-    "lint:check": "eslint --fix-dry-run .",
-    "pre-release": "npm run lint && npm run format:check && npm test && npx metalsmith-plugin-mcp-server validate .",
+    "test": "node --test --test-timeout=15000 'test/**/*.test.js' 'test/**/*.test.cjs'",
+    "test:esm": "node --test --test-timeout=15000 'test/**/*.test.js'",
+    "test:cjs": "npm run build && node --test --test-timeout=15000 'test/**/*.test.cjs'",
+    "coverage": "node --test --experimental-test-coverage --test-reporter=spec --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=coverage/lcov.info --test-timeout=15000 'test/**/*.test.js' 'test/**/*.test.cjs'",
+    "test:coverage": "npm run coverage",
+    "format": "biome format --write .",
+    "format:check": "biome format .",
+    "lint": "biome check --write .",
+    "lint:check": "biome check .",
+    "pre-release": "npm run lint:check && npm run format:check && npm test && npx metalsmith-plugin-mcp-server validate .",
     "prepublishOnly": "npm run build",
     "release:patch": "./scripts/release.sh patch --ci",
     "release:minor": "./scripts/release.sh minor --ci",
     "release:major": "./scripts/release.sh major --ci",
     "release:check": "npm run lint:check && npm run build && release-it --dry-run",
-    "test": "c8 --include=src/**/*.js mocha 'test/index.js' 'test/cjs.test.cjs' -t 15000",
-    "test:coverage": "c8 npm test",
-    "test:esm": "c8 --include=src/**/*.js mocha test/index.js -t 15000",
-    "test:cjs": "c8 --include=src/**/*.js mocha test/cjs.test.cjs -t 15000",
     "depcheck": "depcheck"
-  },
-  "mocha": {
-    "timeout": 10000
   },
   "dependencies": {},
   "devDependencies": {
+    "@biomejs/biome": "^2.4.12",
     "auto-changelog": "^2.5.0",
-    "c8": "^10.1.3",
     "depcheck": "^1.4.0",
-    "eslint": "^9.22.0",
-    "eslint-config-prettier": "^10.1.1",
-    "eslint-plugin-prettier": "^5.2.3",
     "metalsmith": "^2.5.0",
     "microbundle": "^0.15.1",
-    "mocha": "^11.2.2",
-    "prettier": "^3.5.3",
-    "release-it": "^19.0.2"
+    "release-it": "^20.0.0"
   },
   "engines": {
-    "node": ">= 18.0.0"
+    "node": ">= 22.0.0"
   },
   "publishConfig": {
     "access": "public"

@@ -151,7 +151,7 @@ ${aiInstructions ? `\n${aiInstructions}` : ''}`,
               'tests',
               'docs',
               'package-json',
-              'eslint',
+              'biome',
               'coverage',
               'jsdoc',
               'performance',
@@ -201,10 +201,10 @@ ${aiInstructions ? `\n${aiInstructions}` : ''}`,
           type: 'array',
           items: {
             type: 'string',
-            enum: ['eslint', 'prettier', 'editorconfig', 'gitignore', 'release-it']
+            enum: ['biome', 'editorconfig', 'gitignore', 'release-it']
           },
           description: 'Configuration files to generate',
-          default: ['eslint', 'prettier', 'editorconfig', 'gitignore']
+          default: ['biome', 'editorconfig', 'gitignore']
         }
       },
       required: []
@@ -218,7 +218,7 @@ ${aiInstructions ? `\n${aiInstructions}` : ''}`,
       properties: {
         template: {
           type: 'string',
-          enum: ['release-it', 'package-scripts', 'eslint', 'prettier', 'gitignore', 'editorconfig'],
+          enum: ['release-it', 'package-scripts', 'biome', 'gitignore', 'editorconfig'],
           description: 'Template to display'
         }
       },

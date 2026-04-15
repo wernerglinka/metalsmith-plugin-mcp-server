@@ -51,8 +51,7 @@ describe('plugin-scaffold tool', function () {
       'README.md',
       'src/index.js',
       'test/index.test.js',
-      'eslint.config.js',
-      'prettier.config.js',
+      'biome.json',
       '.editorconfig',
       '.gitignore',
       'scripts/release.sh'

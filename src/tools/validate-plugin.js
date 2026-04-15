@@ -225,8 +225,8 @@ export async function validatePluginTool(args) {
         case 'release-notes':
           await checkReleaseNotes(pluginPath, results);
           break;
-        case 'eslint':
-          await checkEslint(pluginPath, results);
+        case 'biome':
+          await checkBiome(pluginPath, results);
           break;
         case 'coverage':
           await checkCoverage(pluginPath, results, functional, config);
@@ -824,13 +824,17 @@ async function checkPackageJson(pluginPath, results, config) {
         }
       } else {
         if (script === 'lint') {
-          results.recommendations.push(`💡 Consider adding script: ${script}. Example: "lint": "eslint src test"`);
+          results.recommendations.push(
+            `💡 Consider adding script: ${script}. Example: "lint": "biome check --write ."`
+          );
         } else if (script === 'format') {
           results.recommendations.push(
-            `💡 Consider adding script: ${script}. Example: "format": "prettier --write src test"`
+            `💡 Consider adding script: ${script}. Example: "format": "biome format --write ."`
           );
         } else if (script === 'test:coverage') {
-          results.recommendations.push(`💡 Consider adding script: ${script}. Example: "test:coverage": "c8 npm test"`);
+          results.recommendations.push(
+            `💡 Consider adding script: ${script}. Example: "test:coverage": "node --test --experimental-test-coverage --test-reporter=spec --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=coverage/lcov.info 'test/**/*.test.js'"`
+          );
         } else if (script.startsWith('release:')) {
           const releaseType = script.split(':')[1];
           if (claudeAnalysis.exists && claudeAnalysis.approvedTokenPattern === 'npm-script-with-gh-token') {
@@ -850,6 +854,17 @@ async function checkPackageJson(pluginPath, results, config) {
           results.recommendations.push(`💡 Consider adding script: ${script}`);
         }
       }
+    }
+
+    // Flag legacy toolchain dependencies as modernization opportunities
+    const legacyDeps = ['mocha', 'chai', 'c8', 'nyc', 'eslint', 'prettier'];
+    const foundLegacy = legacyDeps.filter(
+      (dep) => packageJson.devDependencies?.[dep] || packageJson.dependencies?.[dep]
+    );
+    if (foundLegacy.length > 0) {
+      results.recommendations.push(
+        `💡 Legacy toolchain detected in dependencies (${foundLegacy.join(', ')}). Consider modernizing to @biomejs/biome (lint + format) and the native node:test runner. See: show-template biome`
+      );
     }
 
     // Check for release-it dependency
@@ -948,37 +963,41 @@ async function checkPackageJson(pluginPath, results, config) {
 }
 
 /**
- * Check ESLint configuration
+ * Check Biome configuration (modern unified lint + format tool)
  */
-async function checkEslint(pluginPath, results) {
-  const eslintFiles = ['eslint.config.js', '.eslintrc.js', '.eslintrc.json'];
-  let found = false;
-
-  for (const file of eslintFiles) {
-    try {
-      await fs.access(path.join(pluginPath, file));
-      results.passed.push(`✓ ESLint configuration found: ${file}`);
-      found = true;
-      break;
-    } catch {
-      // Continue checking
-    }
-  }
-
-  if (!found) {
-    results.recommendations.push(
-      `💡 Consider adding ESLint configuration. Generate with: npx metalsmith-plugin-mcp-server scaffold ${
-        pluginPath
-      } eslint.config.js eslint`
-    );
-  }
-
-  // Check for modern flat config
+async function checkBiome(pluginPath, results) {
   try {
-    await fs.access(path.join(pluginPath, 'eslint.config.js'));
-    results.passed.push('✓ Using modern ESLint flat config');
+    await fs.access(path.join(pluginPath, 'biome.json'));
+    results.passed.push('✓ Biome configuration found (biome.json)');
   } catch {
-    // Not using flat config
+    // Flag legacy ESLint/Prettier setup as a modernization opportunity
+    const legacyFiles = [
+      'eslint.config.js',
+      '.eslintrc.js',
+      '.eslintrc.json',
+      'prettier.config.js',
+      '.prettierrc',
+      '.prettierrc.json'
+    ];
+    const legacy = [];
+    for (const file of legacyFiles) {
+      try {
+        await fs.access(path.join(pluginPath, file));
+        legacy.push(file);
+      } catch {
+        // Not present
+      }
+    }
+
+    if (legacy.length > 0) {
+      results.recommendations.push(
+        `💡 Legacy lint/format config detected (${legacy.join(', ')}). Consider migrating to Biome. Generate with: npx metalsmith-plugin-mcp-server configs . --configs biome`
+      );
+    } else {
+      results.recommendations.push(
+        '💡 Consider adding a Biome configuration for lint + format. Generate with: npx metalsmith-plugin-mcp-server configs . --configs biome'
+      );
+    }
   }
 }
 
@@ -1462,8 +1481,9 @@ async function checkCoverage(pluginPath, results, _functional = false, config) {
       }
     }
 
-    // Check for coverage configuration
-    const coverageConfigExists = await Promise.all([
+    // Check coverage approach: prefer native node:test coverage (no config file needed).
+    // Legacy c8/nyc configs are still accepted but flagged as a modernization opportunity.
+    const [hasC8, hasNyc, hasNycJson] = await Promise.all([
       fs
         .access(path.join(pluginPath, '.c8rc.json'))
         .then(() => true)
@@ -1476,14 +1496,26 @@ async function checkCoverage(pluginPath, results, _functional = false, config) {
         .access(path.join(pluginPath, '.nycrc.json'))
         .then(() => true)
         .catch(() => false)
-    ]).then((results) => results.some((exists) => exists));
+    ]);
 
-    if (coverageConfigExists) {
-      results.passed.push('✓ Coverage configuration found');
-    } else {
-      results.recommendations.push(
-        '💡 Consider adding coverage configuration. Create .c8rc.json with coverage thresholds'
-      );
+    try {
+      const pkg = JSON.parse(await fs.readFile(path.join(pluginPath, 'package.json'), 'utf-8'));
+      const coverageScript = pkg.scripts?.coverage || pkg.scripts?.['test:coverage'] || '';
+      const usesNativeCoverage = coverageScript.includes('--experimental-test-coverage');
+
+      if (usesNativeCoverage) {
+        results.passed.push('✓ Using native node:test coverage (no config file needed)');
+      } else if (hasC8 || hasNyc || hasNycJson) {
+        results.recommendations.push(
+          '💡 Legacy coverage tool detected (c8/nyc). Consider migrating to native `node --test --experimental-test-coverage` (Node >= 22).'
+        );
+      } else if (coverageScript) {
+        results.recommendations.push(
+          '💡 Consider using native coverage: node --test --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=coverage/lcov.info'
+        );
+      }
+    } catch {
+      // package.json read failure already reported elsewhere
     }
   } catch (error) {
     results.warnings.push(`⚠ Could not check coverage: ${error.message}`);

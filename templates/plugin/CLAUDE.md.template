@@ -17,7 +17,7 @@ list-templates
 # Get specific template content (use these exactly as provided)
 get-template plugin/CLAUDE.md
 get-template configs/release-it.json
-get-template configs/eslint.config.js
+get-template configs/biome.json
 
 # Validate plugin and get actionable recommendations
 validate .
@@ -27,7 +27,7 @@ configs .
 
 # Show recommended configuration templates
 show-template release-it
-show-template eslint
+show-template biome
 
 # Update dependencies
 update-deps .
@@ -230,17 +230,19 @@ npm run test:coverage
 
 ## Code Quality Standards
 
-### ESLint Configuration
+### Lint + Format (Biome)
 
-- Uses ESLint 9.x flat configuration (`eslint.config.js`)
-- Automatically fixes common issues with `npm run lint`
-- Modern JavaScript patterns enforced
+- Uses [Biome](https://biomejs.dev) for linting and formatting in a single tool (`biome.json`)
+- `npm run lint` runs `biome check --write .` (lint + format with autofix)
+- `npm run lint:check` runs `biome check .` (no writes — useful in CI)
+- `npm run format` runs `biome format --write .` (format-only with writes)
+- `npm run format:check` runs `biome format .` (format check only)
 
-### Formatting
+### Testing
 
-- Prettier configuration for consistent code style
-- Auto-format with `npm run format`
-- Check formatting with `npm run format:check`
+- Uses the native `node:test` runner and `node:assert/strict` (no mocha/chai)
+- Coverage uses `node --test --experimental-test-coverage` (no c8/nyc)
+- Requires Node.js >= 22 for stable coverage reporter destinations
 
 ### Documentation
 

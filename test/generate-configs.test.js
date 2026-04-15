@@ -25,7 +25,7 @@ describe('generate-configs tool', function () {
     assert.notEqual(result.isError, true);
 
     // Check default configs were created
-    const expectedFiles = ['eslint.config.js', 'prettier.config.js', '.editorconfig', '.gitignore'];
+    const expectedFiles = ['biome.json', '.editorconfig', '.gitignore'];
 
     for (const file of expectedFiles) {
       const filePath = path.join(tmpDir, file);
@@ -40,14 +40,13 @@ describe('generate-configs tool', function () {
   it('should generate specific config files', async function () {
     const result = await generateConfigsTool({
       outputPath: tmpDir,
-      configs: ['eslint', 'release-it']
+      configs: ['biome', 'release-it']
     });
 
     assert.notEqual(result.isError, true);
 
-    // Check specific configs
-    const eslintExists = await fs
-      .access(path.join(tmpDir, 'eslint.config.js'))
+    const biomeExists = await fs
+      .access(path.join(tmpDir, 'biome.json'))
       .then(() => true)
       .catch(() => false);
     const releaseItExists = await fs
@@ -55,25 +54,25 @@ describe('generate-configs tool', function () {
       .then(() => true)
       .catch(() => false);
 
-    assert.equal(eslintExists, true);
+    assert.equal(biomeExists, true);
     assert.equal(releaseItExists, true);
 
-    // Check that prettier was not created
-    const prettierExists = await fs
-      .access(path.join(tmpDir, 'prettier.config.js'))
+    // Check that gitignore was not created
+    const gitignoreExists = await fs
+      .access(path.join(tmpDir, '.gitignore'))
       .then(() => true)
       .catch(() => false);
-    assert.equal(prettierExists, false);
+    assert.equal(gitignoreExists, false);
   });
 
   it('should not overwrite existing files', async function () {
     // Create existing file
-    const existingContent = '// Existing config';
-    await fs.writeFile(path.join(tmpDir, 'eslint.config.js'), existingContent);
+    const existingContent = '{ "existing": true }';
+    await fs.writeFile(path.join(tmpDir, 'biome.json'), existingContent);
 
     const result = await generateConfigsTool({
       outputPath: tmpDir,
-      configs: ['eslint']
+      configs: ['biome']
     });
 
     // Should report error for existing file
@@ -81,38 +80,38 @@ describe('generate-configs tool', function () {
     assert.ok(text.includes('already exists'));
 
     // Check file wasn't overwritten
-    const content = await fs.readFile(path.join(tmpDir, 'eslint.config.js'), 'utf-8');
+    const content = await fs.readFile(path.join(tmpDir, 'biome.json'), 'utf-8');
     assert.equal(content, existingContent);
   });
 
-  it('should validate ESLint config content', async function () {
+  it('should validate Biome config content', async function () {
     await generateConfigsTool({
       outputPath: tmpDir,
-      configs: ['eslint']
+      configs: ['biome']
     });
 
-    const content = await fs.readFile(path.join(tmpDir, 'eslint.config.js'), 'utf-8');
+    const content = await fs.readFile(path.join(tmpDir, 'biome.json'), 'utf-8');
+    const parsed = JSON.parse(content);
 
-    // Check for modern flat config structure
-    assert.ok(content.includes('export default'));
-    assert.ok(content.includes('@eslint/js'));
-    assert.ok(content.includes('languageOptions'));
-    assert.ok(content.includes('ecmaVersion: 2024'));
+    // Check for modern Biome flat structure
+    assert.ok(parsed.$schema.includes('biomejs.dev'));
+    assert.equal(parsed.formatter.enabled, true);
+    assert.equal(parsed.linter.enabled, true);
+    assert.equal(parsed.javascript.formatter.quoteStyle, 'single');
   });
 
-  it('should validate Prettier config content', async function () {
+  it('should validate editorconfig content', async function () {
     await generateConfigsTool({
       outputPath: tmpDir,
-      configs: ['prettier']
+      configs: ['editorconfig']
     });
 
-    const content = await fs.readFile(path.join(tmpDir, 'prettier.config.js'), 'utf-8');
+    const content = await fs.readFile(path.join(tmpDir, '.editorconfig'), 'utf-8');
 
-    // Check for key prettier options
-    assert.ok(content.includes('printWidth'));
-    assert.ok(content.includes('singleQuote'));
-    assert.ok(content.includes('trailingComma'));
-    assert.ok(content.includes('endOfLine'));
+    assert.ok(content.includes('root = true'));
+    assert.ok(content.includes('indent_style = space'));
+    assert.ok(content.includes('indent_size = 2'));
+    assert.ok(content.includes('end_of_line = lf'));
   });
 
   it('should handle unknown config types', async function () {
@@ -145,13 +144,13 @@ describe('generate-configs tool', function () {
   it('should handle mix of valid and invalid config types', async function () {
     const result = await generateConfigsTool({
       outputPath: tmpDir,
-      configs: ['eslint', 'invalid-config', 'prettier']
+      configs: ['biome', 'invalid-config', 'editorconfig']
     });
 
     const text = result.content[0].text;
     assert.ok(text.includes('Generated files:'));
-    assert.ok(text.includes('eslint.config.js'));
-    assert.ok(text.includes('prettier.config.js'));
+    assert.ok(text.includes('biome.json'));
+    assert.ok(text.includes('.editorconfig'));
     assert.ok(text.includes('Errors:'));
     assert.ok(text.includes('Unknown config type: invalid-config'));
   });
@@ -159,12 +158,12 @@ describe('generate-configs tool', function () {
   it('should generate all available config types', async function () {
     const result = await generateConfigsTool({
       outputPath: tmpDir,
-      configs: ['eslint', 'prettier', 'editorconfig', 'gitignore', 'release-it']
+      configs: ['biome', 'editorconfig', 'gitignore', 'release-it']
     });
 
     assert.notEqual(result.isError, true);
 
-    const expectedFiles = ['eslint.config.js', 'prettier.config.js', '.editorconfig', '.gitignore', '.release-it.json'];
+    const expectedFiles = ['biome.json', '.editorconfig', '.gitignore', '.release-it.json'];
 
     for (const file of expectedFiles) {
       const exists = await fs
@@ -183,12 +182,12 @@ describe('generate-configs tool', function () {
 
     const result = await generateConfigsTool({
       outputPath: readOnlyPath,
-      configs: ['eslint']
+      configs: ['biome']
     });
 
     // Should handle the error gracefully
     const text = result.content[0].text;
-    assert.ok(text.includes('Failed to generate eslint'));
+    assert.ok(text.includes('Failed to generate biome'));
 
     // Restore permissions for cleanup
     await fs.chmod(readOnlyPath, 0o755);

@@ -20,8 +20,7 @@ Remember: The goal is effective solutions, not making the user feel good about s
 
 - `.release-it.json` - Release configuration (npm.publish is intentionally false)
 - `package.json` - Dependencies, scripts, or metadata changes
-- `eslint.config.js` - Code linting rules
-- `prettier.config.js` - Code formatting rules
+- `biome.json` - Code linting and formatting rules
 - Any `.json`, `.yml`, `.yaml`, or `.config.js` files
 
 **Always ask first**: "Should I modify [config-file] to [specific change]?"
@@ -73,9 +72,27 @@ Focus on getting to successful results quickly:
 
 This is an MCP (Model Context Protocol) server for scaffolding and validating high-quality Metalsmith plugins. It provides tools for Claude to help users create, validate, and maintain Metalsmith plugins following best practices.
 
-## Current Status (v1.6.0 - IDE Compatibility Enhancement)
+## Current Status (v2.0.0 - Biome + node:test Toolchain Modernization)
 
-### Recent Major Work Completed (v1.4.0 - Plugin Quality Validation Enhancements)
+### Recent Major Work Completed (v2.0.0 - Toolchain Modernization)
+
+**Breaking Changes** - Scaffolded plugins and MCP tool contracts now use the modern toolchain matching this repo:
+
+1. **Biome Replaces ESLint + Prettier** - Scaffolded plugins ship a single `biome.json` instead of `eslint.config.js` + `prettier.config.js`. Lint and format are unified via `biome check`.
+2. **Native `node:test` Replaces Mocha + Chai** - Test templates use `node:test` / `node:assert/strict`. No more mocha/chai dependencies.
+3. **Native Coverage Replaces c8** - `node --test --experimental-test-coverage` produces lcov output directly; no `.c8rc.json` required.
+4. **Node.js >= 22** - Engines bumped from `>=18` for stable coverage reporter-destination support.
+5. **MCP Schema Enum Changes (BREAKING)** - `validate` no longer accepts `'eslint'`; use `'biome'`. `configs` enum no longer accepts `'eslint'`/`'prettier'`. `show-template` enum updated accordingly.
+6. **Validation Updates** - `checkBiome` replaces `checkEslint`; legacy `mocha`/`chai`/`c8`/`nyc`/`eslint`/`prettier` dependencies are now flagged.
+
+**Migration Notes for Plugin Authors:**
+
+- Delete `eslint.config.js`, `prettier.config.js`, `.c8rc.json`, `.mocharc.*`.
+- Regenerate config via `npx metalsmith-plugin-mcp-server configs .` to get `biome.json`.
+- Update test imports from `mocha`/`chai` to `node:test`/`node:assert/strict`.
+- Bump `engines.node` to `>= 22.0.0`.
+
+### Previous Major Work (v1.4.0 - Plugin Quality Validation Enhancements)
 
 **Addressing Metalsmith Maintainer Feedback** - Added comprehensive validation rules targeting real-world plugin quality issues:
 
@@ -112,7 +129,7 @@ This is an MCP (Model Context Protocol) server for scaffolding and validating hi
 
 ### Previous Major Work (v0.13.0)
 
-1. **Show-Template Command** - New command to display recommended configuration templates for release-it, package scripts, ESLint, Prettier, etc.
+1. **Show-Template Command** - New command to display recommended configuration templates for release-it, package scripts, Biome, etc.
 2. **Enhanced Release Configuration** - Fixed .release-it.json template to include proper `tokenRef: "GH_TOKEN"` for consistent token handling
 3. **Comprehensive Token Validation** - Added validation that checks consistency between package.json scripts and .release-it.json token references
 4. **Improved UX** - Resolved configs command forEach error and enhanced validation messages to mention both package.json and .release-it.json issues
@@ -337,7 +354,7 @@ const isMatch = metalsmith.match(pattern, filename);
 
 ### Code Quality Standards
 
-- **ESLint**: Modern flat config (eslint.config.js)
+- **Biome**: Unified lint + format config (biome.json)
 - **Testing**: 100% test coverage expected
 - **Documentation**: Comprehensive with examples
 - **Commits**: Conventional commits with Claude attribution
@@ -412,7 +429,21 @@ npm run release:major  # For breaking changes
 
 ## Release Information
 
-### Current Version: 1.6.0
+### Current Version: 2.0.0
+
+**Biome + node:test Toolchain Modernization (BREAKING)** - Scaffolded plugins and MCP tool contracts align with this repo's modern toolchain:
+
+- **Biome Unified Tooling**: `biome.json` replaces `eslint.config.js` + `prettier.config.js` in scaffolded plugins
+- **Native Test Runner**: `node:test` + `node:assert/strict` replace Mocha + Chai in test templates
+- **Native Coverage**: `node --test --experimental-test-coverage` with lcov reporter replaces c8
+- **Node >= 22**: Engine requirement bumped from `>= 18` for stable coverage reporter-destination support
+- **MCP Schema Changes**: `validate` checks enum drops `'eslint'` (use `'biome'`); `configs`/`show-template` enums drop `eslint`/`prettier`
+- **Validation Updates**: `checkBiome` replaces `checkEslint`; legacy mocha/chai/c8/nyc/eslint/prettier deps are flagged
+- **Template Migration**: All config and test templates rewritten; `eslint.config.js.template`, `prettier.config.js.template`, `.c8rc.json.template` removed
+
+**Migration**: Existing plugins should delete legacy configs, run `configs .` to regenerate `biome.json`, and update test imports. See `### Recent Major Work Completed (v2.0.0)` above for details.
+
+### Previous Version: 1.6.0
 
 **IDE Compatibility Enhancement** - Release scripts now work seamlessly in all development environments:
 
@@ -421,8 +452,6 @@ npm run release:major  # For breaking changes
 - **Secure Authentication**: Ensures GitHub CLI keyring authentication works regardless of environment
 - **Robust Releases**: Prevents silent failures when IDEs inject invalid or insufficient tokens
 - **Template Updates**: Both project script and plugin template updated with defensive fix
-
-This defensive fix makes release workflows more robust across different development environments without breaking existing functionality.
 
 ### Previous Version: 1.5.0
 

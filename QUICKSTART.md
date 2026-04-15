@@ -247,7 +247,7 @@ Once connected, you can ask Claude to:
 - **"Show me all available templates"**
 - **"Get the CLAUDE.md template content"**
 - **"Install CLAUDE.md guidance for AI assistants"**
-- **"Generate ESLint and Prettier configs for my project"**
+- **"Generate a Biome config for my project"**
 - **"Add MCP server guidance to my existing CLAUDE.md"**
 
 **Smart AI Integration:**
@@ -312,8 +312,8 @@ npm run pre-release
 
 This script runs:
 
-- `npm run lint` - ESLint validation
-- `npm run format:check` - Prettier formatting validation
+- `npm run lint:check` - Biome lint + format check
+- `npm run format:check` - Biome formatter check
 - `npm test` - Full test suite
 - `npx metalsmith-plugin-mcp-server validate .` - Plugin validation
 
@@ -346,8 +346,8 @@ Use this before any release to ensure your plugin meets quality standards.
 
 ### Config Generation
 
-- Modern ESLint flat config
-- Prettier with sensible defaults
+- Unified Biome config for linting and formatting
+- .editorconfig with consistent editor settings
 - .gitignore with common patterns
 - Release automation setup
 

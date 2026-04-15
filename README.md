@@ -55,10 +55,10 @@ This creates a fully-configured plugin with:
 - **Native Metalsmith Methods**: Enforces `metalsmith.debug()`, `metalsmith.match()`, `metalsmith.env()`, `metalsmith.path()` over external packages
 - **Zero External Dependencies**: Self-contained utilities for pattern matching and config merging
 - **Complementary CI/CD Architecture**: GitHub workflows for automated testing + manual release scripts
-- Comprehensive test setup with both ESM and CJS testing
+- Comprehensive test setup with both ESM and CJS testing via the native `node:test` runner
 - Production-ready documentation
-- ESLint 9.x flat config
-- Prettier formatting
+- Unified lint + format via [Biome](https://biomejs.dev) (`biome.json`)
+- Native coverage via `node --test --experimental-test-coverage` (no c8/nyc)
 - Release automation with GitHub integration
 - Deep configuration merging
 - Error handling with proper propagation
@@ -118,8 +118,8 @@ Validation checks include:
 - **Security**: Build-time security, dependency monitoring, error handling
 - **Integration**: Compatibility with common Metalsmith plugins
 - **Metalsmith Patterns**: Plugin factory patterns, function signatures, metadata handling, native methods usage
-- **ESLint**: Modern configuration presence
-- **Coverage**: Test coverage analysis
+- **Biome**: Unified lint + format configuration presence (`biome.json`)
+- **Coverage**: Test coverage analysis (prefers native `node:test` coverage)
 
 **Enhanced Quality Standards** (addressing Metalsmith maintainer feedback):
 
@@ -138,7 +138,7 @@ Generate configuration files following enhanced standards:
 ```js
 await mcp.call('configs', {
   outputPath: './my-plugin',
-  configs: ['eslint', 'prettier', 'editorconfig', 'gitignore', 'release-it']
+  configs: ['biome', 'editorconfig', 'gitignore', 'release-it']
 });
 ```
 
@@ -311,8 +311,8 @@ npx metalsmith-plugin-mcp-server validate ./my-plugin --functional
 
 ```
 Consider adding a LICENSE file. Generate one with: npx metalsmith-plugin-mcp-server scaffold ./my-plugin LICENSE MIT
-Consider adding ESLint configuration. Generate with: npx metalsmith-plugin-mcp-server scaffold ./my-plugin eslint.config.js eslint
-Consider adding script: lint. Example: "lint": "eslint src test"
+Consider adding a Biome configuration for lint + format. Generate with: npx metalsmith-plugin-mcp-server configs . --configs biome
+Consider adding script: lint. Example: "lint": "biome check --write ."
 Use metalsmith.debug() instead of debug package. Replace debug() calls with metalsmith.debug()
 Use metalsmith.match() instead of minimatch package for file pattern matching
 Remove debug dependency from package.json since you're using metalsmith.debug()
@@ -393,8 +393,8 @@ npx metalsmith-plugin-mcp-server batch-audit ./plugins --output=json
 - **Validation**: Plugin structure and configuration (40% weight)
 - **Tests**: Test execution and pass/fail status (30% weight)
 - **Coverage**: Code coverage percentage (20% weight)
-- **Linting**: ESLint compliance (5% weight)
-- **Formatting**: Prettier compliance (5% weight)
+- **Linting**: Biome compliance (5% weight)
+- **Formatting**: Biome formatter compliance (5% weight)
 
 **Pre-Release Integration**:
 New plugins scaffolded with this tool include a `pre-release` script that runs a full audit before releasing:
@@ -636,7 +636,7 @@ Here are prompts that will trigger the MCP server's capabilities:
 
 **Upgrading Configuration**:
 
-> "Update my Metalsmith plugin to use ESLint 9 flat config and modern testing patterns."
+> "Update my Metalsmith plugin to use Biome for lint+format and the native node:test runner."
 
 **Complex Plugin Development**:
 
@@ -677,14 +677,14 @@ This ensures consistent, high-quality plugin development and prevents common con
 | Option   | Type       | Default    | Description                                                                                |
 | -------- | ---------- | ---------- | ------------------------------------------------------------------------------------------ |
 | `path`   | `string`   | Required   | Path to the plugin to validate                                                             |
-| `checks` | `string[]` | All checks | Specific checks to run: 'structure', 'tests', 'docs', 'package-json', 'eslint', 'coverage' |
+| `checks` | `string[]` | All checks | Specific checks to run: 'structure', 'tests', 'docs', 'package-json', 'biome', 'coverage' |
 
 ### Configuration Generation Options
 
 | Option       | Type       | Default     | Description                                                                               |
 | ------------ | ---------- | ----------- | ----------------------------------------------------------------------------------------- |
 | `outputPath` | `string`   | Required    | Where to generate config files                                                            |
-| `configs`    | `string[]` | All configs | Config files to generate: 'eslint', 'prettier', 'editorconfig', 'gitignore', 'release-it' |
+| `configs`    | `string[]` | All configs | Config files to generate: 'biome', 'editorconfig', 'gitignore', 'release-it' |
 
 ## Plugin Types
 

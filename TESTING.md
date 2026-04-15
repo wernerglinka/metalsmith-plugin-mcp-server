@@ -172,7 +172,7 @@ echo '{"jsonrpc": "2.0", "id": 3, "method": "tools/call", "params": {"name": "va
 ### 4. Test Configuration Generation
 
 ```bash
-echo '{"jsonrpc": "2.0", "id": 4, "method": "tools/call", "params": {"name": "configs", "arguments": {"outputPath": "./test-configs", "configs": ["eslint", "prettier"]}}}' | node src/index.js
+echo '{"jsonrpc": "2.0", "id": 4, "method": "tools/call", "params": {"name": "configs", "arguments": {"outputPath": "./test-configs", "configs": ["biome", "editorconfig"]}}}' | node src/index.js
 ```
 
 ## Method 2: Using the Test Scripts
@@ -292,7 +292,7 @@ When tools run successfully, you should see:
 ### Config Generation Success
 
 - ✅ Modern configuration files created
-- ✅ ESLint flat config, Prettier, .gitignore, etc.
+- ✅ Biome config (lint + format), .editorconfig, .gitignore, .release-it.json
 - ✅ No overwriting of existing files
 
 ## Troubleshooting

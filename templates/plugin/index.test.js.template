@@ -1,113 +1,119 @@
-import { expect } from 'chai';
+import { describe, it, beforeEach } from 'node:test';
+import assert from 'node:assert/strict';
 import Metalsmith from 'metalsmith';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import {{ functionName }} from '../src/index.js';
-import { promises as fs } from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-describe('{{ pluginName }}', function () {
+describe('{{ pluginName }}', () => {
   let metalsmith;
 
-  beforeEach(function () {
+  beforeEach(() => {
     metalsmith = Metalsmith(path.join(__dirname, 'fixtures', 'basic'));
   });
 
-  it('should export a function', function () {
-    expect({{ functionName }}).to.be.a('function');
+  it('should export a function', () => {
+    assert.equal(typeof {{ functionName }}, 'function');
   });
 
-  it('should return a metalsmith plugin', function () {
+  it('should return a metalsmith plugin', () => {
     const plugin = {{ functionName }}();
-    expect(plugin).to.be.a('function');
-    expect(plugin).to.have.length(3);
+    assert.equal(typeof plugin, 'function');
+    assert.equal(plugin.length, 3);
   });
 
-  describe('basic functionality', function () {
-    it('should process files with default options', function (done) {
+  describe('basic functionality', () => {
+    it('should process files with default options', (_t, done) => {
       metalsmith
         .use({{ functionName }}())
-        .build(function (err, files) {
-          if (err) return done(err);
-          
-          expect(files).to.be.an('object');
-          expect(Object.keys(files)).to.have.length.above(0);
+        .build((err, files) => {
+          if (err) {
+            return done(err);
+          }
+          assert.equal(typeof files, 'object');
+          assert.ok(Object.keys(files).length > 0);
           done();
         });
     });
 
-    it('should handle empty file set', function (done) {
+    it('should handle empty file set', (_t, done) => {
       metalsmith = Metalsmith(path.join(__dirname, 'fixtures', 'empty'));
-      
+
       metalsmith
         .use({{ functionName }}())
-        .build(function (err, files) {
-          if (err) return done(err);
-          
-          expect(files).to.be.an('object');
+        .build((err, files) => {
+          if (err) {
+            return done(err);
+          }
+          assert.equal(typeof files, 'object');
           done();
         });
     });
   });
 
-  describe('options', function () {
-    it('should accept pattern option', function (done) {
+  describe('options', () => {
+    it('should accept pattern option', (_t, done) => {
       metalsmith
         .use({{ functionName }}({
           pattern: '**/*.html'
         }))
-        .build(function (err, files) {
-          if (err) return done(err);
-          
-          const htmlFiles = Object.keys(files).filter(f => f.endsWith('.html'));
-          expect(htmlFiles).to.have.length.above(0);
+        .build((err, files) => {
+          if (err) {
+            return done(err);
+          }
+          const htmlFiles = Object.keys(files).filter((f) => f.endsWith('.html'));
+          assert.ok(htmlFiles.length > 0);
           done();
         });
     });
 
-    it('should accept ignore option', function (done) {
+    it('should accept ignore option', (_t, done) => {
       metalsmith
         .use({{ functionName }}({
           ignore: ['**/ignore/**']
         }))
-        .build(function (err, files) {
-          if (err) return done(err);
-          
-          const ignoredFiles = Object.keys(files).filter(f => f.includes('ignore/'));
-          expect(ignoredFiles).to.have.length(0);
+        .build((err, files) => {
+          if (err) {
+            return done(err);
+          }
+          const ignoredFiles = Object.keys(files).filter((f) => f.includes('ignore/'));
+          assert.equal(ignoredFiles.length, 0);
           done();
         });
     });
 
-    it('should accept array patterns', function (done) {
+    it('should accept array patterns', (_t, done) => {
       metalsmith
         .use({{ functionName }}({
           pattern: ['**/*.html', '**/*.md']
         }))
-        .build(function (err, files) {
-          if (err) return done(err);
-          
-          const matchedFiles = Object.keys(files).filter(f => 
-            f.endsWith('.html') || f.endsWith('.md')
+        .build((err, files) => {
+          if (err) {
+            return done(err);
+          }
+          const matchedFiles = Object.keys(files).filter(
+            (f) => f.endsWith('.html') || f.endsWith('.md')
           );
-          expect(matchedFiles).to.have.length.above(0);
+          assert.ok(matchedFiles.length > 0);
           done();
         });
     });
   });
 
 {% if hasProgressiveLoading %}
-  describe('progressive loading', function () {
-    it('should process files with progressive loading enabled', function (done) {
+  describe('progressive loading', () => {
+    it('should process files with progressive loading enabled', (_t, done) => {
       metalsmith
         .use({{ functionName }}({
           progressive: true,
           quality: 80
         }))
-        .build(function (err, files) {
-          if (err) return done(err);
-          
+        .build((err) => {
+          if (err) {
+            return done(err);
+          }
           // TODO: Add assertions for progressive loading
           done();
         });
@@ -116,16 +122,17 @@ describe('{{ pluginName }}', function () {
 {% endif %}
 
 {% if hasBackgroundProcessing %}
-  describe('background processing', function () {
-    it('should process files concurrently', function (done) {
+  describe('background processing', () => {
+    it('should process files concurrently', (_t, done) => {
       metalsmith
         .use({{ functionName }}({
           concurrent: true,
           workers: 2
         }))
-        .build(function (err, files) {
-          if (err) return done(err);
-          
+        .build((err) => {
+          if (err) {
+            return done(err);
+          }
           // TODO: Add assertions for concurrent processing
           done();
         });
@@ -134,60 +141,57 @@ describe('{{ pluginName }}', function () {
 {% endif %}
 
 {% if hasMetadataGeneration %}
-  describe('metadata generation', function () {
-    it('should generate metadata for processed files', function (done) {
+  describe('metadata generation', () => {
+    it('should generate metadata for processed files', (_t, done) => {
       const metadataKey = '_test';
-      
+
       metalsmith
         .use({{ functionName }}({
           metadata: true,
-          metadataKey: metadataKey
+          metadataKey
         }))
-        .build(function (err, files) {
-          if (err) return done(err);
-          
-          const filesWithMetadata = Object.values(files).filter(f => f[metadataKey]);
-          expect(filesWithMetadata).to.have.length.above(0);
+        .build((err, files) => {
+          if (err) {
+            return done(err);
+          }
+          const filesWithMetadata = Object.values(files).filter((f) => f[metadataKey]);
+          assert.ok(filesWithMetadata.length > 0);
           done();
         });
     });
   });
 {% endif %}
 
-  describe('error handling', function () {
-    it('should handle invalid options gracefully', function (done) {
+  describe('error handling', () => {
+    it('should handle invalid options gracefully', (_t, done) => {
       metalsmith
         .use({{ functionName }}({
           pattern: null
         }))
-        .build(function (err) {
-          expect(err).to.be.an('error');
+        .build((err) => {
+          assert.ok(err instanceof Error);
           done();
         });
     });
-
-    it('should handle file processing errors', function (done) {
-      // TODO: Add test for file processing errors
-      done();
-    });
   });
 
-  describe('integration', function () {
-    it('should work with other metalsmith plugins', function (done) {
+  describe('integration', () => {
+    it('should work with other metalsmith plugins', (_t, done) => {
       metalsmith
-        .use(function (files, ms, done) {
+        .use((files, _ms, next) => {
           // Simulate another plugin
-          Object.keys(files).forEach(file => {
+          for (const file of Object.keys(files)) {
             files[file].processed = true;
-          });
-          done();
+          }
+          next();
         })
         .use({{ functionName }}())
-        .build(function (err, files) {
-          if (err) return done(err);
-          
-          const processedFiles = Object.values(files).filter(f => f.processed);
-          expect(processedFiles).to.have.length.above(0);
+        .build((err, files) => {
+          if (err) {
+            return done(err);
+          }
+          const processedFiles = Object.values(files).filter((f) => f.processed);
+          assert.ok(processedFiles.length > 0);
           done();
         });
     });

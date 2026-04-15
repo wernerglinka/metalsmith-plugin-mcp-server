@@ -218,7 +218,7 @@ export async function pluginScaffoldTool(args) {
             '- package.json (package configuration)',
             '- README.md (documentation)',
             '- CLAUDE.md (AI development context)',
-            '- eslint.config.js (linting rules)',
+            '- biome.json (lint + format rules)',
             '',
             'Next steps:',
             `  cd ${path.relative(process.cwd(), pluginPath)}`,
@@ -233,8 +233,8 @@ export async function pluginScaffoldTool(args) {
             '  npm run test:esm - Run ESM tests only',
             '  npm run test:cjs - Run CJS tests only',
             '  npm run coverage - Run tests with coverage',
-            '  npm run lint     - Lint code',
-            '  npm run format   - Format code',
+            '  npm run lint     - Lint + format (biome check --write)',
+            '  npm run format   - Format only (biome format --write)',
             '  npm run release  - Create a new release',
             '',
             'Development workflow:',
@@ -417,12 +417,10 @@ async function generateConfigs(pluginPath) {
 
   // Copy configuration files
   const configs = [
-    ['eslint.config.js.template', 'eslint.config.js'],
-    ['prettier.config.js.template', 'prettier.config.js'],
+    ['biome.json.template', 'biome.json'],
     ['.editorconfig.template', '.editorconfig'],
     ['.gitignore.template', '.gitignore'],
-    ['release-it.json.template', '.release-it.json'],
-    ['.c8rc.json.template', '.c8rc.json']
+    ['release-it.json.template', '.release-it.json']
   ];
 
   for (const [source, target] of configs) {

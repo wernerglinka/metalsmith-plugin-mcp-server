@@ -73,25 +73,24 @@ describe('validate-plugin tool', function () {
     assert.ok(result.content[0].text.includes('Failed to validate'));
   });
 
-  it('should check ESLint configuration', async function () {
+  it('should check Biome configuration', async function () {
     const result = await validatePluginTool({
       path: path.join(fixturesDir, 'valid-plugin'),
-      checks: ['eslint']
+      checks: ['biome']
     });
 
     const text = result.content[0].text;
-    assert.ok(text.includes('ESLint configuration found'));
-    assert.ok(text.includes('modern ESLint flat config'));
+    assert.ok(text.includes('Biome configuration found'));
   });
 
-  it('should handle missing ESLint configuration', async function () {
+  it('should handle missing Biome configuration', async function () {
     const result = await validatePluginTool({
       path: path.join(fixturesDir, 'minimal-plugin'),
-      checks: ['eslint']
+      checks: ['biome']
     });
 
     const text = result.content[0].text;
-    assert.ok(text.includes('Consider adding ESLint configuration'));
+    assert.ok(text.includes('Consider adding a Biome configuration'));
   });
 
   it('should check coverage reports when available', async function () {
@@ -1103,7 +1102,7 @@ export default function plugin(options = {}) {
 
       // Create configs
       await fs.writeFile(path.join(pluginDir, '.release-it.json'), '{}');
-      await fs.writeFile(path.join(pluginDir, 'eslint.config.js'), 'export default [];');
+      await fs.writeFile(path.join(pluginDir, 'biome.json'), '{}');
 
       // Create comprehensive package.json
       const packageJson = {
@@ -1443,8 +1442,8 @@ describe('plugin', () => {
     await fs.mkdir(path.join(pluginDir, 'src/processors'), { recursive: true });
     await fs.mkdir(path.join(pluginDir, 'test/fixtures'), { recursive: true });
 
-    // Create ESLint config
-    await fs.writeFile(path.join(pluginDir, 'eslint.config.js'), 'export default [];');
+    // Create Biome config
+    await fs.writeFile(path.join(pluginDir, 'biome.json'), '{}');
 
     // Create LICENSE
     await fs.writeFile(path.join(pluginDir, 'LICENSE'), 'MIT License');
