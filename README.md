@@ -938,7 +938,7 @@ The MCP server itself uses comprehensive testing:
 npm test
 
 # Run tests with coverage
-npm run test:coverage
+npm run coverage
 
 # Run linting
 npm run lint

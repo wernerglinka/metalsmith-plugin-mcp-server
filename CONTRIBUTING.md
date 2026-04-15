@@ -191,7 +191,7 @@ const processFiles = (files, plugins) => {
 
 All contributions must include appropriate tests:
 
-- We use **Mocha** for unit testing
+- We use the **Node.js native test runner** (`node --test`) with `node:assert/strict`
 - Aim for high test coverage
 - Test edge cases and error conditions
 - Keep tests focused and readable
@@ -304,7 +304,7 @@ AI assistance is primarily used for:
 - Generating boilerplate code and repetitive patterns
 - Refactoring existing code to match our functional programming standards
 - Creating comprehensive JSDoc documentation
-- Writing unit tests following our Mocha conventions
+- Writing unit tests using `node --test` and `node:assert`
 - Code reviews and identifying potential improvements
 
 AI is **not** used for:
@@ -321,7 +321,7 @@ All AI-generated code must adhere to our project preferences:
 - **Paradigm**: Functional programming with pure functions and explicit returns
 - **Architecture**: Modular design with dependency injection and separation of concerns
 - **Documentation**: Comprehensive JSDoc comments with descriptive naming
-- **Testing**: Mocha-based unit tests with high coverage
+- **Testing**: `node --test` unit tests with high coverage
 
 ### For Contributors Using AI
 
