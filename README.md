@@ -11,14 +11,17 @@ MCP server for scaffolding and validating high-quality Metalsmith plugins
 
 This MCP (Model Context Protocol) server provides tools for creating and maintaining Metalsmith plugins following quality standards. It encapsulates patterns from the Metalsmith ecosystem, such as `@metalsmith/core-plugin` and contributed plugins like `metalsmith-optimize-images`.
 
-## What's New in v1.8.0
+## What's New in v2.0.0
 
-**Simplified Release Architecture** - Streamlined release process using GitHub's native features:
+**Biome + node:test Toolchain Modernization (BREAKING)** - Scaffolded plugins now use the modern toolchain:
 
-- Removed custom release-notes.sh script in favor of GitHub's auto-generated release notes
-- Simplified .release-it.json configuration with `autoGenerate: true`
-- IDE compatibility fix: release scripts clear `GITHUB_TOKEN` to prevent conflicts with VSCode/Claude Code
-- Reduced maintenance burden with fewer custom scripts to manage
+- **Biome replaces ESLint + Prettier** - Unified lint + format via a single `biome.json`
+- **Native `node:test` replaces Mocha + Chai** - Test templates use `node:test` / `node:assert/strict`
+- **Native coverage replaces c8** - `node --test --experimental-test-coverage` with lcov output
+- **Node >= 22** - Engine requirement bumped for stable coverage reporter destinations
+- **MCP schema changes** - `validate` checks enum drops `'eslint'` (use `'biome'`); `configs` and `show-template` enums drop `eslint`/`prettier`
+
+**Migration for existing plugins**: delete `eslint.config.js`, `prettier.config.js`, `.c8rc.json`, `.mocharc.*`; run `npx metalsmith-plugin-mcp-server configs .` to regenerate `biome.json`; update test imports from `mocha`/`chai` to `node:test`/`node:assert/strict`; bump `engines.node` to `>= 22.0.0`.
 
 ## Installation
 
