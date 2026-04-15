@@ -1433,6 +1433,36 @@ async function checkForOrderingDocumentation(pluginPath) {
 }
 
 /**
+ * Resolve a package.json script to its effective shell content.
+ *
+ * If the script directly invokes a shell script in the repo (e.g. `./scripts/test.sh`,
+ * `bash scripts/test.sh`, `sh scripts/coverage.sh`), read and return that file's contents
+ * so downstream checks can inspect the actual commands.
+ *
+ * Returns the original script string if no wrapped script is detected or the file
+ * can't be read — callers can compare against the input to detect that case.
+ *
+ * @param {string} pluginPath - Plugin root
+ * @param {string} script - package.json script value
+ * @returns {Promise<string>}
+ */
+async function resolveScriptContent(pluginPath, script) {
+  if (!script) {
+    return '';
+  }
+  const match = script.match(/(?:^|\s)(?:bash\s+|sh\s+)?(\.?\/?scripts\/[\w.-]+\.sh)\b/);
+  if (!match) {
+    return script;
+  }
+  try {
+    const scriptFile = path.join(pluginPath, match[1]);
+    return await fs.readFile(scriptFile, 'utf-8');
+  } catch {
+    return script;
+  }
+}
+
+/**
  * Check test coverage
  */
 // eslint-disable-next-line no-unused-vars
@@ -1501,7 +1531,9 @@ async function checkCoverage(pluginPath, results, _functional = false, config) {
     try {
       const pkg = JSON.parse(await fs.readFile(path.join(pluginPath, 'package.json'), 'utf-8'));
       const coverageScript = pkg.scripts?.coverage || pkg.scripts?.['test:coverage'] || '';
-      const usesNativeCoverage = coverageScript.includes('--experimental-test-coverage');
+      const coverageScriptContent = await resolveScriptContent(pluginPath, coverageScript);
+      const usesNativeCoverage = coverageScriptContent.includes('--experimental-test-coverage');
+      const wrapsUnknownShellScript = coverageScript && coverageScriptContent === coverageScript;
 
       if (usesNativeCoverage) {
         results.passed.push('✓ Using native node:test coverage (no config file needed)');
@@ -1509,7 +1541,7 @@ async function checkCoverage(pluginPath, results, _functional = false, config) {
         results.recommendations.push(
           '💡 Legacy coverage tool detected (c8/nyc). Consider migrating to native `node --test --experimental-test-coverage` (Node >= 22).'
         );
-      } else if (coverageScript) {
+      } else if (coverageScript && !wrapsUnknownShellScript) {
         results.recommendations.push(
           '💡 Consider using native coverage: node --test --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=coverage/lcov.info'
         );
