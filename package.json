@@ -15,7 +15,7 @@
     "test:validate": "node scripts/test-validate.js",
     "test:configs": "node scripts/test-configs.js",
     "test:unit": "node --test --test-timeout=30000 'test/*.test.js'",
-    "coverage": "node --test --experimental-test-coverage --test-reporter=spec --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=coverage/lcov.info --test-timeout=30000 'test/*.test.js'",
+    "coverage": "mkdir -p coverage && node --test --experimental-test-coverage --test-reporter=spec --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=coverage/lcov.info --test-timeout=30000 'test/*.test.js'",
     "format": "biome format --write .",
     "format:check": "biome format .",
     "lint": "biome check --write .",

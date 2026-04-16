@@ -837,7 +837,7 @@ async function checkPackageJson(pluginPath, results, config) {
           );
         } else if (script === 'test:coverage') {
           results.recommendations.push(
-            `💡 Consider adding script: ${script}. Example: "test:coverage": "node --test --experimental-test-coverage --test-reporter=spec --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=coverage/lcov.info 'test/**/*.test.js'"`
+            `💡 Consider adding script: ${script}. Example: "test:coverage": "mkdir -p coverage && node --test --experimental-test-coverage --test-reporter=spec --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=coverage/lcov.info 'test/**/*.test.js'"`
           );
         } else if (script.startsWith('release:')) {
           const releaseType = script.split(':')[1];
@@ -1546,7 +1546,7 @@ async function checkCoverage(pluginPath, results, _functional = false, config) {
         );
       } else if (coverageScript && !wrapsUnknownShellScript) {
         results.recommendations.push(
-          '💡 Consider using native coverage: node --test --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=coverage/lcov.info'
+          '💡 Consider using native coverage: mkdir -p coverage && node --test --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=coverage/lcov.info'
         );
       }
     } catch {

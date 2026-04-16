@@ -34,7 +34,7 @@
     "test": "node --test --test-timeout=15000 'test/**/*.test.js' 'test/**/*.test.cjs'",
     "test:esm": "node --test --test-timeout=15000 'test/**/*.test.js'",
     "test:cjs": "npm run build && node --test --test-timeout=15000 'test/**/*.test.cjs'",
-    "coverage": "node --test --experimental-test-coverage --test-reporter=spec --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=coverage/lcov.info --test-timeout=15000 'test/**/*.test.js' 'test/**/*.test.cjs'",
+    "coverage": "mkdir -p coverage && node --test --experimental-test-coverage --test-reporter=spec --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=coverage/lcov.info --test-timeout=15000 'test/**/*.test.js' 'test/**/*.test.cjs'",
     "test:coverage": "npm run coverage",
     "format": "biome format --write .",
     "format:check": "biome format .",

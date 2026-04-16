@@ -164,7 +164,7 @@ function getPackageScriptsTemplate() {
     'test:esm': "node --test --test-timeout=15000 'test/**/*.test.js'",
     'test:cjs': "npm run build && node --test --test-timeout=15000 'test/**/*.test.cjs'",
     coverage:
-      "node --test --experimental-test-coverage --test-reporter=spec --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=coverage/lcov.info --test-timeout=15000 'test/**/*.test.js' 'test/**/*.test.cjs'",
+      "mkdir -p coverage && node --test --experimental-test-coverage --test-reporter=spec --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=coverage/lcov.info --test-timeout=15000 'test/**/*.test.js' 'test/**/*.test.cjs'",
     lint: 'biome check --write .',
     'lint:check': 'biome check .',
     format: 'biome format --write .',
