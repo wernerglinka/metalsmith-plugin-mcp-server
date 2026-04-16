@@ -87,19 +87,3 @@ export function render(template, data) {
     throw new Error(`Template rendering failed: ${error.message}`);
   }
 }
-
-// Legacy function exports for backward compatibility
-export function renderTemplate(template, data) {
-  return render(template, data);
-}
-
-export function renderConditionals(template, data) {
-  // For test compatibility: only process conditionals, not variables
-  // Nunjucks doesn't have a way to disable variable processing,
-  // so we'll just render normally
-  return render(template, data);
-}
-
-export function renderEach(template, data) {
-  return render(template, data);
-}

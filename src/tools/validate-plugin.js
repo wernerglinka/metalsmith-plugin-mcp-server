@@ -448,14 +448,17 @@ async function analyzeCodeComplexity(pluginPath, results) {
  * Analyze a file's complexity
  */
 function analyzeFileComplexity(content) {
-  const lines = content.split('\n').filter((line) => line.trim() && !line.trim().startsWith('//')).length;
-  const functions = (content.match(/function\s+\w+|const\s+\w+\s*=\s*\([^)]*\)\s*=>/g) || []).length;
-  const classes = (content.match(/class\s+\w+/g) || []).length;
-  const imports = (content.match(/^import\s+/gm) || []).length;
+  // Strip block comments (JSDoc and /* ... */) before counting so documentation
+  // examples don't inflate the function/line metrics.
+  const stripped = content.replace(/\/\*[\s\S]*?\*\//g, '');
+  const lines = stripped.split('\n').filter((line) => line.trim() && !line.trim().startsWith('//')).length;
+  const functions = (stripped.match(/function\s+\w+|const\s+\w+\s*=\s*\([^)]*\)\s*=>/g) || []).length;
+  const classes = (stripped.match(/class\s+\w+/g) || []).length;
+  const imports = (stripped.match(/^import\s+/gm) || []).length;
 
   // Complexity thresholds
   const needsUtils = lines > 150 || functions > 8 || imports > 10;
-  const hasProcessors = content.includes('process') || content.includes('transform') || content.includes('parse');
+  const hasProcessors = stripped.includes('process') || stripped.includes('transform') || stripped.includes('parse');
   const needsProcessors = hasProcessors && functions > 5;
 
   return {
@@ -472,7 +475,6 @@ function analyzeFileComplexity(content) {
 /**
  * Run a command and return result
  */
-// eslint-disable-next-line require-await
 async function runCommand(command, args, cwd) {
   return new Promise((resolve) => {
     const child = spawn(command, args, {
@@ -807,16 +809,18 @@ async function checkPackageJson(pluginPath, results, config) {
 
     for (const script of recommendedScripts) {
       if (packageJson.scripts?.[script]) {
-        // Check release scripts based on existing CLAUDE.md standards
-        if (script.startsWith('release:') && packageJson.scripts[script].includes('GH_TOKEN=$(gh auth token)')) {
-          // The secure pattern is already in use - mark as passed
+        // Resolve delegated shell scripts so release-script detection works whether
+        // GH_TOKEN is set inline in the npm script or inside scripts/release.sh.
+        const scriptValue = packageJson.scripts[script];
+        const resolvedContent = script.startsWith('release:')
+          ? await resolveScriptContent(pluginPath, scriptValue)
+          : scriptValue;
+        const hasSecureTokenPattern = /GH_TOKEN\s*=\s*["']?\$\(\s*gh\s+auth\s+token\s*\)/.test(resolvedContent);
+
+        if (script.startsWith('release:') && hasSecureTokenPattern) {
           if (claudeAnalysis.exists && claudeAnalysis.approvedTokenPattern === 'npm-script-with-gh-token') {
             results.passed.push(`✓ Script "${script}" uses CLAUDE.md approved pattern (npm script with GH_TOKEN)`);
-          } else if (claudeAnalysis.exists && claudeAnalysis.approvedReleasePattern === 'shell-script') {
-            // CLAUDE.md prefers shell script, but npm script with GH_TOKEN is also secure
-            results.passed.push(`✓ Script "${script}" uses secure GH_TOKEN pattern`);
           } else {
-            // No CLAUDE.md guidance, but the pattern is already secure
             results.passed.push(`✓ Script "${script}" uses secure GH_TOKEN pattern`);
           }
         } else {
@@ -1450,12 +1454,12 @@ async function resolveScriptContent(pluginPath, script) {
   if (!script) {
     return '';
   }
-  const match = script.match(/(?:^|\s)(?:bash\s+|sh\s+)?(\.?\/?scripts\/[\w.-]+\.sh)\b/);
+  const match = script.match(/(?:^|\s)(?:bash\s+|sh\s+)?(?:\.\/)?(scripts\/[\w.-]+\.sh)\b/);
   if (!match) {
     return script;
   }
   try {
-    const scriptFile = path.join(pluginPath, match[1]);
+    const scriptFile = sanitizePath(match[1], pluginPath);
     return await fs.readFile(scriptFile, 'utf-8');
   } catch {
     return script;
@@ -1465,7 +1469,6 @@ async function resolveScriptContent(pluginPath, script) {
 /**
  * Check test coverage
  */
-// eslint-disable-next-line no-unused-vars
 async function checkCoverage(pluginPath, results, _functional = false, config) {
   try {
     // Check if this is a new plugin (no node_modules = no tests run yet)

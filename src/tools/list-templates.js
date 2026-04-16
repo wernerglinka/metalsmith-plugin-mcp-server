@@ -80,8 +80,8 @@ export async function listTemplatesTool() {
     output += 'get-template plugin/CLAUDE.md\n\n';
     output += '# Get release configuration\n';
     output += 'get-template configs/release-it.json\n\n';
-    output += '# Get ESLint configuration\n';
-    output += 'get-template configs/eslint.config.js\n';
+    output += '# Get Biome configuration\n';
+    output += 'get-template configs/biome.json\n';
     output += '```\n\n';
     output += '**Note**: Always use these official templates rather than creating your own versions.\n';
 
