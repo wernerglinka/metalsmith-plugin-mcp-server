@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-This is a Metalsmith plugin generated using the enhanced standards from `metalsmith-plugin-mcp-server`. It follows modern JavaScript patterns with dual ESM/CommonJS support and comprehensive testing.
+This is a Metalsmith plugin generated using the enhanced standards from `metalsmith-plugin-mcp-server`. It is an ESM-only plugin (published directly from `src/`, no build step) targeting Node.js 22+.
 
 ## MCP Server Integration (CRITICAL)
 
@@ -58,68 +58,61 @@ update-deps .
 - Ask for clarification when commands seem confusing
 - Always use official templates verbatim
 
-### Migration from Legacy Toolchain (v2.0.0+)
+### Migration from Legacy Toolchain / Dual Build
 
-**IMPORTANT FOR AI ASSISTANTS**: Before working on this plugin, check whether it is still on the pre-2.0 toolchain. The MCP server now scaffolds plugins with **Biome** (lint + format), the **native `node:test` runner**, and **native coverage**. Plugins created before v2.0.0 may still use ESLint, Prettier, Mocha, Chai, and c8, and must be migrated before this CLAUDE.md accurately describes the project.
+**IMPORTANT FOR AI ASSISTANTS**: Before working on this plugin, check whether it still uses the pre-v3.0.0 dual ESM/CJS build, or the pre-v2.0.0 mocha/eslint/c8 toolchain. The MCP server now scaffolds **ESM-only** plugins using **Biome**, the **native `node:test` runner**, and **native coverage**. Published directly from `src/` — no build step, no `lib/`, no microbundle.
 
-**Detection — the plugin is on the legacy toolchain if ANY of these are true:**
+**Detection — the plugin needs migration if ANY of these are true:**
 
-- Files present: `eslint.config.js`, `.eslintrc*`, `prettier.config.js`, `.prettierrc*`, `.c8rc.json`, `.mocharc.*`
-- `package.json` devDependencies include: `eslint`, `eslint-config-prettier`, `eslint-plugin-prettier`, `prettier`, `mocha`, `chai`, `c8`, `nyc`
-- Test files import from `mocha` or `chai`
-- `package.json` contains a `"mocha"` config block
+- `package.json` has `main`, `module`, or dual `exports.import` / `exports.require` fields
+- `package.json` devDeps include `microbundle`, `eslint`, `prettier`, `mocha`, `chai`, `c8`, `nyc`
+- `package.json` scripts include `build`, `test:esm`, `test:cjs`, or `prepublishOnly: npm run build`
+- Files present: `lib/`, `eslint.config.js`, `.eslintrc*`, `prettier.config.js`, `.c8rc.json`, `.mocharc.*`, `test/**/*.test.cjs`
 - `engines.node` is less than `>= 22.0.0`
 
 **Migration steps — execute in order, stopping to confirm with the user before running destructive commands:**
 
-1. **Delete legacy config files:**
+1. **Delete legacy files:**
 
    ```bash
+   rm -rf lib/
    rm -f eslint.config.js .eslintrc* prettier.config.js .prettierrc* .c8rc.json .mocharc.*
+   rm -f test/**/*.test.cjs
    ```
 
-2. **Generate the Biome config:**
+2. **Rewrite `package.json`** — use `get-template plugin/package.json` as the source of truth:
+   - Remove `main`, `module`; set `"exports": "./src/index.js"`
+   - Set `files: ["src/**/*.js", "LICENSE", "README.md"]`
+   - Remove scripts: `build`, `test:esm`, `test:cjs`, `prepublishOnly`
+   - Remove devDeps: `microbundle`, `eslint`, `prettier`, `mocha`, `chai`, `c8`, `nyc`
+   - Add devDep: `@biomejs/biome` (latest `^2.x`)
+   - Bump `engines.node` to `">= 22.0.0"`
+
+3. **Generate the Biome config:**
 
    ```bash
    npx metalsmith-plugin-mcp-server configs . --configs biome
    ```
 
-3. **Update `package.json`:**
-   - Remove devDeps: `eslint`, `eslint-config-prettier`, `eslint-plugin-prettier`, `prettier`, `mocha`, `chai`, `c8`, `nyc`
-   - Add devDep: `@biomejs/biome` (latest `^2.x`)
-   - Remove the `"mocha"` block if present
-   - Replace scripts — use `show-template package-scripts` to retrieve the current set verbatim; do NOT improvise
-   - Bump `engines.node` to `">= 22.0.0"`
-
 4. **Rewrite test imports** (manual — cannot be automated safely):
    - `import { describe, it, before, after, beforeEach, afterEach } from 'mocha'` → `from 'node:test'`
    - `import { expect } from 'chai'` → `import assert from 'node:assert/strict'`
-   - Convert assertions:
-     - `expect(x).to.equal(y)` → `assert.equal(x, y)`
-     - `expect(x).to.deep.equal(y)` → `assert.deepEqual(x, y)`
-     - `expect(x).to.be.a('function')` → `assert.equal(typeof x, 'function')`
-     - `expect(x).to.be.true` → `assert.equal(x, true)`
-     - `expect(fn).to.throw()` → `assert.throws(fn)`
+   - Convert assertions: `expect(x).to.equal(y)` → `assert.equal(x, y)`, `expect(x).to.deep.equal(y)` → `assert.deepEqual(x, y)`, `expect(x).to.be.true` → `assert.equal(x, true)`, `expect(fn).to.throw()` → `assert.throws(fn)`
    - Callback-style tests: `it('name', (done) => {...})` → `it('name', (_t, done) => {...})`
-   - Rename test files to match `test/**/*.test.js` and `test/**/*.test.cjs` glob
 
-5. **Reinstall and verify:**
+5. **Update README examples** — replace `__dirname` with `import.meta.dirname`, remove any `require()` usage of this plugin, drop the ESM/CJS badge
+
+6. **Reinstall and verify:**
 
    ```bash
    rm -rf node_modules package-lock.json
    npm install
    npm run lint
    npm test
-   npm run coverage
-   ```
-
-6. **Run full validation:**
-
-   ```bash
    npx metalsmith-plugin-mcp-server validate . --functional
    ```
 
-**Do NOT proceed with normal development tasks if legacy toolchain files are detected — migrate first so this CLAUDE.md accurately reflects the project.**
+**Do NOT proceed with normal development tasks if legacy toolchain files or dual-build artifacts are detected — migrate first so this CLAUDE.md accurately reflects the project.**
 
 ### Quick Commands
 
@@ -139,7 +132,6 @@ npm run release:major   # Breaking changes (1.5.4 → 2.0.0)
 
 **Development:**
 ```bash
-npm run build          # Build ESM/CJS versions
 npm run test:coverage  # Run tests with detailed coverage
 ```
 
@@ -160,10 +152,7 @@ npm test              # Ensure all tests pass
 ### Common Development Commands
 
 ```bash
-# Build the plugin (required before testing)
-npm run build
-
-# Run tests for both ESM and CommonJS
+# Run tests
 npm test
 
 # Run tests with coverage
@@ -200,7 +189,6 @@ This plugin includes professional GitHub workflows for automated quality assuran
   - Runs on every push and pull request
   - Tests across Node.js versions
   - Automatic coverage calculation and README badge updates
-  - Build verification
 
 - **`claude-code.yml`**: AI-assisted code review
   - Automatic code review on pull requests
@@ -215,13 +203,9 @@ This plugin includes professional GitHub workflows for automated quality assuran
 - ✅ **Human Release Control**: Developers control release timing, not automation
 - ✅ **Professional Standards**: Coverage tracking, AI code review, secure authentication
 
-### Dual Module Support
+### Module System
 
-This plugin supports both ESM and CommonJS:
-
-- **Source**: Write in ESM in `src/index.js`
-- **Build**: Creates both `lib/index.js` (ESM) and `lib/index.cjs` (CommonJS) 
-- **Testing**: Tests run against built files for both formats
+This plugin is **ESM-only** and published directly from `src/` — no build step, no `lib/`, no dual exports. CommonJS consumers can still `require()` it via Node 22+'s stable `require(esm)` support.
 
 ### File Organization
 
@@ -236,12 +220,9 @@ This plugin supports both ESM and CommonJS:
 │   ├── metadata/             # Metadata generation
 {%- endif %}
 │   └── utils/                # Utility functions
-├── test/
-│   ├── index.test.js         # ESM tests
-│   ├── index.test.cjs        # CommonJS tests
-│   └── fixtures/             # Test data
-├── lib/                      # Built files (auto-generated)
-└── types/                    # TypeScript definitions
+└── test/
+    ├── index.test.js         # Test suite
+    └── fixtures/             # Test data
 ```
 
 ### Plugin Features
@@ -266,30 +247,18 @@ This plugin uses standard synchronous processing patterns.
 
 ### Test Structure
 
-- **ESM Tests**: `test/index.test.js` - Tests the built ESM version
-- **CommonJS Tests**: `test/index.test.cjs` - Tests the built CommonJS version
-- **Fixtures**: `test/fixtures/` - Sample files for testing transformations
+- **Tests**: `test/index.test.js` — exercises `src/index.js` directly (no build step)
+- **Fixtures**: `test/fixtures/` — sample files for testing transformations
 
 ### Running Tests
 
 ```bash
-# Build first (required!)
-npm run build
-
 # Run all tests
 npm test
-
-# Run specific test format
-npm run test:esm
-npm run test:cjs
 
 # Coverage reporting
 npm run test:coverage
 ```
-
-### Important: Build Before Testing
-
-**Always run `npm run build` before running tests** - the tests execute against the built files in `lib/`, not the source files in `src/`.
 
 ## Code Quality Standards
 
@@ -332,24 +301,24 @@ This plugin is validated against enhanced quality standards that catch common pr
 ```
 
 #### 2. Module System Consistency (`module-consistency`)
-**What it catches**: Dangerous CJS/ESM mixing in README examples that causes runtime errors
-- ❌ Avoid: Mixed `require()` and `import` in the same example
-- ✅ Use: Consistent module syntax that matches package.json type
+**What it catches**: CommonJS patterns in README examples for an ESM-only plugin
+- ❌ Avoid: `require()`, `module.exports`, or `__dirname` in README examples
+- ✅ Use: `import`, `export`, and `import.meta.dirname`
 
 **Examples:**
 ```javascript
-// ❌ Mixed module systems (causes runtime errors)
+// ❌ CommonJS in an ESM-only plugin (users will copy-paste broken code)
 const Metalsmith = require('metalsmith');
-import myPlugin from 'my-plugin';
+const myPlugin = require('my-plugin');
+Metalsmith(__dirname).use(myPlugin());
 
 // ✅ Consistent ESM
 import Metalsmith from 'metalsmith';
 import myPlugin from 'my-plugin';
-
-// ✅ Consistent CJS  
-const Metalsmith = require('metalsmith');
-const myPlugin = require('my-plugin');
+Metalsmith(import.meta.dirname).use(myPlugin());
 ```
+
+Node 22+ can `require()` ESM packages, so CJS users can still consume the plugin — but README examples must show the authoritative ESM syntax.
 
 #### 3. Hardcoded Values Detection (`hardcoded-values`)
 **What it catches**: Values that should be user-configurable options
@@ -772,7 +741,7 @@ Test your plugin with real Metalsmith projects:
 import Metalsmith from 'metalsmith';
 import {{ camelCaseName }} from '{{ name }}';
 
-const metalsmith = Metalsmith(__dirname)
+const metalsmith = Metalsmith(import.meta.dirname)
   .source('src')
   .destination('dist')
   .use({{ camelCaseName }}({
@@ -789,7 +758,7 @@ const metalsmith = Metalsmith(__dirname)
 ### When Working on This Plugin
 
 - **Be specific** - Include exact error messages and file paths
-- **Test thoroughly** - Both ESM and CommonJS formats
+- **Test thoroughly** - Cover both success and error paths
 - **Follow patterns** - Use existing utilities and conventions
 - **Document changes** - Update JSDoc and README as needed
 

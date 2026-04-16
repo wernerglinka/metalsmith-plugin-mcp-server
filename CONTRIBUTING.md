@@ -236,7 +236,7 @@ cd .. && rm -rf test-plugin
 
 ### Testing Generated Plugins
 
-Generated plugins use dual module testing. After scaffolding a plugin:
+Generated plugins are ESM-only and publish `src/` directly. After scaffolding:
 
 ```bash
 cd generated-plugin
@@ -244,25 +244,21 @@ cd generated-plugin
 # Install dependencies
 npm install
 
-# Build both ESM and CJS versions
-npm run build
+# Run tests (no build step — tests run against src/)
+npm test
 
-# Test both module formats
-npm test  # Runs both test:esm and test:cjs
-
-# Or test individually
-npm run test:esm  # Test ESM build
-npm run test:cjs  # Test CJS build
+# Run coverage
+npm run test:coverage
 ```
 
-### Build Process for Generated Plugins
+### Publishing Model for Generated Plugins
 
-Generated plugins use microbundle for dual module builds:
+Generated plugins ship source directly — no build tool required:
 
-- Source files in `src/` (ESM)
-- Built files in `lib/` (both `index.js` for ESM and `index.cjs` for CJS)
-- Tests run against built files in `lib/`
-- Always run `npm run build` before testing plugins
+- Source files in `src/` are the published artifact
+- `package.json` uses `"type": "module"` and `"exports": "./src/index.js"`
+- `"files": ["src/**/*.js", "LICENSE", "README.md"]` controls what npm publishes
+- CommonJS consumers can still `require('metalsmith-foo')` via Node 22+'s stable `require(esm)`
 
 ## Documentation
 

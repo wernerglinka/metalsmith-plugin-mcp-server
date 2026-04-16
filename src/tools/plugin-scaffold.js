@@ -223,30 +223,23 @@ export async function pluginScaffoldTool(args) {
             'Next steps:',
             `  cd ${path.relative(process.cwd(), pluginPath)}`,
             '  npm install',
-            '  npm run build    # Build ESM and CJS versions',
-            '  npm test         # Run tests for both module formats',
+            '  npm test',
             '  npm run lint',
             '',
             'Available scripts:',
-            '  npm run build    - Build ESM and CJS versions',
-            '  npm test         - Run both ESM and CJS tests',
-            '  npm run test:esm - Run ESM tests only',
-            '  npm run test:cjs - Run CJS tests only',
+            '  npm test         - Run tests',
             '  npm run coverage - Run tests with coverage',
             '  npm run lint     - Lint + format (biome check --write)',
             '  npm run format   - Format only (biome format --write)',
-            '  npm run release  - Create a new release',
+            '  npm run release:patch - Create a patch release',
             '',
             'Development workflow:',
             '  1. Make your changes in src/index.js',
             '  2. Add tests in test/index.test.js',
-            '  3. Run npm run build to create lib/ files',
-            '  4. Run npm test to verify functionality',
-            '  5. Run npm run lint to check code style',
+            '  3. Run npm test to verify functionality',
+            '  4. Run npm run lint to check code style',
             '',
-            'Note: Remember to run "npm run build" before testing or publishing!',
-            '',
-            'Happy coding! 🚀'
+            'Happy coding!'
           ].join('\n')
         }
       ]
@@ -311,11 +304,6 @@ async function copyTemplates(pluginPath, data) {
   await copyTemplate(
     path.join(templatesDir, 'index.test.js.template'),
     path.join(pluginPath, 'test/index.test.js'),
-    data
-  );
-  await copyTemplate(
-    path.join(templatesDir, 'cjs.test.cjs.template'),
-    path.join(pluginPath, 'test/cjs.test.cjs'),
     data
   );
 

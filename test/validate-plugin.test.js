@@ -119,7 +119,7 @@ describe('validate-plugin tool', function () {
   it('should handle all check types in one validation', async function () {
     const result = await validatePluginTool({
       path: path.join(fixturesDir, 'valid-plugin'),
-      checks: ['structure', 'tests', 'docs', 'package-json', 'eslint', 'coverage']
+      checks: ['structure', 'tests', 'docs', 'package-json', 'biome', 'coverage']
     });
 
     assert.notEqual(result.isError, true);
@@ -736,7 +736,7 @@ describe('validate-plugin tool', function () {
 
       const result = await validatePluginTool({
         path: pluginDir,
-        checks: ['structure', 'tests', 'docs', 'eslint', 'jsdoc', 'performance', 'security']
+        checks: ['structure', 'tests', 'docs', 'biome', 'jsdoc', 'performance', 'security']
       });
 
       assert.notEqual(result.isError, true);
@@ -1332,7 +1332,129 @@ MIT
       );
     });
   });
+
+  describe('ESM-only scaffold (v3.0.0)', function () {
+    it('should fail when README code block uses require()', async function () {
+      const pluginDir = path.join(fixturesDir, 'esm-readme-require');
+      await createEsmPluginFixture(pluginDir, {
+        readmeExample: "const plugin = require('metalsmith-foo');\nMetalsmith(__dirname).use(plugin());"
+      });
+
+      const result = await validatePluginTool({ path: pluginDir, checks: ['module-consistency'] });
+      const text = result.content[0].text;
+      assert.ok(text.includes('README code blocks contain CommonJS syntax'), 'should flag CJS syntax in README');
+      assert.ok(text.includes('require()'), 'should name require() as the offending token');
+    });
+
+    it('should fail when README code block uses __dirname', async function () {
+      const pluginDir = path.join(fixturesDir, 'esm-readme-dirname');
+      await createEsmPluginFixture(pluginDir, {
+        readmeExample: "import plugin from 'metalsmith-foo';\nMetalsmith(__dirname).use(plugin());"
+      });
+
+      const result = await validatePluginTool({ path: pluginDir, checks: ['module-consistency'] });
+      const text = result.content[0].text;
+      assert.ok(text.includes('__dirname'), 'should flag __dirname');
+      assert.ok(text.includes('import.meta.dirname'), 'should recommend import.meta.dirname');
+    });
+
+    it('should fail when README code block uses module.exports', async function () {
+      const pluginDir = path.join(fixturesDir, 'esm-readme-module-exports');
+      await createEsmPluginFixture(pluginDir, {
+        readmeExample: 'module.exports = function plugin() {};'
+      });
+
+      const result = await validatePluginTool({ path: pluginDir, checks: ['module-consistency'] });
+      const text = result.content[0].text;
+      assert.ok(text.includes('module.exports'), 'should flag module.exports');
+    });
+
+    it('should fail when package.json is missing "type": "module"', async function () {
+      const pluginDir = path.join(fixturesDir, 'esm-missing-type-module');
+      await createEsmPluginFixture(pluginDir, { omitTypeModule: true });
+
+      const result = await validatePluginTool({ path: pluginDir, checks: ['module-consistency'] });
+      const text = result.content[0].text;
+      assert.ok(text.includes('package.json is missing "type": "module"'), 'should flag missing type: module');
+    });
+
+    it('should pass for a clean ESM-only plugin', async function () {
+      const pluginDir = path.join(fixturesDir, 'esm-clean');
+      await createEsmPluginFixture(pluginDir);
+
+      const result = await validatePluginTool({ path: pluginDir, checks: ['module-consistency'] });
+      const text = result.content[0].text;
+      assert.ok(text.includes('✓ README examples use ESM syntax'), 'should pass ESM check');
+      assert.ok(!text.includes('CommonJS syntax'), 'should not flag any CJS syntax');
+    });
+
+    it('should flag microbundle and lib/ as legacy artifacts', async function () {
+      const pluginDir = path.join(fixturesDir, 'esm-legacy-build');
+      await createEsmPluginFixture(pluginDir, {
+        extraPackageJson: {
+          main: 'lib/index.cjs',
+          module: 'lib/index.js',
+          devDependencies: { microbundle: '^0.15.0' }
+        },
+        createLibDir: true
+      });
+
+      const result = await validatePluginTool({ path: pluginDir, checks: ['package-json'] });
+      const text = result.content[0].text;
+      assert.ok(text.includes('microbundle'), 'should list microbundle as legacy dep');
+      assert.ok(text.includes('`main`, `module`') || text.includes('main`, `module'), 'should flag main/module fields');
+      assert.ok(text.includes('`lib/`') || text.includes('lib/'), 'should flag lib/ directory');
+    });
+  });
 });
+
+/**
+ * Create an ESM-only plugin fixture for module-consistency and legacy-flagging tests.
+ * Writes a minimal but valid plugin with configurable README example and package.json extras.
+ */
+async function createEsmPluginFixture(pluginDir, options = {}) {
+  await fs.mkdir(path.join(pluginDir, 'src'), { recursive: true });
+  await fs.mkdir(path.join(pluginDir, 'test'), { recursive: true });
+
+  const packageJson = {
+    name: 'metalsmith-esm-fixture',
+    version: '1.0.0',
+    description: 'ESM fixture',
+    license: 'MIT',
+    exports: './src/index.js',
+    files: ['src/**/*.js', 'LICENSE', 'README.md'],
+    scripts: {
+      test: "node --test 'test/**/*.test.js'"
+    },
+    engines: { node: '>= 22.0.0' },
+    ...options.extraPackageJson
+  };
+  if (!options.omitTypeModule) {
+    packageJson.type = 'module';
+  }
+  await fs.writeFile(path.join(pluginDir, 'package.json'), JSON.stringify(packageJson, null, 2));
+
+  await fs.writeFile(
+    path.join(pluginDir, 'src/index.js'),
+    `export default function plugin(options = {}) {
+  return function (files, metalsmith, done) { done(); };
+}
+`
+  );
+
+  const example =
+    options.readmeExample ??
+    "import Metalsmith from 'metalsmith';\nimport plugin from 'metalsmith-esm-fixture';\nMetalsmith(import.meta.dirname).use(plugin());";
+  await fs.writeFile(
+    path.join(pluginDir, 'README.md'),
+    `# metalsmith-esm-fixture\n\n## Usage\n\n\`\`\`js\n${example}\n\`\`\`\n`
+  );
+
+  if (options.createLibDir) {
+    await fs.mkdir(path.join(pluginDir, 'lib'), { recursive: true });
+    await fs.writeFile(path.join(pluginDir, 'lib/index.js'), '// built artifact\n');
+  }
+}
 
 /**
  * Create a test plugin fixture

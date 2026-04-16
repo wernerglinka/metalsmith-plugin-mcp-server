@@ -72,11 +72,28 @@ Focus on getting to successful results quickly:
 
 This is an MCP (Model Context Protocol) server for scaffolding and validating high-quality Metalsmith plugins. It provides tools for Claude to help users create, validate, and maintain Metalsmith plugins following best practices.
 
-## Current Status (v2.0.0 - Biome + node:test Toolchain Modernization)
+## Current Status (v3.0.0 - ESM-Only Scaffold)
 
-### Recent Major Work Completed (v2.0.0 - Toolchain Modernization)
+### Recent Major Work Completed (v3.0.0 - ESM-Only)
 
-**Breaking Changes** - Scaffolded plugins and MCP tool contracts now use the modern toolchain matching this repo:
+**Breaking Changes** - Scaffolded plugins no longer produce a dual ESM/CJS build:
+
+1. **No build step** - `microbundle` removed; package ships `src/` directly via `"exports": "./src/index.js"` and `"files": ["src/**/*.js", ...]`. `main`, `module`, and dual `exports.import`/`exports.require` fields are gone.
+2. **ESM-only scripts** - `build`, `prepublishOnly`, `test:esm`, and `test:cjs` are gone. `npm test` runs a single `node --test` pass against source.
+3. **No CJS tests** - `templates/plugin/cjs.test.cjs.template` deleted. README examples use `import`/`import.meta.dirname`. ESM/CommonJS badge removed.
+4. **Module-consistency check flipped** - Any `require()`, `module.exports`, `__dirname`, or `__filename` in README code blocks now fails validation. Missing `"type": "module"` also fails.
+5. **Legacy dependency flagging extended** - `microbundle` now joins `mocha`/`chai`/`c8`/`nyc`/`eslint`/`prettier` on the legacy list. Presence of `lib/`, `main`, `module`, or dual `exports` fields surfaces as a modernization recommendation.
+
+**Why this works without dual builds**: Node 22+ has stable `require(esm)`. CommonJS consumers can still `require('metalsmith-foo')` on an ESM-only package without any transpilation.
+
+**Migration Notes for Plugin Authors** (see [MIGRATION.md](MIGRATION.md)):
+
+- Delete `lib/`, `eslint.config.js`, `prettier.config.js`, `.c8rc.json`, `.mocharc.*`, `test/**/*.test.cjs`.
+- Remove `microbundle` and `main`/`module` from `package.json`; set `"exports": "./src/index.js"`.
+- Remove scripts: `build`, `prepublishOnly`, `test:esm`, `test:cjs`.
+- Rewrite README examples in ESM (`import`, `import.meta.dirname`).
+
+### Previous Major Work (v2.0.0 - Biome + node:test Toolchain Modernization)
 
 1. **Biome Replaces ESLint + Prettier** - Scaffolded plugins ship a single `biome.json` instead of `eslint.config.js` + `prettier.config.js`. Lint and format are unified via `biome check`.
 2. **Native `node:test` Replaces Mocha + Chai** - Test templates use `node:test` / `node:assert/strict`. No more mocha/chai dependencies.
@@ -84,13 +101,6 @@ This is an MCP (Model Context Protocol) server for scaffolding and validating hi
 4. **Node.js >= 22** - Engines bumped from `>=18` for stable coverage reporter-destination support.
 5. **MCP Schema Enum Changes (BREAKING)** - `validate` no longer accepts `'eslint'`; use `'biome'`. `configs` enum no longer accepts `'eslint'`/`'prettier'`. `show-template` enum updated accordingly.
 6. **Validation Updates** - `checkBiome` replaces `checkEslint`; legacy `mocha`/`chai`/`c8`/`nyc`/`eslint`/`prettier` dependencies are now flagged.
-
-**Migration Notes for Plugin Authors:**
-
-- Delete `eslint.config.js`, `prettier.config.js`, `.c8rc.json`, `.mocharc.*`.
-- Regenerate config via `npx metalsmith-plugin-mcp-server configs .` to get `biome.json`.
-- Update test imports from `mocha`/`chai` to `node:test`/`node:assert/strict`.
-- Bump `engines.node` to `>= 22.0.0`.
 
 ### Previous Major Work (v1.4.0 - Plugin Quality Validation Enhancements)
 
@@ -366,7 +376,7 @@ const isMatch = metalsmith.match(pattern, filename);
 - `test/plugin-scaffold.test.js` - Plugin generation tests
 - `test/validate-plugin.test.js` - Validation logic tests
 - All tests use temporary directories for isolation
-- Both ESM and CJS plugin generation tested
+- Scaffold generates ESM-only plugins (no CJS test variant)
 
 ### Running Tests
 
@@ -429,7 +439,22 @@ npm run release:major  # For breaking changes
 
 ## Release Information
 
-### Current Version: 2.0.0
+### Current Version: 3.0.0
+
+**ESM-Only Scaffold (BREAKING)** — Scaffolded plugins drop the dual ESM/CJS build:
+
+- **No Build Step**: `microbundle` removed; package publishes `src/` directly via `"exports": "./src/index.js"` and `"files": ["src/**/*.js", ...]`
+- **Package.json Cleanup**: `main`, `module`, `exports.import`/`exports.require`, `build`, `prepublishOnly`, `test:esm`, `test:cjs` all removed from templates
+- **CJS Test Removed**: `templates/plugin/cjs.test.cjs.template` deleted; single `test/index.test.js` runs against source
+- **README Templates**: Replace `__dirname` with `import.meta.dirname`, drop ESM/CommonJS badge
+- **Validation Flipped**: `module-consistency` check fails on any `require()`, `module.exports`, `__dirname`, `__filename` in README code blocks, and fails when `package.json` is missing `"type": "module"`
+- **Legacy Flagging Extended**: `microbundle` now flagged alongside mocha/chai/c8/nyc/eslint/prettier. Presence of `lib/`, `main`, `module`, or dual `exports` fields surfaces as a modernization recommendation
+
+**Why this works**: Node 22+ has stable `require(esm)`, so CommonJS consumers can still `require('metalsmith-foo')` on an ESM-only package without transpilation.
+
+**Migration**: See [MIGRATION.md](MIGRATION.md) for step-by-step instructions.
+
+### Previous Version: 2.0.0
 
 **Biome + node:test Toolchain Modernization (BREAKING)** - Scaffolded plugins and MCP tool contracts align with this repo's modern toolchain:
 
@@ -440,8 +465,6 @@ npm run release:major  # For breaking changes
 - **MCP Schema Changes**: `validate` checks enum drops `'eslint'` (use `'biome'`); `configs`/`show-template` enums drop `eslint`/`prettier`
 - **Validation Updates**: `checkBiome` replaces `checkEslint`; legacy mocha/chai/c8/nyc/eslint/prettier deps are flagged
 - **Template Migration**: All config and test templates rewritten; `eslint.config.js.template`, `prettier.config.js.template`, `.c8rc.json.template` removed
-
-**Migration**: Existing plugins should delete legacy configs, run `configs .` to regenerate `biome.json`, and update test imports. See `### Recent Major Work Completed (v2.0.0)` above for details.
 
 ### Previous Version: 1.6.0
 

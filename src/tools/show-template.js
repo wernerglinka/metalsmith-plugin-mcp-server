@@ -158,13 +158,9 @@ function getReleaseItTemplate() {
  */
 function getPackageScriptsTemplate() {
   const scripts = {
-    build:
-      'microbundle --entry src/index.js --output lib/index.js --target node -f esm,cjs --strict --generateTypes=false',
-    test: "node --test --test-timeout=15000 'test/**/*.test.js' 'test/**/*.test.cjs'",
-    'test:esm': "node --test --test-timeout=15000 'test/**/*.test.js'",
-    'test:cjs': "npm run build && node --test --test-timeout=15000 'test/**/*.test.cjs'",
+    test: "node --test --test-timeout=15000 'test/**/*.test.js'",
     coverage:
-      "mkdir -p coverage && node --test --experimental-test-coverage --test-reporter=spec --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=coverage/lcov.info --test-timeout=15000 'test/**/*.test.js' 'test/**/*.test.cjs'",
+      "mkdir -p coverage && node --test --experimental-test-coverage --test-reporter=spec --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=coverage/lcov.info --test-timeout=15000 'test/**/*.test.js'",
     lint: 'biome check --write .',
     'lint:check': 'biome check .',
     format: 'biome format --write .',
@@ -172,7 +168,7 @@ function getPackageScriptsTemplate() {
     'release:patch': './scripts/release.sh patch --ci',
     'release:minor': './scripts/release.sh minor --ci',
     'release:major': './scripts/release.sh major --ci',
-    'release:check': 'npm run lint:check && npm run build && release-it --dry-run'
+    'release:check': 'npm run lint:check && release-it --dry-run'
   };
 
   return `Add these scripts to your package.json:
@@ -203,7 +199,6 @@ function getBiomeTemplate() {
         '**',
         '!**/node_modules',
         '!**/coverage',
-        '!**/lib',
         '!**/test/fixtures',
         '!**/package-lock.json',
         '!**/CHANGELOG.md'
@@ -249,7 +244,7 @@ function getBiomeTemplate() {
     },
     overrides: [
       {
-        includes: ['test/**/*.js', 'test/**/*.cjs'],
+        includes: ['test/**/*.js'],
         linter: { rules: { suspicious: { noConsole: 'off' } } }
       }
     ]

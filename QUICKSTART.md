@@ -286,17 +286,13 @@ cd metalsmith-my-plugin
 # Install dependencies
 npm install
 
-# Build both ESM and CJS versions
-npm run build
-
-# Run tests for both module formats
+# Run tests (no build step — tests run directly against src/)
 npm test
 
 # Start developing
 # - Edit files in src/
 # - Add tests in test/
-# - Run npm run build before testing
-# - Both ESM and CJS builds are tested automatically
+# - Plugin is ESM-only; CommonJS consumers can still require() it via Node 22+
 
 # Before releasing, run comprehensive quality checks
 npm run pre-release
@@ -323,10 +319,10 @@ Use this before any release to ensure your plugin meets quality standards.
 
 ### Plugin Creation
 
-- Complete directory structure with dual module support (src/, lib/, test/)
-- Modern ESM source with automatic CJS builds via microbundle
-- Comprehensive test setup for both ESM and CommonJS
-- Production-ready documentation with build instructions
+- Complete directory structure (src/, test/) — no build step, ships `src/` directly
+- ESM-only source published via `"exports": "./src/index.js"` (CommonJS consumers use Node 22+ `require(esm)`)
+- Single test suite via the native `node:test` runner
+- Production-ready documentation
 - Zero external runtime dependencies
 - Native Metalsmith method integration
 

@@ -6,22 +6,31 @@ MCP server for scaffolding and validating high-quality Metalsmith plugins
 [![npm: version][npm-badge]][npm-url]
 [![license: MIT][license-badge]][license-url]
 [![test coverage][coverage-badge]][coverage-url]
-[![ESM/CommonJS][modules-badge]][npm-url]
 [![Known Vulnerabilities](https://snyk.io/test/npm/metalsmith-plugin-mcp-server/badge.svg)](https://snyk.io/test/npm/metalsmith-plugin-mcp-server)
 
 This MCP (Model Context Protocol) server provides tools for creating and maintaining Metalsmith plugins following quality standards. It encapsulates patterns from the Metalsmith ecosystem, such as `@metalsmith/core-plugin` and contributed plugins like `metalsmith-optimize-images`.
 
+## What's New in v3.0.0
+
+**ESM-Only Scaffold (BREAKING)** — Scaffolded plugins no longer ship a CommonJS build. The scaffold publishes `src/` directly with `"type": "module"` and `"exports": "./src/index.js"`, and Node 22+'s stable `require(esm)` lets CommonJS consumers still `require()` the plugin without a dual build.
+
+- **No build step** — `microbundle` removed; no `lib/`, no `main`, no `module`, no dual `exports.import`/`exports.require`
+- **Single test format** — `test/index.test.js` runs against source; `test:esm`/`test:cjs` scripts gone
+- **Template cleanup** — README examples use `import`/`import.meta.dirname`; ESM/CommonJS badge removed
+- **Validation flip** — `module-consistency` check now fails on any `require()`, `module.exports`, `__dirname`, or `__filename` in README code blocks, and fails when `package.json` is missing `"type": "module"`
+- **Legacy flagging** — `microbundle`, `lib/`, `main`/`module`, and dual-`exports` fields now surface as modernization recommendations
+
+See [MIGRATION.md](MIGRATION.md) for step-by-step instructions for existing plugins.
+
 ## What's New in v2.0.0
 
-**Biome + node:test Toolchain Modernization (BREAKING)** - Scaffolded plugins now use the modern toolchain:
+**Biome + node:test Toolchain Modernization (BREAKING)** - Scaffolded plugins use the modern toolchain:
 
 - **Biome replaces ESLint + Prettier** - Unified lint + format via a single `biome.json`
 - **Native `node:test` replaces Mocha + Chai** - Test templates use `node:test` / `node:assert/strict`
 - **Native coverage replaces c8** - `node --test --experimental-test-coverage` with lcov output
 - **Node >= 22** - Engine requirement bumped for stable coverage reporter destinations
 - **MCP schema changes** - `validate` checks enum drops `'eslint'` (use `'biome'`); `configs` and `show-template` enums drop `eslint`/`prettier`
-
-**Migration for existing plugins**: delete `eslint.config.js`, `prettier.config.js`, `.c8rc.json`, `.mocharc.*`; run `npx metalsmith-plugin-mcp-server configs .` to regenerate `biome.json`; update test imports from `mocha`/`chai` to `node:test`/`node:assert/strict`; bump `engines.node` to `>= 22.0.0`.
 
 ## Installation
 
@@ -54,11 +63,11 @@ await mcp.call('plugin-scaffold', {
 
 This creates a fully-configured plugin with:
 
-- **Dual Module Support**: Both ESM and CommonJS builds using microbundle
+- **ESM-Only Publishing**: Ships `src/` directly with `"type": "module"` and `"exports": "./src/index.js"` — no build step, no `lib/`, no microbundle. CommonJS consumers can still `require()` the plugin via Node 22+'s stable `require(esm)`
 - **Native Metalsmith Methods**: Enforces `metalsmith.debug()`, `metalsmith.match()`, `metalsmith.env()`, `metalsmith.path()` over external packages
 - **Zero External Dependencies**: Self-contained utilities for pattern matching and config merging
 - **Complementary CI/CD Architecture**: GitHub workflows for automated testing + manual release scripts
-- Comprehensive test setup with both ESM and CJS testing via the native `node:test` runner
+- Comprehensive test setup via the native `node:test` runner
 - Production-ready documentation
 - Unified lint + format via [Biome](https://biomejs.dev) (`biome.json`)
 - Native coverage via `node --test --experimental-test-coverage` (no c8/nyc)
@@ -127,7 +136,7 @@ Validation checks include:
 **Enhanced Quality Standards** (addressing Metalsmith maintainer feedback):
 
 - **Marketing Language Detection**: Flags buzzwords like "intelligent", "smart", "seamless" in documentation
-- **Module System Consistency**: Detects dangerous CJS/ESM mixing in README examples that cause runtime errors
+- **Module System Consistency**: Flags CommonJS syntax (`require()`, `module.exports`, `__dirname`, `__filename`) in README code blocks — scaffold is ESM-only
 - **Hardcoded Values Detection**: Identifies hardcoded configurations (wordsPerMinute, viewport, etc.) that should be options
 - **Performance Pattern Analysis**: Finds objects redefined in functions, redundant utilities (get, pick, identity)
 - **Internationalization Readiness**: Detects English-only outputs that prevent global plugin usage
@@ -899,38 +908,26 @@ The release process will automatically check for GitHub CLI availability and fai
 
 ## Development Workflow
 
-Generated plugins follow a modern dual-module development workflow:
+Generated plugins ship ESM-only — no build step, no `lib/`, tests run directly against `src/`:
 
 ```bash
 # Install dependencies
 npm install
 
-# Build both ESM and CJS versions
-npm run build
-
-# Run tests for both module formats
+# Run tests
 npm test
-
-# Run only ESM tests
-npm run test:esm
-
-# Run only CJS tests
-npm run test:cjs
 
 # Run tests with coverage
 npm run test:coverage
 
-# Run linting
+# Lint + format (Biome)
 npm run lint
 
-# Format code
+# Format only
 npm run format
 ```
 
-**Important**:
-
-- Always run `npm run build` before testing or publishing, as the tests run against the built files in the `lib/` directory.
-- Remove any empty directories (like `src/utils`) that aren't needed for your specific plugin after development is complete.
+**Important**: Remove any empty directories (like `src/utils`) that aren't needed for your specific plugin after development is complete.
 
 ## Testing
 
@@ -969,4 +966,3 @@ MIT © Werner Glinka
 [license-url]: LICENSE
 [coverage-badge]: https://img.shields.io/badge/test%20coverage-100.0%25-brightgreen
 [coverage-url]: https://github.com/wernerglinka/metalsmith-plugin-mcp-server/actions/workflows/test.yml
-[modules-badge]: https://img.shields.io/badge/modules-ESM%2FCJS-blue

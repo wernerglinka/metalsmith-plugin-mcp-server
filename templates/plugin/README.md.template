@@ -4,7 +4,6 @@
 [![npm: version][npm-badge]][npm-url]
 [![license: MIT][license-badge]][license-url]
 [![test coverage][coverage-badge]][coverage-url]
-[![ESM/CommonJS][modules-badge]][npm-url]
 [![Known Vulnerabilities](https://snyk.io/test/npm/{{ pluginName }}/badge.svg)](https://snyk.io/test/npm/{{ pluginName }})
 
 > {{ description }}
@@ -29,7 +28,7 @@ Add requirements here...
 import Metalsmith from 'metalsmith';
 import {{ functionName }} from '{{ pluginName }}';
 
-Metalsmith(__dirname)
+Metalsmith(import.meta.dirname)
   .use({{ functionName }}({
     // options
   }))
@@ -59,7 +58,7 @@ Add examples here...
 import Metalsmith from 'metalsmith';
 import {{ functionName }} from '{{ pluginName }}';
 
-Metalsmith(__dirname)
+Metalsmith(import.meta.dirname)
   .source('./src')
   .destination('./build')
   .use({{ functionName }}())
@@ -75,7 +74,7 @@ Metalsmith(__dirname)
 import Metalsmith from 'metalsmith';
 import {{ functionName }} from '{{ pluginName }}';
 
-Metalsmith(__dirname)
+Metalsmith(import.meta.dirname)
   .source('./src')
   .destination('./build')
   .use({{ functionName }}({
@@ -96,7 +95,7 @@ This plugin supports asynchronous processing for improved performance:
 import Metalsmith from 'metalsmith';
 import {{ functionName }} from '{{ pluginName }}';
 
-Metalsmith(__dirname)
+Metalsmith(import.meta.dirname)
   .use({{ functionName }}({
     async: true,
     batchSize: 5
@@ -122,17 +121,8 @@ Add CLI usage instructions here...
 ## Testing and Coverage
 
 ```bash
-# Build the plugin (required before testing)
-npm run build
-
-# Run all tests (ESM and CJS)
+# Run tests
 npm test
-
-# Run only ESM tests
-npm run test:esm
-
-# Run only CJS tests
-npm run test:cjs
 
 # Generate coverage report
 npm run test:coverage
@@ -152,7 +142,6 @@ This plugin includes professional GitHub workflows for automated quality assuran
 - **`.github/workflows/test.yml`**: Runs on every push and pull request
   - Automated testing across Node.js versions
   - Coverage calculation and badge updates
-  - Build verification
   - Automatic README updates with coverage percentages
 
 - **`.github/workflows/claude-code.yml`**: AI-assisted code review
@@ -264,4 +253,3 @@ MIT © [Your Name](https://github.com/yourusername)
 [license-url]: LICENSE
 [coverage-badge]: https://img.shields.io/badge/test%20coverage-100.0%25-brightgreen
 [coverage-url]: https://github.com/yourusername/{{ pluginName }}/actions/workflows/test.yml
-[modules-badge]: https://img.shields.io/badge/modules-ESM%2FCJS-blue

@@ -861,14 +861,33 @@ async function checkPackageJson(pluginPath, results, config) {
     }
 
     // Flag legacy toolchain dependencies as modernization opportunities
-    const legacyDeps = ['mocha', 'chai', 'c8', 'nyc', 'eslint', 'prettier'];
+    const legacyDeps = ['mocha', 'chai', 'c8', 'nyc', 'eslint', 'prettier', 'microbundle'];
     const foundLegacy = legacyDeps.filter(
       (dep) => packageJson.devDependencies?.[dep] || packageJson.dependencies?.[dep]
     );
     if (foundLegacy.length > 0) {
       results.recommendations.push(
-        `💡 Legacy toolchain detected in dependencies (${foundLegacy.join(', ')}). Consider modernizing to @biomejs/biome (lint + format) and the native node:test runner. See: show-template biome`
+        `💡 Legacy toolchain detected in dependencies (${foundLegacy.join(', ')}). Consider modernizing to @biomejs/biome (lint + format), the native node:test runner, and ESM-only publishing (drop microbundle, ship src/ directly). See: show-template biome`
       );
+    }
+
+    // Flag dual-build / CJS artifacts (ESM-only policy)
+    const hasLegacyExportsField =
+      typeof packageJson.exports === 'object' &&
+      packageJson.exports !== null &&
+      (packageJson.exports.require || packageJson.exports.import);
+    if (packageJson.main || packageJson.module || hasLegacyExportsField) {
+      results.recommendations.push(
+        '💡 package.json contains `main`, `module`, or dual `exports.import`/`exports.require` fields. ESM-only plugins should use `"exports": "./src/index.js"` and drop `main`/`module`.'
+      );
+    }
+    try {
+      await fs.access(path.join(pluginPath, 'lib'));
+      results.recommendations.push(
+        '💡 Build artifact directory `lib/` detected. ESM-only plugins publish `src/` directly — remove `lib/` and any `build`/`prepublishOnly` scripts.'
+      );
+    } catch {
+      // No lib/ directory — good.
     }
 
     // Check for release-it dependency
@@ -1899,7 +1918,9 @@ async function checkMarketingLanguage(pluginPath, results) {
 }
 
 /**
- * Check for module system consistency (CJS vs ESM mixing)
+ * Check that README examples use ESM (the scaffold is ESM-only).
+ * Flags `require()`, `module.exports`, `exports.`, `__dirname`, `__filename`
+ * anywhere in README code blocks so users never copy-paste broken CJS snippets.
  */
 async function checkModuleConsistency(pluginPath, results) {
   try {
@@ -1907,65 +1928,50 @@ async function checkModuleConsistency(pluginPath, results) {
 
     try {
       const readme = await fs.readFile(readmePath, 'utf-8');
-
-      // Look for code blocks
       const codeBlocks = readme.match(/```(?:javascript|js)?\n([\s\S]*?)\n```/g) || [];
 
-      let hasCJSPatterns = false;
+      const cjsHits = new Set();
       let hasESMPatterns = false;
-      let hasMixedPatterns = false;
 
       for (const block of codeBlocks) {
         const content = block.replace(/```(?:javascript|js)?\n|\n```/g, '');
 
-        // Check for CJS patterns
-        if (/require\s*\(|module\.exports|exports\.|__dirname|__filename/.test(content)) {
-          hasCJSPatterns = true;
+        if (/\brequire\s*\(/.test(content)) {
+          cjsHits.add('require()');
         }
-
-        // Check for ESM patterns
+        if (/module\.exports|(^|\s)exports\./.test(content)) {
+          cjsHits.add('module.exports/exports.*');
+        }
+        if (/\b__dirname\b/.test(content)) {
+          cjsHits.add('__dirname');
+        }
+        if (/\b__filename\b/.test(content)) {
+          cjsHits.add('__filename');
+        }
         if (/import\s+.*from|export\s+.*from|export\s+default|export\s+\{/.test(content)) {
           hasESMPatterns = true;
         }
-
-        // Check for mixed patterns in same block
-        if (
-          /require\s*\(.*import\s+.*from|import\s+.*from.*require\s*\(|__dirname.*import|import.*__dirname/.test(
-            content
-          )
-        ) {
-          hasMixedPatterns = true;
-        }
       }
 
-      if (hasMixedPatterns) {
-        results.failed.push('✗ README examples mix CJS and ESM syntax - this will cause runtime errors');
+      if (cjsHits.size > 0) {
+        const tokens = Array.from(cjsHits).join(', ');
+        results.failed.push(`✗ README code blocks contain CommonJS syntax (${tokens}) — scaffold is ESM-only`);
         results.recommendations.push(
-          '💡 Fix mixed module syntax in README examples. Choose either CJS or ESM consistently'
+          '💡 Rewrite README examples in ESM: replace `require()` with `import`, `module.exports` with `export`, and `__dirname` with `import.meta.dirname`'
         );
-      } else if (hasCJSPatterns && hasESMPatterns) {
-        results.warnings.push('⚠ README has both CJS and ESM examples - ensure they are clearly separated and labeled');
-        results.recommendations.push('💡 Label code examples clearly as "CommonJS" or "ES Modules" to avoid confusion');
-      } else if (hasCJSPatterns || hasESMPatterns) {
-        results.passed.push('✓ README examples use consistent module syntax');
+      } else if (hasESMPatterns) {
+        results.passed.push('✓ README examples use ESM syntax');
       }
 
-      // Check package.json type
       try {
         const packageJson = JSON.parse(await fs.readFile(path.join(pluginPath, 'package.json'), 'utf-8'));
-        const isESM = packageJson.type === 'module' || packageJson.exports;
-
-        if (isESM && hasCJSPatterns && !hasESMPatterns) {
-          results.recommendations.push(
-            '💡 Package uses ES modules but README shows CJS examples - update examples to ESM'
-          );
-        } else if (!isESM && hasESMPatterns && !hasCJSPatterns) {
-          results.recommendations.push(
-            '💡 Package uses CommonJS but README shows ESM examples - update examples to CJS or add "type": "module"'
-          );
+        const isESM = packageJson.type === 'module';
+        if (!isESM) {
+          results.failed.push('✗ package.json is missing "type": "module" — scaffold is ESM-only');
+          results.recommendations.push('💡 Add `"type": "module"` to package.json and remove any CJS build output');
         }
       } catch {
-        // Could not read package.json
+        // Could not read package.json; upstream checks will surface this.
       }
     } catch {
       results.warnings.push('⚠ Could not read README.md to check module consistency');

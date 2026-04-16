@@ -276,9 +276,9 @@ When tools run successfully, you should see:
 ### Plugin Scaffold Success
 
 - ✅ New directory created with plugin name
-- ✅ Complete file structure with dual module support (src/, test/, package.json, README.md, etc.)
-- ✅ Both ESM and CJS test files created (index.test.js and cjs.test.cjs)
-- ✅ Build configuration with microbundle for dual outputs
+- ✅ Complete file structure (src/, test/, package.json, README.md, etc.)
+- ✅ Single ESM test file (`test/index.test.js`) — no CJS variant, no build step
+- ✅ package.json uses `"type": "module"` and `"exports": "./src/index.js"` — no microbundle
 - ✅ All template variables properly substituted
 - ✅ Git repository initialized
 - ✅ Native Metalsmith methods integrated (no external pattern matching dependencies)
@@ -389,7 +389,7 @@ cd .. && rm -rf test-new-plugin
 
 ## Testing Generated Plugins
 
-After generating a plugin, you should test its dual module functionality:
+After generating a plugin, verify the ESM-only setup works end to end:
 
 ```bash
 cd generated-plugin-name
@@ -397,22 +397,14 @@ cd generated-plugin-name
 # Install dependencies
 npm install
 
-# Build both ESM and CJS versions
-npm run build
-
-# This should create lib/index.js (ESM) and lib/index.cjs (CJS)
-ls lib/
-
-# Run tests for both module formats
+# Run tests (no build step — tests import src/index.js directly)
 npm test
 
-# Run tests individually
-npm run test:esm  # Tests the built ESM version
-npm run test:cjs  # Tests the built CJS version
+# Verify the package is importable via ESM
+node -e "import('./src/index.js').then(m => console.log('ESM works:', typeof m.default))"
 
-# Check that both modules can be imported
-node -e "import plugin from './lib/index.js'; console.log('ESM works:', typeof plugin)"
-node -e "const plugin = require('./lib/index.cjs'); console.log('CJS works:', typeof plugin)"
+# Verify it's also usable from CommonJS (Node 22+ require(esm))
+node -e "const plugin = require('./src/index.js'); console.log('CJS works:', typeof plugin)"
 ```
 
 ## Development Testing
