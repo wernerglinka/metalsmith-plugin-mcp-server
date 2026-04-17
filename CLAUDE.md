@@ -371,6 +371,16 @@ const isMatch = metalsmith.match(pattern, filename);
 
 ## Testing Strategy
 
+### CRITICAL: Never Mock Metalsmith
+
+**Always use a real Metalsmith instance in tests — never a mock, stub, or fake.**
+
+This applies to tests in this repo AND to scaffolded plugin test templates. Metalsmith is in `devDependencies` specifically so tests can import and use it directly. Instantiate a real `Metalsmith` against a temp directory instead of mocking `metalsmith()`, `metalsmith.match`, `metalsmith.debug`, `metalsmith.env`, `metalsmith.path`, or plugin invocation.
+
+**Why**: Mocking Metalsmith repeatedly hid real integration issues (plugin signature mismatches, metadata handling bugs, path resolution errors) that only surfaced in production. A real instance exercises the full plugin pipeline and catches these at test time.
+
+Mocking unrelated external systems (network, non-Metalsmith fs concerns) is still fine.
+
 ### Test Structure
 
 - `test/plugin-scaffold.test.js` - Plugin generation tests
