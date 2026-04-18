@@ -1,0 +1,6 @@
+{
+  "permissions": {
+    "allow": ["Bash(awk '{print $5, $9}')"],
+    "additionalDirectories": ["/Users/wernerglinka/Documents/Projects/metalsmith/metalsmith-plugin-mcp-server/.claude"]
+  }
+}
