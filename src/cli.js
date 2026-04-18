@@ -115,7 +115,8 @@ function showHelp() {
   console.warn('  list-templates                List all available templates');
   console.warn('  get-template [name]           Get specific template content (e.g., plugin/CLAUDE.md)');
   console.warn('  install-claude-md [path] [--replace] [--dry-run] Install CLAUDE.md with AI assistant instructions');
-  console.warn('  update-deps [path] [--install] [--test] Update dependencies in plugin(s)\n');
+  console.warn('  update-deps [path] [--install] [--test] Update dependencies in plugin(s)');
+  console.warn('  diff-template [path] [--templates=a,b] Diff plugin against current scaffold templates\n');
 
   console.warn(chalk.gray('Note: Commands can be run in guided mode by omitting parameters\n'));
 
@@ -138,7 +139,11 @@ function showHelp() {
   console.warn('  npx metalsmith-plugin-mcp-server install-claude-md --dry-run # Preview changes without applying');
   console.warn('  npx metalsmith-plugin-mcp-server update-deps ./plugins     # Update all plugins');
   console.warn('  npx metalsmith-plugin-mcp-server update-deps ./my-plugin   # Update single plugin');
-  console.warn('  npx metalsmith-plugin-mcp-server update-deps ./ --install --test # Update, install & test\n');
+  console.warn('  npx metalsmith-plugin-mcp-server update-deps ./ --install --test # Update, install & test');
+  console.warn('  npx metalsmith-plugin-mcp-server diff-template ./my-plugin # Show drift from latest scaffold');
+  console.warn(
+    '  npx metalsmith-plugin-mcp-server diff-template . --templates=plugin/package.json.template # Diff one file\n'
+  );
 
   console.warn(chalk.bold('Enhanced Validation Includes:'));
   console.warn('  • Marketing language detection (flags buzzwords like "intelligent", "seamless")');
@@ -947,6 +952,36 @@ async function runUpdateDeps(userPath, install = false, test = false) {
   }
 }
 
+async function runDiffTemplate(userPath, only) {
+  let pathArg = userPath;
+  if (!pathArg) {
+    console.warn(styles.header('\nDiff a plugin against scaffold templates\n'));
+    pathArg = await prompt('Plugin path', '.');
+    if (!pathArg) {
+      console.error(styles.error('\nError: Plugin path is required'));
+      process.exit(1);
+    }
+  }
+
+  pathArg = sanitizePath(pathArg, process.cwd());
+
+  try {
+    const { diffTemplateTool } = await import('./tools/diff-template.js');
+    const result = await diffTemplateTool({ path: pathArg, templates: only });
+    if (result.content && result.content[0] && result.content[0].text) {
+      console.warn(result.content[0].text);
+    } else {
+      console.warn(styles.error('No diff results returned'));
+    }
+    if (result.isError) {
+      process.exit(1);
+    }
+  } catch (error) {
+    console.error(chalk.red('Error running template diff:'), error.message);
+    process.exit(1);
+  }
+}
+
 // Main CLI logic
 switch (command) {
   case 'help':
@@ -1029,6 +1064,20 @@ switch (command) {
       const install = args.includes('--install');
       const test = args.includes('--test');
       runUpdateDeps(path, install, test);
+    }
+    break;
+
+  case 'diff-template':
+    {
+      const path = args[1];
+      const onlyArg = args.find((arg) => arg.startsWith('--templates='))?.split('=')[1];
+      const only = onlyArg
+        ? onlyArg
+            .split(',')
+            .map((s) => s.trim())
+            .filter(Boolean)
+        : undefined;
+      runDiffTemplate(path, only);
     }
     break;
 

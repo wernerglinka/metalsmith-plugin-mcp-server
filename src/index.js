@@ -32,6 +32,7 @@ import { auditPlugin } from './tools/audit-plugin.js';
 import { listTemplatesTool } from './tools/list-templates.js';
 import { getTemplateTool } from './tools/get-template.js';
 import { installClaudeMdTool } from './tools/install-claude-md.js';
+import { diffTemplateTool } from './tools/diff-template.js';
 
 // Import AI assistant instructions
 import { promises as fs } from 'node:fs';
@@ -162,7 +163,8 @@ ${aiInstructions ? `\n${aiInstructions}` : ''}`,
               'module-consistency',
               'hardcoded-values',
               'performance-patterns',
-              'i18n-readiness'
+              'i18n-readiness',
+              'theory-doc'
             ]
           },
           description: 'Specific checks to perform. Use metalsmith-patterns for plugin-specific validations',
@@ -179,7 +181,8 @@ ${aiInstructions ? `\n${aiInstructions}` : ''}`,
             'module-consistency',
             'hardcoded-values',
             'performance-patterns',
-            'i18n-readiness'
+            'i18n-readiness',
+            'theory-doc'
           ]
         }
       },
@@ -274,6 +277,28 @@ ${aiInstructions ? `\n${aiInstructions}` : ''}`,
         }
       },
       required: []
+    }
+  },
+  {
+    name: 'diff-template',
+    description:
+      'Diff a plugin against the current scaffold templates. Reports which files match, are missing, or have drifted, with unified diff snippets for drifted files. Helps keep aging plugins in sync with the latest scaffold standards.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        path: {
+          type: 'string',
+          description: 'Plugin directory path (default: current directory)',
+          default: '.'
+        },
+        templates: {
+          type: 'array',
+          items: { type: 'string' },
+          description:
+            'Optional filter — restrict the diff to specific templates by template path (e.g., "plugin/package.json.template") or target path (e.g., ".github/workflows/test.yml"). Omit to diff every tracked template.'
+        }
+      },
+      required: ['path']
     }
   },
   {
@@ -394,6 +419,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       case 'audit-plugin':
         return await auditPlugin(args); // Run comprehensive plugin audit
+
+      case 'diff-template':
+        return await diffTemplateTool(args); // Diff plugin against scaffold templates
       default:
         // This shouldn't happen if Claude only calls tools we advertised
         throw new Error(`Unknown tool: ${name}`);

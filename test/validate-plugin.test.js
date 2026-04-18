@@ -1406,6 +1406,91 @@ MIT
       assert.ok(text.includes('`lib/`') || text.includes('lib/'), 'should flag lib/ directory');
     });
   });
+
+  describe('Theory-of-operations doc validation', function () {
+    it('should warn when docs/THEORY.md is missing', async function () {
+      const pluginDir = path.join(fixturesDir, 'theory-missing');
+      await fs.mkdir(pluginDir, { recursive: true });
+
+      const result = await validatePluginTool({ path: pluginDir, checks: ['theory-doc'] });
+      const text = result.content[0].text;
+      assert.ok(text.includes('Missing docs/THEORY.md'), 'should flag missing theory doc as a warning');
+    });
+
+    it('should warn when docs/THEORY.md is still the unfilled stub', async function () {
+      const pluginDir = path.join(fixturesDir, 'theory-stub');
+      await fs.mkdir(path.join(pluginDir, 'docs'), { recursive: true });
+      await fs.writeFile(
+        path.join(pluginDir, 'docs/THEORY.md'),
+        '# Theory of Operations\n\n<!-- TODO: Replace this stub with a real theory-of-operations document -->\n'
+      );
+
+      const result = await validatePluginTool({ path: pluginDir, checks: ['theory-doc'] });
+      const text = result.content[0].text;
+      assert.ok(text.includes('still the unfilled scaffold stub'), 'should flag unfilled stub as a warning');
+    });
+
+    it('should pass when docs/THEORY.md has been filled in', async function () {
+      const pluginDir = path.join(fixturesDir, 'theory-filled');
+      await fs.mkdir(path.join(pluginDir, 'docs'), { recursive: true });
+      await fs.writeFile(
+        path.join(pluginDir, 'docs/THEORY.md'),
+        '# Theory of Operations\n\nThis plugin transforms HTML files in the Metalsmith pipeline by injecting metadata tags.\n'
+      );
+
+      const result = await validatePluginTool({ path: pluginDir, checks: ['theory-doc'] });
+      const text = result.content[0].text;
+      assert.ok(
+        text.includes('docs/THEORY.md exists and has been filled in'),
+        'should pass when stub markers are gone'
+      );
+    });
+  });
+
+  describe('CI/CD recommended files validation', function () {
+    it('should recommend test-matrix.yml when missing', async function () {
+      // Minimal plugin fixture without any .github/workflows files. Structure
+      // check should surface a specific recommendation pointing at the matrix
+      // workflow template, not a generic "missing file" note.
+      const pluginDir = path.join(fixturesDir, 'missing-test-matrix');
+      await fs.mkdir(path.join(pluginDir, 'src'), { recursive: true });
+      await fs.mkdir(path.join(pluginDir, 'test'), { recursive: true });
+      await fs.writeFile(
+        path.join(pluginDir, 'package.json'),
+        JSON.stringify({ name: 'metalsmith-x', version: '1.0.0' })
+      );
+      await fs.writeFile(path.join(pluginDir, 'src/index.js'), 'export default () => () => {};\n');
+      await fs.writeFile(path.join(pluginDir, 'README.md'), '# x\n');
+
+      const result = await validatePluginTool({ path: pluginDir, checks: ['structure'] });
+      const text = result.content[0].text;
+      assert.ok(text.includes('.github/workflows/test-matrix.yml'), 'should name the missing matrix workflow file');
+      assert.ok(
+        text.includes('multiple Node.js versions'),
+        'should include the matrix-workflow-specific recommendation message'
+      );
+    });
+
+    it('should recommend dependabot.yml when missing', async function () {
+      const pluginDir = path.join(fixturesDir, 'missing-dependabot');
+      await fs.mkdir(path.join(pluginDir, 'src'), { recursive: true });
+      await fs.mkdir(path.join(pluginDir, 'test'), { recursive: true });
+      await fs.writeFile(
+        path.join(pluginDir, 'package.json'),
+        JSON.stringify({ name: 'metalsmith-x', version: '1.0.0' })
+      );
+      await fs.writeFile(path.join(pluginDir, 'src/index.js'), 'export default () => () => {};\n');
+      await fs.writeFile(path.join(pluginDir, 'README.md'), '# x\n');
+
+      const result = await validatePluginTool({ path: pluginDir, checks: ['structure'] });
+      const text = result.content[0].text;
+      assert.ok(text.includes('.github/dependabot.yml'), 'should name the missing dependabot config');
+      assert.ok(
+        text.includes('automated weekly dependency updates'),
+        'should include the dependabot-specific recommendation message'
+      );
+    });
+  });
 });
 
 /**

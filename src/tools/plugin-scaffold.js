@@ -218,6 +218,9 @@ export async function pluginScaffoldTool(args) {
             '- package.json (package configuration)',
             '- README.md (documentation)',
             '- CLAUDE.md (AI development context)',
+            '- docs/THEORY.md (theory-of-operations skeleton — fill in before first release)',
+            '- .github/workflows/test.yml + test-matrix.yml + claude-code.yml',
+            '- .github/dependabot.yml (weekly npm + actions updates)',
             '- biome.json (lint + format rules)',
             '',
             'Next steps:',
@@ -307,6 +310,9 @@ async function copyTemplates(pluginPath, data) {
     data
   );
 
+  // Copy theory-of-operations doc skeleton
+  await copyTemplate(path.join(templatesDir, 'docs/THEORY.md.template'), path.join(pluginPath, 'docs/THEORY.md'), data);
+
   // Copy test fixtures
   await copyTestFixtures(templatesDir, pluginPath, data);
 
@@ -325,22 +331,41 @@ async function copyTemplates(pluginPath, data) {
 }
 
 /**
- * Copy GitHub workflow files for complementary CI/CD architecture
+ * Copy GitHub workflow and config files for complementary CI/CD architecture.
+ *
+ * Three workflows ship by default:
+ *   - test.yml         single-Node CI on push/PR; owns the coverage badge.
+ *   - test-matrix.yml  multi-Node verification on PR only.
+ *   - claude-code.yml  AI code review.
+ *
+ * Plus a Dependabot config under .github/dependabot.yml for weekly npm and
+ * github-actions updates.
  */
 async function copyGitHubWorkflows(pluginPath, data) {
   const workflowsDir = path.join(__dirname, '../../templates/workflows');
+  const githubDir = path.join(__dirname, '../../templates/github');
   const targetWorkflowsDir = path.join(pluginPath, '.github/workflows');
+  const targetGithubDir = path.join(pluginPath, '.github');
 
-  // Create .github/workflows directory
   await fs.mkdir(targetWorkflowsDir, { recursive: true });
 
-  // Copy test workflow (CI/CD automation)
   await copyTemplate(path.join(workflowsDir, 'test.yml.template'), path.join(targetWorkflowsDir, 'test.yml'), data);
 
-  // Copy Claude Code workflow (AI code review)
+  await copyTemplate(
+    path.join(workflowsDir, 'test-matrix.yml.template'),
+    path.join(targetWorkflowsDir, 'test-matrix.yml'),
+    data
+  );
+
   await copyTemplate(
     path.join(workflowsDir, 'claude-code.yml.template'),
     path.join(targetWorkflowsDir, 'claude-code.yml'),
+    data
+  );
+
+  await copyTemplate(
+    path.join(githubDir, 'dependabot.yml.template'),
+    path.join(targetGithubDir, 'dependabot.yml'),
     data
   );
 }

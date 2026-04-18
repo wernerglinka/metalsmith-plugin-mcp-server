@@ -72,9 +72,37 @@ Focus on getting to successful results quickly:
 
 This is an MCP (Model Context Protocol) server for scaffolding and validating high-quality Metalsmith plugins. It provides tools for Claude to help users create, validate, and maintain Metalsmith plugins following best practices.
 
-## Current Status (v3.0.0 - ESM-Only Scaffold)
+## Current Status (v3.1.0 - Theory Doc + Template Diff + CI Templates)
 
-### Recent Major Work Completed (v3.0.0 - ESM-Only)
+### Recent Major Work Completed (v3.1.0)
+
+This release bundles two feature sets: the theory-of-operations doc that became standard plugin shape, and the diff-template tool plus CI template additions.
+
+**Theory-of-operations doc**
+
+Every scaffolded plugin gets `docs/THEORY.md` with a section skeleton (The job / Architecture / Data flow / Design invariants / Deliberate non-features / Testing notes / Known sharp edges) and prompt comments. The `metalsmith-seo` plugin's THEORY.md is the model.
+
+1. **Scaffold creates `docs/THEORY.md`** from `templates/plugin/docs/THEORY.md.template` with a `TODO: Replace this stub` marker that makes unfilled stubs self-identify.
+2. **New `theory-doc` validation check** — runs by default. Missing `docs/THEORY.md` → warning. Present but still containing the stub marker → warning. Filled in (marker removed) → pass.
+3. **Available via `get-template plugin/docs/THEORY.md`** — the dynamic template lookup picks it up automatically; no schema changes needed.
+
+**Why the warning category (not a recommendation)**: Werner explicitly wants a missing theory doc to read as "needs work." Warnings carry that weight; recommendations don't. The doc is a quality signal future maintainers (human and AI) need to make non-trivial changes safely.
+
+**Template diff tool + CI templates**
+
+New `diff-template` tool lets authors check whether an existing plugin has drifted from the current scaffold standards. For each tracked template the tool reports `matches`, `missing`, or `drifted` (with a unified diff). Available as both an MCP tool and a CLI command.
+
+1. **MCP `diff-template` tool** — accepts `path` (required) and `templates` (optional filter array). Renders each scaffold template against the plugin's own `package.json` so the diff reflects real drift rather than placeholder noise.
+2. **CLI `diff-template` command** — `npx metalsmith-plugin-mcp-server diff-template ./plugin`. Prints a structured report with summary counts and truncated unified diffs (60 lines per file) for drifted entries.
+3. **Template manifest** lives in `src/tools/diff-template.js` and **must stay in sync with `copyTemplates()` in `src/tools/plugin-scaffold.js`** — when you add or remove a scaffold template, update both.
+4. **New `templates/github/dependabot.yml.template`** — weekly npm + github-actions updates with grouped dev/production deps. Now copied into every scaffolded plugin.
+5. **New `templates/workflows/test-matrix.yml.template`** — PR-triggered matrix testing on Node 22.x + 24.x. Now copied into every scaffolded plugin.
+6. **Validation surfaces both new files** — missing `.github/workflows/test-matrix.yml` or `.github/dependabot.yml` produces specific recommendations, not generic "missing file" notes.
+7. **Bug fix**: removed stale `npm run build` step from `templates/workflows/test.yml.template` (no longer exists in ESM-only v3.0.0 scaffolds).
+
+**Why `diff-template` is useful**: After every scaffold revision, plugins get further out of date. Running the tool tells the author exactly which structural files (workflows, configs, scripts) need refreshing without touching content files (README, theory doc) where drift is expected.
+
+### Previous Major Work Completed (v3.0.0 - ESM-Only)
 
 **Breaking Changes** - Scaffolded plugins no longer produce a dual ESM/CJS build:
 

@@ -14,7 +14,8 @@ export function generatePluginStructure(features) {
         complex: {}
       }
     },
-    scripts: {}
+    scripts: {},
+    docs: {}
   };
 
   // Add feature-specific directories

@@ -54,7 +54,12 @@ describe('plugin-scaffold tool', function () {
       'biome.json',
       '.editorconfig',
       '.gitignore',
-      'scripts/release.sh'
+      'scripts/release.sh',
+      'docs/THEORY.md',
+      '.github/workflows/test.yml',
+      '.github/workflows/test-matrix.yml',
+      '.github/workflows/claude-code.yml',
+      '.github/dependabot.yml'
     ];
 
     for (const file of requiredFiles) {
@@ -65,6 +70,11 @@ describe('plugin-scaffold tool', function () {
         .catch(() => false);
       assert.equal(exists, true);
     }
+
+    // Theory doc should be the unfilled stub at scaffold time
+    const theory = await fs.readFile(path.join(pluginPath, 'docs/THEORY.md'), 'utf-8');
+    assert.match(theory, /TODO: Replace this stub/);
+    assert.match(theory, new RegExp(pluginName));
   });
 
   it('should prevent overwriting existing directory', async function () {

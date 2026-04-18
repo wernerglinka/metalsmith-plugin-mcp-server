@@ -29,7 +29,9 @@ async function loadValidationConfig(pluginPath) {
           '.release-it.json',
           'CLAUDE.md',
           '.github/workflows/test.yml',
+          '.github/workflows/test-matrix.yml',
           '.github/workflows/claude-code.yml',
+          '.github/dependabot.yml',
           'scripts/release.sh'
         ]
       },
@@ -177,7 +179,8 @@ export async function validatePluginTool(args) {
       'module-consistency',
       'hardcoded-values',
       'performance-patterns',
-      'i18n-readiness'
+      'i18n-readiness',
+      'theory-doc'
     ],
     functional = false
   } = args;
@@ -261,6 +264,9 @@ export async function validatePluginTool(args) {
         case 'i18n-readiness':
           await checkI18nReadiness(pluginPath, results);
           break;
+        case 'theory-doc':
+          await checkTheoryDoc(pluginPath, results);
+          break;
       }
     }
 
@@ -339,9 +345,17 @@ async function checkStructure(pluginPath, results, functional = false, config) {
         results.recommendations.push(
           `💡 Consider adding ${file} for CI/CD automation. Use: get-template workflows/test.yml`
         );
+      } else if (file === '.github/workflows/test-matrix.yml') {
+        results.recommendations.push(
+          `💡 Consider adding ${file} to verify against multiple Node.js versions on PR. Use: get-template workflows/test-matrix.yml`
+        );
       } else if (file === '.github/workflows/claude-code.yml') {
         results.recommendations.push(
           `💡 Consider adding ${file} for AI code review. Use: get-template workflows/claude-code.yml`
+        );
+      } else if (file === '.github/dependabot.yml') {
+        results.recommendations.push(
+          `💡 Consider adding ${file} for automated weekly dependency updates. Use: get-template github/dependabot.yml`
         );
       } else if (file === 'scripts/release.sh') {
         results.recommendations.push(
@@ -2247,4 +2261,44 @@ async function checkReleaseNotes(pluginPath, results) {
   } catch (error) {
     results.warnings.push(`⚠ Could not check release configuration: ${error.message}`);
   }
+}
+
+/**
+ * Check for a theory-of-operations document at docs/THEORY.md.
+ *
+ * A plugin without a theory doc — or one whose stub has not yet been
+ * filled in — is flagged as a warning ("needs work"). The doc captures
+ * the *why* of the plugin's design and is required reading before
+ * non-trivial changes; missing it is a quality concern, not just a
+ * stylistic preference.
+ *
+ * Detection of an unfilled stub looks for the marker comment that the
+ * scaffold template plants at the top of the file. If the marker is
+ * still present, the author hasn't replaced the stub with real content.
+ */
+async function checkTheoryDoc(pluginPath, results) {
+  const theoryPath = path.join(pluginPath, 'docs/THEORY.md');
+
+  let contents;
+  try {
+    contents = await fs.readFile(theoryPath, 'utf-8');
+  } catch (error) {
+    if (error.code === 'ENOENT') {
+      results.warnings.push(
+        '⚠ Missing docs/THEORY.md — every plugin should ship a theory-of-operations document explaining how and why it works. Use: get-template plugin/docs/THEORY.md'
+      );
+      return;
+    }
+    results.warnings.push(`⚠ Could not read docs/THEORY.md: ${error.message}`);
+    return;
+  }
+
+  if (contents.includes('TODO: Replace this stub')) {
+    results.warnings.push(
+      '⚠ docs/THEORY.md is still the unfilled scaffold stub. Replace the TODO sections with the real theory of operations before the next release.'
+    );
+    return;
+  }
+
+  results.passed.push('✓ docs/THEORY.md exists and has been filled in');
 }
