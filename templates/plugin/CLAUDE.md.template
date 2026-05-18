@@ -102,6 +102,29 @@ Releases use `./scripts/release.sh` which retrieves the GitHub token from
 `gh auth token` and calls release-it. npm publishing is intentionally
 manual.
 
+## Before releasing: re-read the user-facing docs
+
+Before any `npm run release:*`, read the user-facing docs end-to-end
+and update anything that's drifted from current behavior. This is a
+real footgun — drift goes unnoticed during code-focused work, then
+ships, then needs a follow-up patch release purely for docs.
+
+Files to audit:
+
+- [README.md](README.md) — installation, usage examples, options, badges
+- [docs/THEORY.md](docs/THEORY.md) — architecture and design rationale
+- Any other `docs/*.md` files if present
+
+Specific things to grep for: option names and defaults that no longer
+match `src/index.js`, code examples that import removed exports,
+references to removed CLI flags, "What's New in vX.Y" callouts
+referencing past releases, broken links to renamed sections.
+
+If the change being released doesn't actually affect any user-visible
+surface (pure internal refactor, dependency bump, test-only fix), say
+so explicitly when reporting the audit — don't claim drift you didn't
+find. But default to reading.
+
 ## File organization
 
 ```
