@@ -65,6 +65,29 @@ npm run release:minor   # new feature
 npm run release:major   # breaking change
 ```
 
+## Before releasing: re-read the user-facing docs
+
+Before any `npm run release:*`, read these files end-to-end and update
+anything that's drifted from current behavior. Werner has had to ship
+follow-up patch releases purely to fix documentation drift — this
+checkpoint is the prevention.
+
+- [README.md](README.md) — overview, tool list, quick-start commands
+- [docs/tools.md](docs/tools.md) — per-tool MCP reference (descriptions, options, schemas)
+- [docs/cli.md](docs/cli.md) — every `npx` command with current flags
+- [docs/setup.md](docs/setup.md) — Claude Desktop/Code setup
+- [templates/plugin/CLAUDE.md.template](templates/plugin/CLAUDE.md.template) — ships into every scaffolded plugin
+
+Specific things to grep for: tool counts ("ten tools"), inline enum
+lists, removed checks/flags still mentioned, MCP example payloads that
+don't match the current schema, links to deleted sections, "What's New
+in vX.Y" callouts referencing past releases.
+
+If the change being released doesn't actually affect any user-visible
+surface (pure internal refactor, dependency bump, test-only fix), say
+so explicitly when reporting the audit — don't claim drift you didn't
+find. But default to reading.
+
 ## What the server does
 
 Provides MCP tools and an equivalent CLI for scaffolding and validating
@@ -129,10 +152,13 @@ A tool change usually touches multiple files. Easy to miss one and ship
 drift:
 
 1. Tool implementation — `src/tools/<name>.js`
-2. MCP schema — `src/index.js` (`TOOLS` array)
+2. MCP schema — `src/index.js` (`registerTool` call)
 3. CLI command — `src/cli.js`
 4. Tests — `test/<name>.test.js`
-5. README + this file if the change is user-visible
+5. User-facing docs — [README.md](README.md), [docs/tools.md](docs/tools.md),
+   [docs/cli.md](docs/cli.md), [docs/setup.md](docs/setup.md), and this
+   file if relevant. The pre-release doc audit (above) is your
+   safety net but don't rely on it — update docs in the same change.
 
 The `validate-plugin` and `diff-template` tools also have manifests that
 must stay in sync with `copyTemplates()` in `src/tools/plugin-scaffold.js`
