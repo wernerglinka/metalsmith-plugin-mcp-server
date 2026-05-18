@@ -7,7 +7,7 @@
 
 import { resolve, basename } from 'node:path';
 import { promises as fs } from 'node:fs';
-import { glob } from 'glob';
+import { glob } from 'node:fs/promises';
 import chalk from 'chalk';
 import ora from 'ora';
 import { auditPlugin } from './audit-plugin.js';
@@ -59,7 +59,7 @@ async function findPluginDirectories(searchPath) {
 
     // Also try glob patterns for nested structures
     const globPattern = resolve(searchPath, '*/package.json');
-    const packageFiles = await glob(globPattern);
+    const packageFiles = await Array.fromAsync(glob(globPattern));
 
     for (const packageFile of packageFiles) {
       const pluginPath = resolve(packageFile, '..');

@@ -76,38 +76,50 @@ function extractValidationScore(output) {
 }
 
 /**
- * Extract test results from output
+ * Extract test results from runner output. Handles both the native
+ * node:test spec reporter (`# pass 163`, `# fail 0`, `# tests 163`) and
+ * older mocha-style output (`163 passing`, `0 failing`).
+ *
  * @param {string} output - Test output
- * @returns {Object} Test statistics
+ * @returns {{passing: number, failing: number, total: number}}
  */
 function extractTestStats(output) {
-  const stats = {
-    passing: 0,
-    failing: 0,
-    total: 0
-  };
+  const stats = { passing: 0, failing: 0, total: 0 };
 
-  // Try multiple patterns for different test runners
-  const passingMatch = output.match(/(\d+) passing/);
-  const failingMatch = output.match(/(\d+) failing/);
-  const totalMatch = output.match(/(\d+) tests?/);
+  // node:test spec reporter — anchored to line starts so we don't grab
+  // numbers from unrelated output. The leading `#` is optional because
+  // node strips it when piping through some shells.
+  const nodePass = output.match(/^#?\s*pass\s+(\d+)\s*$/m);
+  const nodeFail = output.match(/^#?\s*fail\s+(\d+)\s*$/m);
+  const nodeTotal = output.match(/^#?\s*tests\s+(\d+)\s*$/m);
 
-  if (passingMatch) {
-    stats.passing = parseInt(passingMatch[1], 10);
+  if (nodePass) {
+    stats.passing = parseInt(nodePass[1], 10);
   }
-  if (failingMatch) {
-    stats.failing = parseInt(failingMatch[1], 10);
+  if (nodeFail) {
+    stats.failing = parseInt(nodeFail[1], 10);
   }
-  if (totalMatch) {
-    stats.total = parseInt(totalMatch[1], 10);
+  if (nodeTotal) {
+    stats.total = parseInt(nodeTotal[1], 10);
   }
 
-  // Calculate total if not found but we have passing/failing
+  // Mocha-style fallback if node:test didn't match.
+  if (stats.passing === 0 && stats.failing === 0 && stats.total === 0) {
+    const mochaPass = output.match(/(\d+)\s+passing/);
+    const mochaFail = output.match(/(\d+)\s+failing/);
+    if (mochaPass) {
+      stats.passing = parseInt(mochaPass[1], 10);
+    }
+    if (mochaFail) {
+      stats.failing = parseInt(mochaFail[1], 10);
+    }
+  }
+
+  // Derive total when only pass/fail are available.
   if (stats.total === 0 && (stats.passing > 0 || stats.failing > 0)) {
     stats.total = stats.passing + stats.failing;
   }
-
-  // Handle case where we only have total tests passed
+  // Or pass count when only total is present.
   if (stats.total > 0 && stats.passing === 0 && stats.failing === 0) {
     stats.passing = stats.total;
   }
@@ -116,14 +128,53 @@ function extractTestStats(output) {
 }
 
 /**
- * Extract coverage percentage from output
- * @param {string} output - Coverage output
+ * Read line coverage from a plugin's coverage/lcov.info file, if present.
+ * The scaffold's coverage script writes lcov via
+ * `--test-reporter=lcov --test-reporter-destination=coverage/lcov.info`,
+ * so the file is the authoritative source — avoids fragile regex parsing
+ * of the spec reporter's freeform table.
+ *
+ * Returns null when no lcov file exists or it has no executable lines.
+ *
+ * @param {string} pluginPath - Plugin directory
+ * @returns {number|null} Line coverage percentage (0–100)
+ */
+function readLcovCoverage(pluginPath) {
+  const lcovPath = resolve(pluginPath, 'coverage/lcov.info');
+  if (!existsSync(lcovPath)) {
+    return null;
+  }
+  try {
+    const content = readFileSync(lcovPath, 'utf8');
+    let totalLines = 0;
+    let hitLines = 0;
+    for (const line of content.split('\n')) {
+      if (line.startsWith('LF:')) {
+        totalLines += parseInt(line.slice(3), 10) || 0;
+      } else if (line.startsWith('LH:')) {
+        hitLines += parseInt(line.slice(3), 10) || 0;
+      }
+    }
+    if (totalLines === 0) {
+      return null;
+    }
+    return Math.round((hitLines / totalLines) * 10000) / 100;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Extract coverage percentage from runner output. Used as a fallback
+ * when no lcov file is available (e.g. plugins on a non-standard
+ * coverage setup).
+ *
+ * @param {string} output - Coverage tool output
  * @returns {number|null} Coverage percentage
  */
 function extractCoverage(output) {
-  // Look for coverage percentage in various formats
   const patterns = [
-    /All files[^|]*\|[^|]*\|[^|]*\|[^|]*(\d+\.?\d*)/, // Istanbul table format
+    /All files[^|]*\|[^|]*\|[^|]*\|[^|]*(\d+\.?\d*)/, // Istanbul table
     /Coverage[:\s]+(\d+\.?\d*)%/i,
     /Statements\s*:[^\d]*(\d+\.?\d*)%/,
     /Lines\s*:[^\d]*(\d+\.?\d*)%/,
@@ -161,7 +212,9 @@ export async function auditPlugin(args) {
     coverage: { percentage: null, passed: false }
   };
 
-  console.log(chalk.blue(`\n🔍 Running plugin audit for ${chalk.bold(pluginName)}...\n`));
+  // Progress output goes to stderr so it doesn't corrupt MCP stdio when this
+  // tool is invoked over the protocol; CLI users still see it on the terminal.
+  console.error(chalk.blue(`\n🔍 Running plugin audit for ${chalk.bold(pluginName)}...\n`));
 
   // 1. Run validation
   const validationSpinner = ora('Running validation...').start();
@@ -237,7 +290,8 @@ export async function auditPlugin(args) {
     const coverageCommand = hasScript('test:coverage', pluginPath) ? 'npm run test:coverage' : 'npm run coverage';
     const { stdout } = runCommand(coverageCommand, pluginPath);
 
-    results.coverage.percentage = extractCoverage(stdout);
+    // Prefer the lcov file the scaffold writes; fall back to regex.
+    results.coverage.percentage = readLcovCoverage(pluginPath) ?? extractCoverage(stdout);
     results.coverage.passed = results.coverage.percentage >= 80;
 
     if (results.coverage.percentage !== null) {
@@ -249,7 +303,7 @@ export async function auditPlugin(args) {
 
   // Generate summary
   const overallHealth = calculateOverallHealth(results);
-  console.log(chalk.blue(`\n📊 Overall Health: ${getHealthLabel(overallHealth)}\n`));
+  console.error(chalk.blue(`\n📊 Overall Health: ${getHealthLabel(overallHealth)}\n`));
 
   // Format output based on requested format
   if (args.output === 'json') {

@@ -23,7 +23,7 @@ Before contributing, please take time to understand the Metalsmith Plugin MCP Se
 
 The Metalsmith Plugin MCP Server aims to:
 
-- Provide a seamless interface between AI assistants and Metalsmith plugin development
+- Provide a consistent interface between AI assistants and Metalsmith plugin development
 - Enable AI-powered plugin creation, testing, and modification
 - Help developers build plugins that follow Metalsmith's conventions
 - Follow functional programming principles

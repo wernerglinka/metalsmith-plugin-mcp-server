@@ -15,6 +15,7 @@ import { homedir } from 'node:os';
 import chalk from 'chalk';
 import readline from 'node:readline';
 import { sanitizePath } from './utils/path-security.js';
+import { smartMergeClaudeMd } from './utils/claude-md-merge.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -276,7 +277,6 @@ async function runValidate(userPath, functional = false) {
     const { validatePluginTool } = await import('./tools/validate-plugin.js');
     const result = await validatePluginTool({
       path,
-      checks: ['structure', 'tests', 'docs', 'package-json', 'eslint', 'coverage'],
       functional
     });
 
@@ -405,7 +405,7 @@ async function runGenerateConfigs(userOutputPath) {
     const { generateConfigsTool } = await import('./tools/generate-configs.js');
     const result = await generateConfigsTool({
       outputPath,
-      configs: ['eslint', 'prettier', 'editorconfig', 'gitignore', 'release-it']
+      configs: ['biome', 'editorconfig', 'gitignore', 'release-it']
     });
 
     // The tool returns a content array, extract the text
@@ -577,8 +577,7 @@ async function runShowTemplate(template) {
     console.warn('Available templates:');
     console.warn('  release-it      - .release-it.json with secure GitHub token handling');
     console.warn('  package-scripts - package.json scripts for secure releases');
-    console.warn('  eslint          - eslint.config.js modern flat config');
-    console.warn('  prettier        - prettier.config.js formatting rules');
+    console.warn('  biome           - biome.json unified lint + format config');
     console.warn('  gitignore       - .gitignore for Metalsmith plugins');
     console.warn('  editorconfig    - .editorconfig for consistent coding style\n');
 
@@ -590,7 +589,7 @@ async function runShowTemplate(template) {
     }
   }
 
-  const validTemplates = ['release-it', 'package-scripts', 'eslint', 'prettier', 'gitignore', 'editorconfig'];
+  const validTemplates = ['release-it', 'package-scripts', 'biome', 'gitignore', 'editorconfig'];
   if (!validTemplates.includes(template)) {
     console.error(styles.error(`\nError: Invalid template type. Valid options: ${validTemplates.join(', ')}`));
     process.exit(1);
@@ -650,7 +649,7 @@ async function runGetTemplate(template) {
     console.warn('Examples:');
     console.warn('  plugin/CLAUDE.md        - AI development context');
     console.warn('  configs/release-it.json - Release configuration');
-    console.warn('  configs/eslint.config.js- ESLint configuration\n');
+    console.warn('  configs/biome.json      - Biome lint + format configuration\n');
 
     template = await prompt('Template name (e.g., plugin/CLAUDE.md)');
 
@@ -848,53 +847,6 @@ async function runInstallClaudeMd(userPath = '.', options = {}) {
     console.error(styles.error('Error installing CLAUDE.md:'), error.message);
     process.exit(1);
   }
-}
-
-/**
- * Smart merge existing CLAUDE.md content with MCP template
- * Preserves project-specific content while adding/updating MCP guidance
- * @param {string} existingContent - Current CLAUDE.md content
- * @param {string} templateContent - New template content
- * @param {Object} context - Merge context information
- * @returns {string} Merged content
- */
-function smartMergeClaudeMd(existingContent, templateContent, context = {}) {
-  const { hasMcpSection } = context;
-
-  // Extract the MCP section from template
-  // Match everything from "## MCP Server Integration" until the next ## heading or end of content
-  const mcpSectionMatch = templateContent.match(/(## MCP Server Integration \(CRITICAL\)[\s\S]*?)(?=\n## |$)/);
-  const mcpSection = mcpSectionMatch ? mcpSectionMatch[1] : '';
-
-  if (!mcpSection) {
-    throw new Error('Could not extract MCP section from template');
-  }
-
-  let mergedContent;
-
-  if (hasMcpSection) {
-    // Replace existing MCP section with updated one
-    mergedContent = existingContent.replace(/(## MCP Server Integration[\s\S]*?)(?=\n## |$)/i, `${mcpSection}\n`);
-  } else {
-    // Add MCP section after the project overview (or at the beginning)
-    const overviewMatch = existingContent.match(/(## Project Overview[\s\S]*?)(?=\n## |$)/i);
-
-    if (overviewMatch) {
-      // Insert after Project Overview
-      mergedContent = existingContent.replace(/(## Project Overview[\s\S]*?)(\n## )/, `$1\n\n${mcpSection}\n$2`);
-    } else {
-      // Insert at the beginning after the title
-      const titleMatch = existingContent.match(/^(# [^\n]*\n)/);
-      if (titleMatch) {
-        mergedContent = existingContent.replace(/^(# [^\n]*\n)/, `$1\n${mcpSection}\n\n`);
-      } else {
-        // Just prepend
-        mergedContent = `${mcpSection}\n\n${existingContent}`;
-      }
-    }
-  }
-
-  return mergedContent;
 }
 
 /**

@@ -3,6 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import nunjucks from 'nunjucks';
 import { sanitizePath } from '../utils/path-security.js';
+import { smartMergeClaudeMd } from '../utils/claude-md-merge.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -199,58 +200,5 @@ You can now ask AI assistants to "check the MCP server for recommendations" and 
       ],
       isError: true
     };
-  }
-}
-
-/**
- * Smart merge function (extracted from existing CLI code)
- * Preserves user customizations while ensuring essential MCP sections exist
- */
-function smartMergeClaudeMd(existingContent, templateContent, options = {}) {
-  const { hasMcpSection = false } = options;
-
-  // If no MCP section exists, add the entire MCP section from template
-  if (!hasMcpSection) {
-    // Find the MCP section in the template
-    const mcpSectionStart = templateContent.indexOf('## MCP Server Integration (CRITICAL)');
-    if (mcpSectionStart === -1) {
-      return existingContent; // No MCP section in template, return as-is
-    }
-
-    // Find the end of the MCP section (next ## heading or end of file)
-    const nextSectionRegex = /\n## (?!MCP Server Integration)/g;
-    nextSectionRegex.lastIndex = mcpSectionStart;
-    const nextSectionMatch = nextSectionRegex.exec(templateContent);
-    const mcpSectionEnd = nextSectionMatch ? nextSectionMatch.index : templateContent.length;
-
-    const mcpSection = templateContent.substring(mcpSectionStart, mcpSectionEnd);
-
-    // Insert MCP section after the first heading or at the beginning
-    const firstHeadingMatch = existingContent.match(/^# .+$/m);
-    if (firstHeadingMatch) {
-      const insertPoint = firstHeadingMatch.index + firstHeadingMatch[0].length;
-      return `${existingContent.slice(0, insertPoint)}\n\n${mcpSection}\n${existingContent.slice(insertPoint)}`;
-    } else {
-      return `${mcpSection}\n\n${existingContent}`;
-    }
-  } else {
-    // MCP section exists - replace it with the new version
-    const existingMcpStart = existingContent.indexOf('## MCP Server Integration (CRITICAL)');
-    const nextSectionRegex = /\n## (?!MCP Server Integration)/g;
-    nextSectionRegex.lastIndex = existingMcpStart;
-    const nextSectionMatch = nextSectionRegex.exec(existingContent);
-    const existingMcpEnd = nextSectionMatch ? nextSectionMatch.index : existingContent.length;
-
-    // Get new MCP section from template
-    const templateMcpStart = templateContent.indexOf('## MCP Server Integration (CRITICAL)');
-    const templateMcpNextSectionRegex = /\n## (?!MCP Server Integration)/g;
-    templateMcpNextSectionRegex.lastIndex = templateMcpStart;
-    const templateMcpNextSectionMatch = templateMcpNextSectionRegex.exec(templateContent);
-    const templateMcpEnd = templateMcpNextSectionMatch ? templateMcpNextSectionMatch.index : templateContent.length;
-
-    const newMcpSection = templateContent.substring(templateMcpStart, templateMcpEnd);
-
-    // Replace the existing MCP section with the new one
-    return existingContent.slice(0, existingMcpStart) + newMcpSection + existingContent.slice(existingMcpEnd);
   }
 }

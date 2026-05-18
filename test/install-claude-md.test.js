@@ -1,46 +1,14 @@
 import { strict as assert } from 'node:assert';
 import { describe, it, before, after } from 'node:test';
-import { fileURLToPath } from 'node:url';
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
 import fs from 'node:fs/promises';
 import os from 'node:os';
-
-// Import the smartMergeClaudeMd function from cli.js
-import { readFile } from 'node:fs/promises';
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-// We need to extract the smartMergeClaudeMd function from cli.js for testing
-// Since it's not exported, we'll test it through a different approach
-async function getSmartMergeFunction() {
-  const cliPath = join(__dirname, '..', 'src', 'cli.js');
-  const cliContent = await readFile(cliPath, 'utf8');
-
-  // Extract the function using regex
-  const funcMatch = cliContent.match(/function smartMergeClaudeMd\([\s\S]*?\n\}\n/);
-  if (!funcMatch) {
-    throw new Error('Could not extract smartMergeClaudeMd function');
-  }
-
-  // Create a module that exports this function
-  const moduleContent = `${funcMatch[0]}\nexport { smartMergeClaudeMd };`;
-
-  // Write to a temporary file and import it
-  const tempFile = join(os.tmpdir(), `smartMerge-${Date.now()}.mjs`);
-  await fs.writeFile(tempFile, moduleContent);
-
-  const module = await import(tempFile);
-  await fs.unlink(tempFile); // Clean up
-
-  return module.smartMergeClaudeMd;
-}
+import { smartMergeClaudeMd } from '../src/utils/claude-md-merge.js';
 
 describe('install-claude-md functionality', function () {
-  let smartMergeClaudeMd;
   let tempDir;
 
   before(async function () {
-    smartMergeClaudeMd = await getSmartMergeFunction();
     tempDir = join(os.tmpdir(), `mcp-test-${Date.now()}`);
     await fs.mkdir(tempDir, { recursive: true });
   });

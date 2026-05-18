@@ -1,2 +1,0 @@
-// Type-specific helper for {{pluginName}}
-export function processFile() {}

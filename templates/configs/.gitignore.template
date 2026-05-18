@@ -47,8 +47,6 @@ temp/
 
 # Cache
 .cache/
-.eslintcache
-.prettierignore
 
 # Test artifacts
 test-results/

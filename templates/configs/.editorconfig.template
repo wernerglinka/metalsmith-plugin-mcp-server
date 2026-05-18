@@ -24,11 +24,6 @@ trim_trailing_whitespace = false
 indent_style = space
 indent_size = 2
 
-# Package files
-[{package.json,.prettierrc,.eslintrc}]
-indent_style = space
-indent_size = 2
-
 # Makefiles
 [Makefile]
 indent_style = tab

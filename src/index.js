@@ -3,26 +3,27 @@
 /**
  * Metalsmith MCP Server
  *
- * This is a Model Context Protocol (MCP) server that provides tools for
- * scaffolding and validating Metalsmith plugins with enhanced standards.
+ * Entry point — registers the server's tools with the MCP SDK and starts
+ * a stdio transport. Tool implementations live in src/tools/<name>.js
+ * and are wrapped here with zod schemas so the SDK validates inputs
+ * before dispatch.
  *
- * MCP is a protocol that allows AI assistants like Claude to interact with
- * external tools and data sources. This server exposes four main tools:
- * 1. plugin-scaffold: Generate complete plugin structures
- * 2. validate-plugin: Check plugins against quality standards
- * 3. generate-configs: Create configuration files
- * 4. update-deps: Update dependencies using npm-check-updates
- *
- * The server communicates via stdio (standard input/output) which allows
- * Claude to call our tools and receive structured responses.
+ * Communication is JSON-RPC over stdio:
+ * - stdin:  requests from the client
+ * - stdout: protocol responses (NEVER write non-protocol data here)
+ * - stderr: free for diagnostic logging
  */
 
-// Import MCP SDK components
-import { Server } from '@modelcontextprotocol/sdk/server/index.js'; // Main MCP server class
-import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'; // Transport for stdio communication
-import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js'; // Request type schemas
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import chalk from 'chalk';
+import { z } from 'zod';
 
-// Import our custom tool implementations
+// Force-disable ANSI color codes in tool responses. chalk auto-detects
+// non-TTY stdout, but FORCE_COLOR can override that. Pin level=0 so MCP
+// responses stay clean regardless of the environment the server runs in.
+chalk.level = 0;
+
 import { pluginScaffoldTool } from './tools/plugin-scaffold.js';
 import { validatePluginTool } from './tools/validate-plugin.js';
 import { generateConfigsTool } from './tools/generate-configs.js';
@@ -34,7 +35,6 @@ import { getTemplateTool } from './tools/get-template.js';
 import { installClaudeMdTool } from './tools/install-claude-md.js';
 import { diffTemplateTool } from './tools/diff-template.js';
 
-// Import AI assistant instructions
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -42,429 +42,223 @@ import { fileURLToPath } from 'node:url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Load AI assistant instructions
-let aiInstructions = '';
+// Reflect the published version in MCP capability negotiation.
+let serverVersion = '0.0.0';
 try {
-  aiInstructions = await fs.readFile(path.join(__dirname, 'instructions.md'), 'utf8');
+  const pkg = JSON.parse(await fs.readFile(path.join(__dirname, '..', 'package.json'), 'utf8'));
+  serverVersion = pkg.version;
 } catch (error) {
-  console.error('Warning: Could not load AI instructions:', error.message);
+  console.error('Warning: Could not read package.json version:', error.message);
 }
 
-/**
- * Create the MCP server instance
- *
- * The Server constructor takes two parameters:
- * 1. Server info: Basic metadata about our server
- * 2. Capabilities: What features our server supports
- *
- * For this server, we only need the 'tools' capability since we're
- * providing tools for Claude to use, not resources or prompts.
- */
-const server = new Server(
+const server = new McpServer({
+  name: '@metalsmith/mcp-server',
+  version: serverVersion
+});
+
+// Default check set for the `validate` tool. Kept here so the dispatcher
+// in src/tools/validate-plugin.js doesn't have to repeat it.
+const DEFAULT_VALIDATE_CHECKS = [
+  'structure',
+  'tests',
+  'docs',
+  'package-json',
+  'release-notes',
+  'jsdoc',
+  'performance',
+  'security',
+  'metalsmith-patterns',
+  'marketing-language',
+  'module-consistency',
+  'hardcoded-values',
+  'performance-patterns',
+  'i18n-readiness',
+  'theory-doc'
+];
+
+const VALIDATE_CHECK_NAMES = [
+  'structure',
+  'tests',
+  'docs',
+  'package-json',
+  'release-notes',
+  'biome',
+  'coverage',
+  'jsdoc',
+  'performance',
+  'security',
+  'integration',
+  'metalsmith-patterns',
+  'marketing-language',
+  'module-consistency',
+  'hardcoded-values',
+  'performance-patterns',
+  'i18n-readiness',
+  'theory-doc'
+];
+
+server.registerTool(
+  'plugin-scaffold',
   {
-    name: '@metalsmith/mcp-server', // Server identifier
-    version: '0.1.0' // Server version
-  },
-  {
-    capabilities: {
-      tools: {} // We provide tools (empty object means default tool capabilities)
+    description:
+      "Scaffold a complete Metalsmith plugin (src/, test/, package.json, README.md, CLAUDE.md, GitHub workflows). Use only for NEW plugins in an empty directory — never against an existing project. Pass the user's exact plugin name (do not add a `metalsmith-` prefix); both name and description are required.",
+    inputSchema: {
+      name: z.string().describe('Plugin name (use EXACT name provided by user; do not add metalsmith- prefix)'),
+      description: z.string().describe('What the plugin does (ask the user if not provided)'),
+      features: z
+        .array(z.enum(['async-processing', 'background-processing', 'metadata-generation']))
+        .default(['async-processing'])
+        .describe(
+          'Optional features:\n- async-processing: batch processing and async capabilities\n- background-processing: worker thread support\n- metadata-generation: metadata extraction and generation'
+        ),
+      outputPath: z.string().default('.').describe('Path where the plugin will be created'),
+      license: z
+        .enum(['MIT', 'Apache-2.0', 'ISC', 'BSD-3-Clause', 'UNLICENSED'])
+        .default('MIT')
+        .describe('License for the plugin (UNLICENSED for proprietary)')
     }
+  },
+  (args) => pluginScaffoldTool(args)
+);
+
+server.registerTool(
+  'validate',
+  {
+    description: 'Check an existing Metalsmith plugin against quality standards.',
+    inputSchema: {
+      path: z.string().describe('Path to the plugin directory'),
+      checks: z
+        .array(z.enum(VALIDATE_CHECK_NAMES))
+        .default(DEFAULT_VALIDATE_CHECKS)
+        .describe('Specific checks to perform. Use metalsmith-patterns for plugin-specific validations.'),
+      functional: z
+        .boolean()
+        .default(false)
+        .describe('Run functional checks (executes test/coverage commands rather than just inspecting config).')
+    }
+  },
+  (args) => validatePluginTool(args)
+);
+
+server.registerTool(
+  'configs',
+  {
+    description: 'Generate configuration files following enhanced standards.',
+    inputSchema: {
+      outputPath: z.string().default('.').describe('Path where configs will be created'),
+      configs: z
+        .array(z.enum(['biome', 'editorconfig', 'gitignore', 'release-it']))
+        .default(['biome', 'editorconfig', 'gitignore'])
+        .describe('Configuration files to generate')
+    }
+  },
+  (args) => generateConfigsTool(args)
+);
+
+server.registerTool(
+  'show-template',
+  {
+    description: 'Display a recommended configuration template for Metalsmith plugins.',
+    inputSchema: {
+      template: z
+        .enum(['release-it', 'package-scripts', 'biome', 'gitignore', 'editorconfig'])
+        .describe('Template to display')
+    }
+  },
+  (args) => showTemplateTool(args)
+);
+
+server.registerTool(
+  'list-templates',
+  {
+    description:
+      'List every template the server can hand back via get-template. Call this before guessing a template name.'
+  },
+  () => listTemplatesTool()
+);
+
+server.registerTool(
+  'get-template',
+  {
+    description:
+      'Retrieve the exact content of a specific template file. Run list-templates first to see available names. Use these templates verbatim instead of improvising.',
+    inputSchema: {
+      template: z.string().describe('Template name (e.g. "plugin/CLAUDE.md", "configs/release-it.json")')
+    }
+  },
+  (args) => getTemplateTool(args)
+);
+
+server.registerTool(
+  'install-claude-md',
+  {
+    description:
+      'Install a CLAUDE.md in an existing Metalsmith plugin. Smart-merges the MCP Server Integration section into any existing CLAUDE.md so user customizations survive.',
+    inputSchema: {
+      path: z.string().default('.').describe('Directory path where CLAUDE.md should be created'),
+      replace: z.boolean().default(false).describe('Replace existing CLAUDE.md completely (default: smart merge)'),
+      dryRun: z.boolean().default(false).describe('Preview the merge without writing')
+    }
+  },
+  (args) => installClaudeMdTool(args)
+);
+
+server.registerTool(
+  'diff-template',
+  {
+    description:
+      'Diff a plugin against the current scaffold templates. Reports which files match, are missing, or have drifted (with unified diff snippets). Use to keep aging plugins in sync with the latest scaffold.',
+    inputSchema: {
+      path: z.string().default('.').describe('Plugin directory path'),
+      templates: z
+        .array(z.string())
+        .optional()
+        .describe(
+          'Optional filter — restrict the diff to specific templates by template path (e.g. "plugin/package.json.template") or target path (e.g. ".github/workflows/test.yml"). Omit to diff every tracked template.'
+        )
+    }
+  },
+  (args) => diffTemplateTool(args)
+);
+
+server.registerTool(
+  'update-deps',
+  {
+    description: 'Update dependencies in Metalsmith plugin(s) using npm-check-updates.',
+    inputSchema: {
+      path: z.string().default('.').describe('Plugin directory or parent containing plugins'),
+      major: z.boolean().default(false).describe('Include major version updates (default: minor/patch only)'),
+      interactive: z.boolean().default(false).describe('Run in interactive mode'),
+      dryRun: z.boolean().default(false).describe('Show what would be updated without making changes')
+    }
+  },
+  (args) => updateDepsTool(args)
+);
+
+server.registerTool(
+  'audit-plugin',
+  {
+    description: 'Run a comprehensive plugin audit (validation + lint + tests + coverage) and return a health report.',
+    inputSchema: {
+      path: z.string().default('.').describe('Plugin directory path'),
+      fix: z.boolean().default(false).describe('Apply automatic fixes where possible'),
+      output: z.enum(['console', 'markdown', 'json']).default('console').describe('Output format for the audit report')
+    }
+  },
+  async (args) => {
+    // auditPlugin returns a raw string; wrap in the MCP CallToolResult shape.
+    const text = await auditPlugin(args);
+    return { content: [{ type: 'text', text }] };
   }
 );
 
-/**
- * Tool definitions
- *
- * In MCP, tools are functions that Claude can call to perform specific tasks.
- * Each tool needs:
- * - name: A unique identifier for the tool
- * - description: What the tool does (Claude uses this to decide when to call it)
- * - inputSchema: JSON Schema defining the expected parameters
- *
- * These definitions tell Claude what tools are available and how to use them.
- * The actual implementation is in separate files for better organization.
- */
-const TOOLS = [
-  {
-    name: 'plugin-scaffold',
-    description: `Generate a complete Metalsmith plugin structure with enhanced standards.
-
-IMPORTANT INSTRUCTIONS FOR AI ASSISTANTS:
-1. ALWAYS use the EXACT plugin name provided by the user - do NOT add 'metalsmith-' prefix automatically
-2. ALWAYS ask the user what the plugin should do - description is REQUIRED
-3. The plugin will be created at outputPath/name/ (not nested further)
-4. Pay attention to path information in the response for follow-up operations
-
-${aiInstructions ? `\n${aiInstructions}` : ''}`,
-    inputSchema: {
-      type: 'object', // The input must be an object (not string, array, etc.)
-      properties: {
-        name: {
-          type: 'string',
-          description: 'Plugin name (use EXACT name provided by user, do not add metalsmith- prefix)'
-        },
-        description: {
-          type: 'string',
-          description: 'REQUIRED: What the plugin does (ask the user if not provided)'
-        },
-        features: {
-          type: 'array',
-          items: {
-            type: 'string',
-            enum: ['async-processing', 'background-processing', 'metadata-generation']
-          },
-          description:
-            'Additional features to include:\n- async-processing: Adds batch processing and async capabilities\n- background-processing: Adds worker thread support for concurrent processing\n- metadata-generation: Adds metadata extraction and generation features',
-          default: ['async-processing']
-        },
-        outputPath: {
-          type: 'string',
-          description: 'Path where the plugin will be created',
-          default: '.' // Current directory if not specified
-        },
-        license: {
-          type: 'string',
-          enum: ['MIT', 'Apache-2.0', 'ISC', 'BSD-3-Clause', 'UNLICENSED'],
-          description:
-            'License for the plugin (choose appropriate license for your project, UNLICENSED for proprietary)',
-          default: 'MIT'
-        }
-      },
-      required: ['name', 'description'] // Both name and description are required
-    }
-  },
-  {
-    name: 'validate',
-    description: 'Check an existing Metalsmith plugin against quality standards with build-time focused validations',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        path: {
-          type: 'string',
-          description: 'Path to the plugin directory'
-        },
-        checks: {
-          type: 'array',
-          items: {
-            type: 'string',
-            enum: [
-              'structure',
-              'tests',
-              'docs',
-              'package-json',
-              'biome',
-              'coverage',
-              'jsdoc',
-              'performance',
-              'security',
-              'integration',
-              'metalsmith-patterns',
-              'marketing-language',
-              'module-consistency',
-              'hardcoded-values',
-              'performance-patterns',
-              'i18n-readiness',
-              'theory-doc'
-            ]
-          },
-          description: 'Specific checks to perform. Use metalsmith-patterns for plugin-specific validations',
-          default: [
-            'structure',
-            'tests',
-            'docs',
-            'package-json',
-            'jsdoc',
-            'performance',
-            'security',
-            'metalsmith-patterns',
-            'marketing-language',
-            'module-consistency',
-            'hardcoded-values',
-            'performance-patterns',
-            'i18n-readiness',
-            'theory-doc'
-          ]
-        }
-      },
-      required: ['path']
-    }
-  },
-  {
-    name: 'configs',
-    description: 'Generate configuration files following enhanced standards',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        outputPath: {
-          type: 'string',
-          description: 'Path where configs will be created',
-          default: '.'
-        },
-        configs: {
-          type: 'array',
-          items: {
-            type: 'string',
-            enum: ['biome', 'editorconfig', 'gitignore', 'release-it']
-          },
-          description: 'Configuration files to generate',
-          default: ['biome', 'editorconfig', 'gitignore']
-        }
-      },
-      required: []
-    }
-  },
-  {
-    name: 'show-template',
-    description: 'Display recommended configuration templates for Metalsmith plugins',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        template: {
-          type: 'string',
-          enum: ['release-it', 'package-scripts', 'biome', 'gitignore', 'editorconfig'],
-          description: 'Template to display'
-        }
-      },
-      required: ['template']
-    }
-  },
-  {
-    name: 'list-templates',
-    description:
-      'List all available templates that can be retrieved with get-template. Use this to see what templates are available before using get-template.',
-    inputSchema: {
-      type: 'object',
-      properties: {},
-      required: []
-    }
-  },
-  {
-    name: 'get-template',
-    description:
-      'Get the exact content of a specific template file. Use list-templates first to see available templates. Always use official templates rather than creating your own versions.',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        template: {
-          type: 'string',
-          description: 'Template name (e.g., "plugin/CLAUDE.md", "configs/release-it.json")'
-        }
-      },
-      required: ['template']
-    }
-  },
-  {
-    name: 'install-claude-md',
-    description:
-      'Install a CLAUDE.md file in the current directory for existing Metalsmith plugins. Uses smart merge to preserve user customizations while ensuring essential MCP sections are present.',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        path: {
-          type: 'string',
-          description: 'Directory path where CLAUDE.md should be created (default: current directory)',
-          default: '.'
-        },
-        replace: {
-          type: 'boolean',
-          description: 'Replace existing CLAUDE.md file completely (default: false - smart merge mode)',
-          default: false
-        },
-        dryRun: {
-          type: 'boolean',
-          description: 'Preview changes without applying them',
-          default: false
-        }
-      },
-      required: []
-    }
-  },
-  {
-    name: 'diff-template',
-    description:
-      'Diff a plugin against the current scaffold templates. Reports which files match, are missing, or have drifted, with unified diff snippets for drifted files. Helps keep aging plugins in sync with the latest scaffold standards.',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        path: {
-          type: 'string',
-          description: 'Plugin directory path (default: current directory)',
-          default: '.'
-        },
-        templates: {
-          type: 'array',
-          items: { type: 'string' },
-          description:
-            'Optional filter — restrict the diff to specific templates by template path (e.g., "plugin/package.json.template") or target path (e.g., ".github/workflows/test.yml"). Omit to diff every tracked template.'
-        }
-      },
-      required: ['path']
-    }
-  },
-  {
-    name: 'update-deps',
-    description: 'Update dependencies in Metalsmith plugin(s) using npm-check-updates',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        path: {
-          type: 'string',
-          description: 'Plugin directory path or parent directory containing plugins',
-          default: '.'
-        },
-        major: {
-          type: 'boolean',
-          description: 'Include major version updates (default: false - only minor/patch)',
-          default: false
-        },
-        interactive: {
-          type: 'boolean',
-          description: 'Run in interactive mode',
-          default: false
-        },
-        dryRun: {
-          type: 'boolean',
-          description: 'Show what would be updated without making changes',
-          default: false
-        }
-      },
-      required: []
-    }
-  },
-  {
-    name: 'audit-plugin',
-    description: 'Comprehensive plugin audit with validation, recommendations, and fix suggestions',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        path: {
-          type: 'string',
-          description: 'Path to the plugin directory',
-          default: '.'
-        },
-        fix: {
-          type: 'boolean',
-          description: 'Apply automatic fixes where possible',
-          default: false
-        },
-        output: {
-          type: 'string',
-          enum: ['console', 'markdown', 'json'],
-          description: 'Output format for audit report',
-          default: 'console'
-        }
-      },
-      required: ['path']
-    }
-  }
-];
-
-/**
- * Handle list tools request
- *
- * When Claude connects to our server, it will ask "what tools do you have?"
- * This handler responds with our TOOLS array, telling Claude what's available.
- *
- * ListToolsRequestSchema is a predefined schema from the MCP SDK that
- * validates the incoming request format.
- */
-server.setRequestHandler(ListToolsRequestSchema, () => ({
-  tools: TOOLS // Send back our tool definitions
-}));
-
-/**
- * Handle tool execution
- *
- * When Claude wants to use one of our tools, it sends a CallToolRequest.
- * This handler:
- * 1. Extracts the tool name and arguments from the request
- * 2. Routes to the appropriate tool implementation
- * 3. Returns the result or an error response
- *
- * The response format is standardized:
- * - content: Array of content blocks (text, images, etc.)
- * - isError: Boolean indicating if this is an error response
- */
-server.setRequestHandler(CallToolRequestSchema, async (request) => {
-  // Extract tool name and arguments from the request
-  // Note: 'arguments' is a reserved word, so we destructure it as 'args'
-  const { name, arguments: args } = request.params;
-
-  try {
-    // Route to the appropriate tool implementation based on the tool name
-    switch (name) {
-      case 'plugin-scaffold':
-        return await pluginScaffoldTool(args); // Generate new plugin
-
-      case 'validate':
-        return await validatePluginTool(args); // Check existing plugin
-
-      case 'configs':
-        return await generateConfigsTool(args); // Create config files
-
-      case 'update-deps':
-        return await updateDepsTool(args); // Update plugin dependencies
-
-      case 'show-template':
-        return await showTemplateTool(args); // Show configuration templates
-
-      case 'list-templates':
-        return await listTemplatesTool(args); // List all available templates
-
-      case 'get-template':
-        return await getTemplateTool(args); // Get specific template content
-
-      case 'install-claude-md':
-        return await installClaudeMdTool(args); // Install CLAUDE.md file with smart merge
-
-      case 'audit-plugin':
-        return await auditPlugin(args); // Run comprehensive plugin audit
-
-      case 'diff-template':
-        return await diffTemplateTool(args); // Diff plugin against scaffold templates
-      default:
-        // This shouldn't happen if Claude only calls tools we advertised
-        throw new Error(`Unknown tool: ${name}`);
-    }
-  } catch (error) {
-    // If any tool throws an error, we catch it and return a standardized error response
-    return {
-      content: [
-        {
-          type: 'text', // Content type (could also be 'image', etc.)
-          text: `Error executing tool ${name}: ${error.message}`
-        }
-      ],
-      isError: true // Tell Claude this is an error, not normal output
-    };
-  }
-});
-
-/**
- * Start the server
- *
- * This function initializes the MCP server and starts listening for requests.
- * The communication happens over stdio (standard input/output):
- * - stdin: Receives requests from Claude
- * - stdout: Sends responses back to Claude
- * - stderr: Used for our own logging (doesn't interfere with the protocol)
- */
 async function main() {
-  // Create a transport that communicates via stdio
-  // This is the most common transport for MCP servers
   const transport = new StdioServerTransport();
-
-  // Connect our server to the transport
-  // After this, the server is ready to receive requests from Claude
   await server.connect(transport);
-
-  // Log to stderr so it doesn't interfere with the MCP protocol messages
-  // Claude reads from stdout, so we must never write non-protocol data there
   console.error('Metalsmith MCP Server started');
 }
 
-// Start the server and handle any startup errors
 main().catch((error) => {
   console.error('Fatal error:', error);
-  process.exit(1); // Exit with error code if startup fails
+  process.exit(1);
 });

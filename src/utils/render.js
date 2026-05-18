@@ -40,22 +40,12 @@ env.addFilter('removePrefix', (str, prefix) => {
  */
 export function render(template, data) {
   try {
-    // Process arrays for display but keep originals for iteration
-    const processedData = {};
-    for (const key in data) {
-      if (Array.isArray(data[key])) {
-        // Keep original array
-        processedData[key] = data[key];
-        // Also create a display version
-        processedData[`${key}Display`] = data[key].join(', ');
-      } else {
-        processedData[key] = data[key];
-      }
-    }
-
-    // Enhance data with computed properties for common template needs
+    // Enhance data with computed properties for common template needs.
+    // These are defensive defaults — most callers pre-compute them, but
+    // diff-template renders raw scaffold templates against any plugin's
+    // package.json and may not.
     const enhancedData = {
-      ...processedData,
+      ...data,
       // Add short plugin name (without metalsmith- prefix)
       pluginNameShort: data.pluginName ? data.pluginName.replace('metalsmith-', '') : '',
       // Add camelCase function name

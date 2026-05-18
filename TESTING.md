@@ -2,8 +2,6 @@
 
 This guide shows you how to test the MCP server locally before using it with Claude.
 
-> **Important**: Starting with v0.5.0, plugin descriptions are required and plugin names are used exactly as provided (no automatic `metalsmith-` prefix).
-
 ## Method 1: CLI Testing (Recommended)
 
 The easiest way to test the MCP server is using the CLI interface:
@@ -148,7 +146,7 @@ The MCP server communicates using JSON-RPC over stdio. You can test it manually:
 echo '{"jsonrpc": "2.0", "id": 1, "method": "tools/list"}' | node src/index.js
 ```
 
-This should return a JSON response showing the four available tools.
+This should return a JSON response listing every MCP tool the server exposes (`plugin-scaffold`, `validate`, `configs`, `update-deps`, `show-template`, `list-templates`, `get-template`, `install-claude-md`, `audit-plugin`, `diff-template`).
 
 ### 2. Test Plugin Scaffolding
 
@@ -175,7 +173,7 @@ echo '{"jsonrpc": "2.0", "id": 3, "method": "tools/call", "params": {"name": "va
 echo '{"jsonrpc": "2.0", "id": 4, "method": "tools/call", "params": {"name": "configs", "arguments": {"outputPath": "./test-configs", "configs": ["biome", "editorconfig"]}}}' | node src/index.js
 ```
 
-## Method 2: Using the Test Scripts
+## Method 3: Using the Test Scripts
 
 We've provided convenient test scripts in the `scripts/` directory:
 
@@ -253,7 +251,7 @@ Ask Claude something like:
 
 Claude should be able to use the plugin-scaffold tool to generate a complete plugin structure.
 
-## Method 4: Using with Claude API/CLI
+## Method 5: Using with Claude API/CLI
 
 If you're using the Claude API or CLI, you can configure the MCP server:
 
@@ -306,10 +304,10 @@ When tools run successfully, you should see:
 
 ### Debug Mode
 
-Enable debug logging:
+The server logs progress and warnings to stderr (stdout is reserved for the MCP JSON-RPC protocol). Run with stderr visible:
 
 ```bash
-DEBUG=metalsmith:* node src/index.js
+node src/index.js 2>&1 >/dev/null
 ```
 
 ### Logs
