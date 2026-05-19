@@ -3,7 +3,6 @@
  * This plugin uses Metalsmith's built-in methods:
  * - metalsmith.match(patterns, files) for pattern matching
  * - metalsmith.debug(namespace) for debug logging
- * - metalsmith.metadata() for accessing global metadata
  * - metalsmith.path() for path operations
  * - metalsmith.source() and metalsmith.destination() for directories
  */

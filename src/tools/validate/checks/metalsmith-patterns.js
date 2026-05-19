@@ -59,8 +59,6 @@ export async function checkMetalsmithPatterns(pluginPath, results) {
     const usesGlobalMetadata = /metalsmith\.metadata\(\)/.test(mainFileContent);
     if (usesGlobalMetadata) {
       results.passed.push('✓ Plugin accesses global metadata');
-    } else {
-      results.recommendations.push('💡 Consider using metalsmith.metadata() for site-wide configuration');
     }
 
     const hasFileFiltering = /Object\.keys\(files\)\.filter|\.filter\(/.test(mainFileContent);

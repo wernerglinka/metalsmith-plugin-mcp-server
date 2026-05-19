@@ -21,8 +21,6 @@ export async function checkIntegration(pluginPath, results) {
     const usesGlobalMetadata = /metalsmith\.metadata\(\)/.test(mainFileContent);
     if (usesGlobalMetadata) {
       results.passed.push('✓ Plugin accesses global metadata');
-    } else {
-      results.recommendations.push('💡 Consider using metalsmith.metadata() to access site-wide information');
     }
 
     const commonPluginPatterns = [

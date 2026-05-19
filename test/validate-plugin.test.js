@@ -527,8 +527,7 @@ describe('validate-plugin tool', function () {
       const pluginDir = path.join(fixturesDir, 'recommendations');
       await createMetalsmithPlugin(pluginDir, {
         noOptionsValidation: true,
-        noNameProperty: true,
-        noGlobalMetadata: true
+        noNameProperty: true
       });
 
       const result = await validatePluginTool({
@@ -539,7 +538,6 @@ describe('validate-plugin tool', function () {
       const text = result.content[0].text;
       assert.ok(text.includes('Add default options handling'));
       assert.ok(text.includes('Set function name for better debugging'));
-      assert.ok(text.includes('Consider using metalsmith.metadata()'));
     });
 
     it('should handle edge cases in checkStructure', async function () {
