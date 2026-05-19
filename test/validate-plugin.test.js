@@ -1489,6 +1489,139 @@ MIT
       );
     });
   });
+
+  describe('Modular plugin layout (src/**/*.js scanning)', function () {
+    // Content-pattern checks must look at every file under src/, not just
+    // src/index.js. Plugins that split work into modules (config.js,
+    // file-processor.js, etc.) used to trigger false-positive warnings
+    // because the validator only scanned the entry file.
+
+    it('should detect files-object iteration in a sibling module', async function () {
+      const pluginDir = path.join(fixturesDir, 'modular-iteration');
+      await fs.mkdir(path.join(pluginDir, 'src'), { recursive: true });
+      await fs.writeFile(
+        path.join(pluginDir, 'src/index.js'),
+        `import { processFiles } from './file-processor.js';
+export default function plugin(options = {}) {
+  return function (files, metalsmith, done) {
+    processFiles(files, metalsmith, options).then(() => done()).catch(done);
+  };
+}\n`
+      );
+      await fs.writeFile(
+        path.join(pluginDir, 'src/file-processor.js'),
+        `export async function processFiles(files, metalsmith, options) {
+  const matched = metalsmith.match(options.pattern || '**/*.md', Object.keys(files));
+  for (const name of matched.filter((n) => !n.startsWith('_'))) {
+    const file = files[name];
+    file.contents = Buffer.from(file.contents.toString().toUpperCase());
+  }
+}\n`
+      );
+      await fs.writeFile(
+        path.join(pluginDir, 'package.json'),
+        JSON.stringify({ name: 'metalsmith-x', version: '1.0.0' })
+      );
+
+      const result = await validatePluginTool({ path: pluginDir, checks: ['performance', 'metalsmith-patterns'] });
+      const text = result.content[0].text;
+      assert.ok(text.includes('Proper files object iteration detected'), 'should credit iteration in module');
+      assert.ok(
+        text.includes('File filtering before processing detected'),
+        'should credit metalsmith.match() filtering'
+      );
+      assert.ok(text.includes('Plugin properly interacts with files object'), 'should credit module file access');
+      assert.ok(
+        !text.includes('Use Object.keys(files) or for...in to iterate'),
+        'should NOT recommend iteration when a module already does it'
+      );
+      assert.ok(
+        !text.includes('Consider filtering files before expensive content transformations'),
+        'should NOT recommend filtering when a module already filters'
+      );
+      assert.ok(
+        !text.includes('Plugin should interact with the files object'),
+        'should NOT warn about missing file interaction'
+      );
+    });
+
+    it('should detect native-method usage in a sibling module', async function () {
+      const pluginDir = path.join(fixturesDir, 'modular-native');
+      await fs.mkdir(path.join(pluginDir, 'src'), { recursive: true });
+      await fs.writeFile(
+        path.join(pluginDir, 'src/index.js'),
+        `import { run } from './runner.js';
+export default function plugin(options = {}) {
+  return function (files, metalsmith, done) {
+    run(files, metalsmith).then(() => done()).catch(done);
+  };
+}\n`
+      );
+      await fs.writeFile(
+        path.join(pluginDir, 'src/runner.js'),
+        `export async function run(files, metalsmith) {
+  const debug = metalsmith.debug('metalsmith-x');
+  const matches = metalsmith.match('**/*.md', Object.keys(files));
+  debug('matched %d files', matches.length);
+}\n`
+      );
+      await fs.writeFile(
+        path.join(pluginDir, 'package.json'),
+        JSON.stringify({ name: 'metalsmith-x', version: '1.0.0' })
+      );
+
+      const result = await validatePluginTool({ path: pluginDir, checks: ['metalsmith-patterns'] });
+      const text = result.content[0].text;
+      assert.ok(text.includes('Using metalsmith.debug() for debugging'), 'should credit metalsmith.debug() in module');
+      assert.ok(
+        text.includes('Using metalsmith.match() for pattern matching'),
+        'should credit metalsmith.match() in module'
+      );
+    });
+
+    it('should keep export-shape checks scoped to the entry file', async function () {
+      // The factory pattern, function signature, and Object.defineProperty(name)
+      // checks must look at the entry file only — they're statements about the
+      // default export. A module exporting a non-plugin function shouldn't
+      // count as the entry's factory.
+      const pluginDir = path.join(fixturesDir, 'modular-entry-shape');
+      await fs.mkdir(path.join(pluginDir, 'src'), { recursive: true });
+      await fs.writeFile(
+        path.join(pluginDir, 'src/index.js'),
+        `import { processFiles } from './file-processor.js';
+function plugin(options = {}) {
+  return function (files, metalsmith, done) {
+    processFiles(files).then(() => done()).catch(done);
+  };
+}
+Object.defineProperty(plugin, 'name', { value: 'metalsmithX' });
+export default plugin;\n`
+      );
+      await fs.writeFile(
+        path.join(pluginDir, 'src/file-processor.js'),
+        `export async function processFiles(files) {
+  for (const name of Object.keys(files)) {
+    files[name].contents = Buffer.from(files[name].contents.toString());
+  }
+}\n`
+      );
+      await fs.writeFile(
+        path.join(pluginDir, 'package.json'),
+        JSON.stringify({ name: 'metalsmith-x', version: '1.0.0' })
+      );
+
+      const result = await validatePluginTool({ path: pluginDir, checks: ['metalsmith-patterns'] });
+      const text = result.content[0].text;
+      assert.ok(
+        text.includes('Plugin function name set for debugging'),
+        'should credit Object.defineProperty in entry'
+      );
+      assert.ok(
+        text.includes('Correct Metalsmith plugin function signature detected'),
+        'should credit entry signature'
+      );
+    });
+  });
 });
 
 /**

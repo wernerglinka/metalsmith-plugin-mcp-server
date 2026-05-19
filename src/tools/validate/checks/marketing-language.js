@@ -1,5 +1,6 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
+import { readPluginSource } from '../utils.js';
 
 const MARKETING_WORDS = [
   'intelligent',
@@ -21,11 +22,11 @@ const MARKETING_WORDS = [
 
 export async function checkMarketingLanguage(pluginPath, results) {
   try {
-    const filesToCheck = ['README.md', 'CHANGELOG.md', 'src/index.js'];
+    const docFiles = ['README.md', 'CHANGELOG.md'];
     let foundMarketingLanguage = false;
     const foundWords = new Set();
 
-    for (const file of filesToCheck) {
+    for (const file of docFiles) {
       try {
         const content = await fs.readFile(path.join(pluginPath, file), 'utf-8');
         for (const word of MARKETING_WORDS) {
@@ -36,6 +37,14 @@ export async function checkMarketingLanguage(pluginPath, results) {
         }
       } catch {
         // file doesn't exist
+      }
+    }
+
+    const { all } = await readPluginSource(pluginPath);
+    for (const word of MARKETING_WORDS) {
+      if (new RegExp(`\\b${word}\\b`, 'gi').test(all)) {
+        foundMarketingLanguage = true;
+        foundWords.add(word);
       }
     }
 

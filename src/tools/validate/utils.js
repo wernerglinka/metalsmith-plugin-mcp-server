@@ -1,4 +1,5 @@
 import { promises as fs } from 'node:fs';
+import { glob } from 'node:fs/promises';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
 import { sanitizePath } from '../../utils/path-security.js';
@@ -117,6 +118,50 @@ export async function analyzeClaudeStandards(pluginPath) {
       approvedTokenPattern: null
     };
   }
+}
+
+/**
+ * Read the plugin's JavaScript source for content-pattern checks.
+ *
+ * Returns the entry-file content and the concatenated content of every
+ * `src/**\/*.js` file. Use `entry` for checks that target the default
+ * export itself (factory pattern, function signature, JSDoc on the
+ * exported function). Use `all` for checks that look for the presence
+ * or absence of code patterns anywhere in the plugin — iteration
+ * style, native-method usage, metadata handling — where the pattern
+ * legitimately lives in a module imported by the entry file.
+ *
+ * The entry file appears in `all` as well; that's a harmless
+ * duplication that keeps the regex semantics unchanged for plugins
+ * that aren't modular.
+ */
+export async function readPluginSource(pluginPath) {
+  const entryPath = path.join(pluginPath, 'src/index.js');
+  let entry = '';
+  try {
+    entry = await fs.readFile(entryPath, 'utf-8');
+  } catch {
+    // entry missing — structure check reports this separately
+  }
+
+  let srcFiles = [];
+  try {
+    srcFiles = await Array.fromAsync(glob('src/**/*.js', { cwd: pluginPath }));
+  } catch {
+    // no src/ directory
+  }
+
+  const parts = await Promise.all(
+    srcFiles.map(async (file) => {
+      try {
+        return await fs.readFile(path.join(pluginPath, file), 'utf-8');
+      } catch {
+        return '';
+      }
+    })
+  );
+
+  return { entry, all: parts.join('\n') };
 }
 
 export async function runCommand(command, args, cwd) {

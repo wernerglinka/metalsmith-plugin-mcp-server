@@ -1,10 +1,10 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
+import { readPluginSource } from '../utils.js';
 
 export async function checkSecurity(pluginPath, results) {
   try {
-    const mainFilePath = path.join(pluginPath, 'src/index.js');
-    const mainFileContent = await fs.readFile(mainFilePath, 'utf-8');
+    const { all } = await readPluginSource(pluginPath);
 
     const dangerousOperations = [
       { pattern: /eval\s*\(/, message: 'eval() usage detected - avoid dynamic code execution in build tools' },
@@ -16,14 +16,14 @@ export async function checkSecurity(pluginPath, results) {
     ];
 
     for (const check of dangerousOperations) {
-      if (check.pattern.test(mainFileContent)) {
+      if (check.pattern.test(all)) {
         results.warnings.push(`⚠ Security concern: ${check.message}`);
       }
     }
 
-    const hasShellExecution = /exec\s*\(|spawn\s*\(|execSync|spawnSync/.test(mainFileContent);
+    const hasShellExecution = /exec\s*\(|spawn\s*\(|execSync|spawnSync/.test(all);
     if (hasShellExecution) {
-      const hasInputValidation = /validate|sanitize|escape|shell-escape|shell-quote/.test(mainFileContent);
+      const hasInputValidation = /validate|sanitize|escape|shell-escape|shell-quote/.test(all);
       if (hasInputValidation) {
         results.passed.push('✓ Shell execution with input validation detected');
       } else {
@@ -43,14 +43,14 @@ export async function checkSecurity(pluginPath, results) {
     ];
 
     for (const check of sensitivePatternsInCode) {
-      if (check.pattern.test(mainFileContent)) {
+      if (check.pattern.test(all)) {
         results.warnings.push(`⚠ Security concern: ${check.message} - use environment variables instead`);
       }
     }
 
-    const hasErrorHandling = /try\s*\{[\s\S]*catch|\.catch\s*\(/.test(mainFileContent);
-    const hasAsyncOperations = /await|Promise|async/.test(mainFileContent);
-    const hasFileOperations = /files\[.*?\]\.contents|Buffer|transform/.test(mainFileContent);
+    const hasErrorHandling = /try\s*\{[\s\S]*catch|\.catch\s*\(/.test(all);
+    const hasAsyncOperations = /await|Promise|async/.test(all);
+    const hasFileOperations = /files\[.*?\]\.contents|Buffer|transform/.test(all);
 
     if (hasFileOperations && hasErrorHandling) {
       results.passed.push('✓ Error handling detected for file operations');
@@ -87,13 +87,13 @@ export async function checkSecurity(pluginPath, results) {
       // could not read package.json
     }
 
-    const hasEnvLogging = /console\.log.*process\.env|debug.*process\.env|log.*process\.env/.test(mainFileContent);
+    const hasEnvLogging = /console\.log.*process\.env|debug.*process\.env|log.*process\.env/.test(all);
     if (hasEnvLogging) {
       results.warnings.push('⚠ Environment variables in logging - avoid exposing secrets in build logs');
     }
 
-    const hasContentValidation = /contents.*length|Buffer.*isBuffer|typeof.*contents/.test(mainFileContent);
-    const hasContentAccess = /\.contents/.test(mainFileContent);
+    const hasContentValidation = /contents.*length|Buffer.*isBuffer|typeof.*contents/.test(all);
+    const hasContentAccess = /\.contents/.test(all);
 
     if (hasContentAccess && hasContentValidation) {
       results.passed.push('✓ File content validation detected');

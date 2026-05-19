@@ -1,5 +1,4 @@
-import { promises as fs } from 'node:fs';
-import path from 'node:path';
+import { readPluginSource } from '../utils.js';
 
 const ENGLISH_ONLY_PATTERNS = [
   { pattern: /['"`]\d+\s+minutes?\s+read['"`]/, message: 'Returns English reading time text instead of data' },
@@ -17,12 +16,11 @@ const LOCALE_PATTERNS = [
 
 export async function checkI18nReadiness(pluginPath, results) {
   try {
-    const mainFilePath = path.join(pluginPath, 'src/index.js');
-    const mainFileContent = await fs.readFile(mainFilePath, 'utf-8');
+    const { all } = await readPluginSource(pluginPath);
 
     let foundI18nIssues = false;
     for (const check of ENGLISH_ONLY_PATTERNS) {
-      if (check.pattern.test(mainFileContent)) {
+      if (check.pattern.test(all)) {
         foundI18nIssues = true;
         results.warnings.push(`⚠ I18n issue: ${check.message}`);
       }
@@ -32,7 +30,7 @@ export async function checkI18nReadiness(pluginPath, results) {
     const usesConfigurableText = /options\.(?:text|message|label)/;
 
     if (foundI18nIssues) {
-      if (returnsDataPattern.test(mainFileContent)) {
+      if (returnsDataPattern.test(all)) {
         results.recommendations.push('💡 Good: Plugin returns data objects. Remove any remaining hardcoded text');
       } else {
         results.recommendations.push(
@@ -40,19 +38,19 @@ export async function checkI18nReadiness(pluginPath, results) {
         );
       }
 
-      if (!usesConfigurableText.test(mainFileContent)) {
+      if (!usesConfigurableText.test(all)) {
         results.recommendations.push(
           '💡 Make text messages configurable via options: options.messages?.readingTime || "minute read"'
         );
       }
-    } else if (returnsDataPattern.test(mainFileContent)) {
+    } else if (returnsDataPattern.test(all)) {
       results.passed.push('✓ Plugin returns data instead of hardcoded English text');
     } else {
       results.passed.push('✓ No obvious internationalization issues detected');
     }
 
     for (const check of LOCALE_PATTERNS) {
-      if (check.pattern.test(mainFileContent)) {
+      if (check.pattern.test(all)) {
         results.warnings.push(`⚠ Locale assumption: ${check.message}`);
       }
     }

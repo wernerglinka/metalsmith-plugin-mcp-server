@@ -1,5 +1,4 @@
-import { promises as fs } from 'node:fs';
-import path from 'node:path';
+import { readPluginSource } from '../utils.js';
 
 const HARDCODED_PATTERNS = [
   {
@@ -30,21 +29,18 @@ const HARDCODED_PATTERNS = [
 
 export async function checkHardcodedValues(pluginPath, results) {
   try {
-    const mainFilePath = path.join(pluginPath, 'src/index.js');
-    const mainFileContent = await fs.readFile(mainFilePath, 'utf-8');
+    const { all } = await readPluginSource(pluginPath);
 
     let foundHardcodedValues = false;
     for (const check of HARDCODED_PATTERNS) {
-      if (check.pattern.test(mainFileContent)) {
+      if (check.pattern.test(all)) {
         foundHardcodedValues = true;
         results.warnings.push(`⚠ ${check.message}`);
       }
     }
 
-    const hasOptionsDefaults = /options\s*=\s*\{[\s\S]*\}|Object\.assign\(.*options|\.\.\.options/.test(
-      mainFileContent
-    );
-    const hasOptionsValidation = /options\?\.|options\s*\|\|\s*\{/.test(mainFileContent);
+    const hasOptionsDefaults = /options\s*=\s*\{[\s\S]*\}|Object\.assign\(.*options|\.\.\.options/.test(all);
+    const hasOptionsValidation = /options\?\.|options\s*\|\|\s*\{/.test(all);
 
     if (foundHardcodedValues) {
       if (hasOptionsDefaults) {

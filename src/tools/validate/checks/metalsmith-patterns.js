@@ -1,16 +1,14 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
+import { readPluginSource } from '../utils.js';
 
 export async function checkMetalsmithPatterns(pluginPath, results) {
   try {
-    const mainFilePath = path.join(pluginPath, 'src/index.js');
-    const mainFileContent = await fs.readFile(mainFilePath, 'utf-8');
+    const { entry, all } = await readPluginSource(pluginPath);
 
-    const hasFactoryPattern = /export\s+default\s+function\s+\w+\s*\([^)]*\)\s*\{[\s\S]*return\s+function/s.test(
-      mainFileContent
-    );
+    const hasFactoryPattern = /export\s+default\s+function\s+\w+\s*\([^)]*\)\s*\{[\s\S]*return\s+function/s.test(entry);
     const hasDirectExport = /export\s+default\s+function\s+\w+\s*\(\s*files\s*,\s*metalsmith\s*(?:,\s*done\s*)?\)/.test(
-      mainFileContent
+      entry
     );
 
     if (hasFactoryPattern) {
@@ -21,15 +19,15 @@ export async function checkMetalsmithPatterns(pluginPath, results) {
       );
     }
 
-    const hasCorrectSignature = /function\s*\(\s*files\s*,\s*metalsmith\s*(?:,\s*done\s*)?\)/.test(mainFileContent);
+    const hasCorrectSignature = /function\s*\(\s*files\s*,\s*metalsmith\s*(?:,\s*done\s*)?\)/.test(entry);
     if (hasCorrectSignature) {
       results.passed.push('✓ Correct Metalsmith plugin function signature detected');
     } else {
       results.warnings.push('⚠ Plugin function should accept (files, metalsmith, done) parameters');
     }
 
-    const manipulatesFiles = /files\[.*?\]\s*=|delete\s+files\[|Object\.assign\(files\[/.test(mainFileContent);
-    const readsFiles = /files\[.*?\](?!\s*=)|Object\.keys\(files\)/.test(mainFileContent);
+    const manipulatesFiles = /files\[.*?\]\s*=|delete\s+files\[|Object\.assign\(files\[/.test(all);
+    const readsFiles = /files\[.*?\](?!\s*=)|Object\.keys\(files\)/.test(all);
 
     if (manipulatesFiles || readsFiles) {
       results.passed.push('✓ Plugin properly interacts with files object');
@@ -37,8 +35,8 @@ export async function checkMetalsmithPatterns(pluginPath, results) {
       results.warnings.push('⚠ Plugin should interact with the files object to transform content');
     }
 
-    const preservesMetadata = /Object\.assign\(.*file.*,|\.\.\.file|file\.\w+\s*=/.test(mainFileContent);
-    const accessesMetadata = /file\.\w+(?!contents)/.test(mainFileContent);
+    const preservesMetadata = /Object\.assign\(.*file.*,|\.\.\.file|file\.\w+\s*=/.test(all);
+    const accessesMetadata = /file\.\w+(?!contents)/.test(all);
 
     if (preservesMetadata || accessesMetadata) {
       results.passed.push('✓ Plugin works with file metadata');
@@ -46,9 +44,9 @@ export async function checkMetalsmithPatterns(pluginPath, results) {
       results.recommendations.push('💡 Consider preserving or enhancing file metadata for better plugin integration');
     }
 
-    const processesContents = /\.contents|Buffer\.from|\.toString\(/.test(mainFileContent);
+    const processesContents = /\.contents|Buffer\.from|\.toString\(/.test(all);
     if (processesContents) {
-      const hasBufferCheck = /Buffer\.isBuffer|instanceof\s+Buffer/.test(mainFileContent);
+      const hasBufferCheck = /Buffer\.isBuffer|instanceof\s+Buffer/.test(all);
       if (hasBufferCheck) {
         results.passed.push('✓ Proper Buffer validation for file.contents');
       } else {
@@ -56,13 +54,13 @@ export async function checkMetalsmithPatterns(pluginPath, results) {
       }
     }
 
-    const usesGlobalMetadata = /metalsmith\.metadata\(\)/.test(mainFileContent);
+    const usesGlobalMetadata = /metalsmith\.metadata\(\)/.test(all);
     if (usesGlobalMetadata) {
       results.passed.push('✓ Plugin accesses global metadata');
     }
 
-    const hasFileFiltering = /Object\.keys\(files\)\.filter|\.filter\(/.test(mainFileContent);
-    const hasFilePattern = /\.\w+$|endsWith\(|extname\(/.test(mainFileContent);
+    const hasFileFiltering = /Object\.keys\(files\)\.filter|\.filter\(|metalsmith\.match\(/.test(all);
+    const hasFilePattern = /\.\w+$|endsWith\(|extname\(/.test(all);
 
     if (hasFileFiltering && hasFilePattern) {
       results.passed.push('✓ Plugin filters files by type/pattern');
@@ -70,25 +68,23 @@ export async function checkMetalsmithPatterns(pluginPath, results) {
       results.recommendations.push('💡 Consider filtering files by extension/pattern before processing');
     }
 
-    const respectsLayout = /layout/.test(mainFileContent);
-    const respectsCollections = /collection/.test(mainFileContent);
-    const respectsDrafts = /draft/.test(mainFileContent);
+    const respectsLayout = /layout/.test(all);
+    const respectsCollections = /collection/.test(all);
+    const respectsDrafts = /draft/.test(all);
 
     const conventionCount = [respectsLayout, respectsCollections, respectsDrafts].filter(Boolean).length;
     if (conventionCount > 0) {
       results.passed.push(`✓ Plugin respects ${conventionCount} common Metalsmith convention(s)`);
     }
 
-    const hasOptionsValidation = /options\s*=\s*\{[\s\S]*\}|Object\.assign\(.*options|\.\.\.options/.test(
-      mainFileContent
-    );
+    const hasOptionsValidation = /options\s*=\s*\{[\s\S]*\}|Object\.assign\(.*options|\.\.\.options/.test(all);
     if (hasOptionsValidation) {
       results.passed.push('✓ Plugin handles options properly');
     } else {
       results.recommendations.push('💡 Add default options handling: options = { ...defaults, ...options }');
     }
 
-    const hasNameProperty = /Object\.defineProperty\([^,]+,\s*['"]name['"]/.test(mainFileContent);
+    const hasNameProperty = /Object\.defineProperty\([^,]+,\s*['"]name['"]/.test(entry);
     if (hasNameProperty) {
       results.passed.push('✓ Plugin function name set for debugging');
     } else {
@@ -97,18 +93,18 @@ export async function checkMetalsmithPatterns(pluginPath, results) {
       );
     }
 
-    const returnsMetalsmith = /return\s+metalsmith/.test(mainFileContent);
+    const returnsMetalsmith = /return\s+metalsmith/.test(entry);
     const isMiddleware = hasFactoryPattern || hasDirectExport;
 
     if (!isMiddleware && !returnsMetalsmith) {
       results.recommendations.push('💡 Non-plugin functions should return metalsmith instance for chainability');
     }
 
-    await checkNativeMethodUsage(mainFileContent, pluginPath, results);
+    await checkNativeMethodUsage(all, pluginPath, results);
 
-    const hasAsyncOperations = /await|Promise|async/.test(mainFileContent);
-    const hasDoneCallback = /done\s*\(/.test(mainFileContent);
-    const hasErrorPropagation = /done\s*\(\s*err\s*\)|\.catch\s*\(\s*done\s*\)/.test(mainFileContent);
+    const hasAsyncOperations = /await|Promise|async/.test(entry);
+    const hasDoneCallback = /done\s*\(/.test(entry);
+    const hasErrorPropagation = /done\s*\(\s*err\s*\)|\.catch\s*\(\s*done\s*\)/.test(entry);
 
     if (hasAsyncOperations && hasDoneCallback) {
       if (hasErrorPropagation) {
@@ -122,7 +118,7 @@ export async function checkMetalsmithPatterns(pluginPath, results) {
   }
 }
 
-async function checkNativeMethodUsage(mainFileContent, pluginPath, results) {
+async function checkNativeMethodUsage(sourceContent, pluginPath, results) {
   try {
     const packageJsonPath = path.join(pluginPath, 'package.json');
     let packageJson = {};
@@ -137,8 +133,8 @@ async function checkNativeMethodUsage(mainFileContent, pluginPath, results) {
       ...packageJson.devDependencies
     };
 
-    const usesDebugPackage = /require\s*\(\s*['"]debug['"]|import.*from\s+['"]debug['"]/m.test(mainFileContent);
-    const usesMetalsmithDebug = /metalsmith\.debug\(/m.test(mainFileContent);
+    const usesDebugPackage = /require\s*\(\s*['"]debug['"]|import.*from\s+['"]debug['"]/m.test(sourceContent);
+    const usesMetalsmithDebug = /metalsmith\.debug\(/m.test(sourceContent);
     const hasDebugDependency = allDependencies?.debug;
 
     if (usesDebugPackage || hasDebugDependency) {
@@ -158,8 +154,8 @@ async function checkNativeMethodUsage(mainFileContent, pluginPath, results) {
       results.passed.push('✓ Using metalsmith.debug() for debugging');
     }
 
-    const usesMinimatch = /require\s*\(\s*['"]minimatch['"]|import.*from\s+['"]minimatch['"]/m.test(mainFileContent);
-    const usesMetalsmithMatch = /metalsmith\.match\(/m.test(mainFileContent);
+    const usesMinimatch = /require\s*\(\s*['"]minimatch['"]|import.*from\s+['"]minimatch['"]/m.test(sourceContent);
+    const usesMetalsmithMatch = /metalsmith\.match\(/m.test(sourceContent);
     const hasMinimatchDependency = allDependencies?.minimatch;
 
     if (usesMinimatch || hasMinimatchDependency) {
@@ -179,8 +175,8 @@ async function checkNativeMethodUsage(mainFileContent, pluginPath, results) {
       results.passed.push('✓ Using metalsmith.match() for pattern matching');
     }
 
-    const usesMetalsmithEnv = /metalsmith\.env\(/m.test(mainFileContent);
-    const usesProcessEnv = /process\.env\./m.test(mainFileContent);
+    const usesMetalsmithEnv = /metalsmith\.env\(/m.test(sourceContent);
+    const usesProcessEnv = /process\.env\./m.test(sourceContent);
 
     if (usesMetalsmithEnv) {
       results.passed.push('✓ Using metalsmith.env() for environment variables');
@@ -190,11 +186,11 @@ async function checkNativeMethodUsage(mainFileContent, pluginPath, results) {
       );
     }
 
-    const usesPath = /require\s*\(\s*['"]path['"]|import.*from\s+['"]path['"]/m.test(mainFileContent);
-    const usesMetalsmithPath = /metalsmith\.path\(/m.test(mainFileContent);
+    const usesPath = /require\s*\(\s*['"]path['"]|import.*from\s+['"]path['"]/m.test(sourceContent);
+    const usesMetalsmithPath = /metalsmith\.path\(/m.test(sourceContent);
 
     if (usesPath && !usesMetalsmithPath) {
-      const hasPathJoins = /path\.join/m.test(mainFileContent);
+      const hasPathJoins = /path\.join/m.test(sourceContent);
       if (hasPathJoins) {
         results.recommendations.push(
           '💡 Consider using metalsmith.path() for consistent path handling across different systems'

@@ -1,14 +1,14 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { glob } from 'node:fs/promises';
+import { readPluginSource } from '../utils.js';
 
 export async function checkIntegration(pluginPath, results) {
   try {
-    const mainFilePath = path.join(pluginPath, 'src/index.js');
-    const mainFileContent = await fs.readFile(mainFilePath, 'utf-8');
+    const { all } = await readPluginSource(pluginPath);
 
-    const respectsMetadata = /files\[.*?\]\.(?!contents)/g.test(mainFileContent);
-    const modifiesMetadata = /files\[.*?\]\.\w+\s*=|Object\.assign\(files\[.*?\]/.test(mainFileContent);
+    const respectsMetadata = /files\[.*?\]\.(?!contents)/g.test(all);
+    const modifiesMetadata = /files\[.*?\]\.\w+\s*=|Object\.assign\(files\[.*?\]/.test(all);
 
     if (respectsMetadata || modifiesMetadata) {
       results.passed.push('✓ Plugin respects/modifies file metadata appropriately');
@@ -18,7 +18,7 @@ export async function checkIntegration(pluginPath, results) {
       );
     }
 
-    const usesGlobalMetadata = /metalsmith\.metadata\(\)/.test(mainFileContent);
+    const usesGlobalMetadata = /metalsmith\.metadata\(\)/.test(all);
     if (usesGlobalMetadata) {
       results.passed.push('✓ Plugin accesses global metadata');
     }
@@ -31,12 +31,12 @@ export async function checkIntegration(pluginPath, results) {
     ];
 
     for (const plugin of commonPluginPatterns) {
-      if (plugin.pattern.test(mainFileContent)) {
+      if (plugin.pattern.test(all)) {
         results.passed.push(`✓ Plugin appears compatible with ${plugin.name} (${plugin.check})`);
       }
     }
 
-    const hasExtensionLogic = /\.endsWith\(|path\.extname|\.ext\b|\.extension/.test(mainFileContent);
+    const hasExtensionLogic = /\.endsWith\(|path\.extname|\.ext\b|\.extension/.test(all);
     if (hasExtensionLogic) {
       results.passed.push('✓ Plugin handles file extensions properly');
     } else {
