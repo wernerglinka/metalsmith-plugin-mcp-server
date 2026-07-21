@@ -14,28 +14,30 @@
 
 /**
  * Deep merge configuration objects
- * 
- * Modern functional approach using reduce() and object spread.
+ *
  * This implementation:
  * - Creates new objects instead of mutating existing ones
  * - Handles nested objects recursively
  * - Uses constructor check for reliable object detection
  * - Utilizes optional chaining for safe property access
- * 
+ *
+ * Builds the result with a plain loop rather than spreading into a reduce
+ * accumulator, which avoids the O(n^2) copying that pattern incurs.
+ *
  * Based on the proven implementation from metalsmith-optimize-images.
  */
-const deepMerge = (target, source) =>
-  Object.keys(source).reduce(
-    (acc, key) => ({
-      ...acc,
-      // If source value is a plain object, recursively merge it
-      // Otherwise, use the source value directly (overwrites target)
-      [key]: source[key]?.constructor === Object 
-        ? deepMerge(target[key] || {}, source[key]) 
-        : source[key]
-    }),
-    { ...target }  // Start with a copy of target to avoid mutation
-  );
+const deepMerge = (target, source) => {
+  // Start from a shallow copy of target so the original is never mutated.
+  const merged = { ...target };
+
+  for (const key of Object.keys(source)) {
+    // If source value is a plain object, recursively merge it.
+    // Otherwise, use the source value directly (overwrites target).
+    merged[key] = source[key]?.constructor === Object ? deepMerge(target[key] || {}, source[key]) : source[key];
+  }
+
+  return merged;
+};
 
 /**
  * Normalize plugin options
