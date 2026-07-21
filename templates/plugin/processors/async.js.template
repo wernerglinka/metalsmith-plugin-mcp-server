@@ -1,0 +1,26 @@
+/**
+ * Async file processor (placeholder).
+ *
+ * Demonstrates where per-file asynchronous work belongs — awaiting I/O,
+ * calling an external tool, transforming file.contents, etc. Runs only when
+ * the plugin is configured with `async: true`. Replace the body with the
+ * plugin's real work.
+ *
+ * @param {Object} file - The Metalsmith file object being processed
+ * @param {string} filename - The file's path/key in the files object
+ * @param {Object} options - Normalized plugin options
+ * @returns {Promise<void>} Resolves when the file has been processed
+ */
+export async function processAsync(file, filename, options) {
+  // A real processor should validate file contents before touching them.
+  if (!Buffer.isBuffer(file.contents)) {
+    return;
+  }
+
+  // Placeholder: yield to the event loop in place of real async work
+  // (an fs read, a network call, an external optimizer, ...). The
+  // `filename` and `options` arguments are available for that work.
+  void filename;
+  void options;
+  await Promise.resolve();
+}

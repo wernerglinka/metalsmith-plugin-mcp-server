@@ -11,19 +11,18 @@ export function generatePluginStructure(features) {
     test: {
       fixtures: {
         basic: {},
-        complex: {}
+        empty: {}
       }
     },
     scripts: {},
     docs: {}
   };
 
-  // Add feature-specific directories
+  // Add feature-specific directories. The async processor lives at
+  // src/processors/async.js (a file, not a directory), so create the
+  // processors/ dir only; the file itself is copied from a template.
   if (features.includes('async-processing')) {
-    baseStructure.src.processors = {
-      ...baseStructure.src.processors,
-      async: {}
-    };
+    baseStructure.src.processors = {};
   }
 
   if (features.includes('background-processing')) {

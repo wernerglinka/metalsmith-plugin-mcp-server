@@ -138,10 +138,10 @@ describe('plugin-scaffold tool', function () {
     // Check feature-specific directories
     const pluginPath = path.join(tmpDir, pluginName);
 
-    // Async processing adds to processors
-    const asyncDir = path.join(pluginPath, 'src', 'processors', 'async');
+    // Async processing adds the processor file that src/index.js imports
+    const asyncFile = path.join(pluginPath, 'src', 'processors', 'async.js');
     const hasAsync = await fs
-      .access(asyncDir)
+      .access(asyncFile)
       .then(() => true)
       .catch(() => false);
     assert.equal(hasAsync, true);
@@ -233,13 +233,13 @@ describe('plugin-scaffold tool', function () {
 
     assert.notEqual(result.isError, true);
 
-    // Check if feature-specific directories were created
+    // Check if feature-specific files/directories were created
     const pluginPath = path.join(tmpDir, pluginName);
-    const processorsDir = path.join(pluginPath, 'src', 'processors', 'async');
+    const processorsFile = path.join(pluginPath, 'src', 'processors', 'async.js');
     const workersDir = path.join(pluginPath, 'src', 'workers');
 
     const processorsExists = await fs
-      .access(processorsDir)
+      .access(processorsFile)
       .then(() => true)
       .catch(() => false);
     const workersExists = await fs
