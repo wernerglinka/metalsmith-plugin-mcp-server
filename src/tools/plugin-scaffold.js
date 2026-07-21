@@ -462,14 +462,16 @@ async function generateConfigs(pluginPath) {
  * Initialize git repository
  */
 async function initGitRepo(pluginPath) {
-  const { exec } = await import('node:child_process');
+  // Use execFile (no shell) rather than exec so arguments are passed
+  // directly to git and never interpreted by a shell.
+  const { execFile } = await import('node:child_process');
   const { promisify } = await import('node:util');
-  const execAsync = promisify(exec);
+  const execFileAsync = promisify(execFile);
 
   try {
-    await execAsync('git init', { cwd: pluginPath });
-    await execAsync('git add .', { cwd: pluginPath });
-    await execAsync('git commit -m "Initial commit"', { cwd: pluginPath });
+    await execFileAsync('git', ['init'], { cwd: pluginPath });
+    await execFileAsync('git', ['add', '.'], { cwd: pluginPath });
+    await execFileAsync('git', ['commit', '-m', 'Initial commit'], { cwd: pluginPath });
   } catch (error) {
     // Git init is optional, don't fail if it doesn't work
     console.error('Failed to initialize git repository:', error.message);
