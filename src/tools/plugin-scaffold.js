@@ -303,6 +303,17 @@ async function copyTemplates(pluginPath, data) {
     data
   );
 
+  // Copy the async processor when the async-processing feature is enabled.
+  // index.js imports it via `import { processAsync } from './processors/async.js'`,
+  // so it must exist whenever that import is rendered.
+  if (data.hasAsyncProcessing) {
+    await copyTemplate(
+      path.join(templatesDir, 'processors/async.js.template'),
+      path.join(pluginPath, 'src/processors/async.js'),
+      data
+    );
+  }
+
   // Copy test templates
   await copyTemplate(
     path.join(templatesDir, 'index.test.js.template'),
@@ -375,35 +386,40 @@ async function copyGitHubWorkflows(pluginPath, data) {
  */
 async function copyTestFixtures(templatesDir, targetDir, data) {
   const fixturesDir = path.join(templatesDir, 'fixtures');
+  const targetFixturesDir = path.join(targetDir, 'test/fixtures');
 
   try {
-    const fixtureCategories = await fs.readdir(fixturesDir);
-
-    for (const category of fixtureCategories) {
-      const categoryPath = path.join(fixturesDir, category);
-      const stats = await fs.stat(categoryPath);
-
-      if (stats.isDirectory()) {
-        const targetCategoryPath = path.join(targetDir, 'test/fixtures', category);
-        await fs.mkdir(targetCategoryPath, { recursive: true });
-
-        // Copy files from this fixture category
-        const files = await fs.readdir(categoryPath);
-        for (const file of files) {
-          const sourcePath = path.join(categoryPath, file);
-          const targetPath = path.join(targetCategoryPath, file.replace('.template', ''));
-
-          if (file.endsWith('.template')) {
-            await copyTemplate(sourcePath, targetPath, data);
-          } else {
-            await fs.copyFile(sourcePath, targetPath);
-          }
-        }
-      }
-    }
+    await copyFixtureTree(fixturesDir, targetFixturesDir, data);
   } catch (error) {
     // Fixtures are optional, don't fail if they don't exist
     console.error('Warning: Could not copy test fixtures:', error.message);
+  }
+}
+
+/**
+ * Recursively copy a fixture directory tree, rendering *.template files and
+ * copying everything else verbatim. Recursion matters because fixtures nest
+ * a `src/` subdirectory (Metalsmith's default source), e.g.
+ * fixtures/basic/src/index.html — a flat copy would try to copyFile a
+ * directory and fail.
+ */
+async function copyFixtureTree(sourceDir, targetDir, data) {
+  await fs.mkdir(targetDir, { recursive: true });
+  const entries = await fs.readdir(sourceDir, { withFileTypes: true });
+
+  for (const entry of entries) {
+    const sourcePath = path.join(sourceDir, entry.name);
+
+    if (entry.isDirectory()) {
+      await copyFixtureTree(sourcePath, path.join(targetDir, entry.name), data);
+    } else {
+      const targetPath = path.join(targetDir, entry.name.replace('.template', ''));
+      if (entry.name.endsWith('.template')) {
+        await copyTemplate(sourcePath, targetPath, data);
+      } else {
+        await fs.copyFile(sourcePath, targetPath);
+      }
+    }
   }
 }
 
@@ -433,6 +449,7 @@ async function generateConfigs(pluginPath) {
     ['biome.json.template', 'biome.json'],
     ['.editorconfig.template', '.editorconfig'],
     ['.gitignore.template', '.gitignore'],
+    ['.nvmrc.template', '.nvmrc'],
     ['release-it.json.template', '.release-it.json']
   ];
 

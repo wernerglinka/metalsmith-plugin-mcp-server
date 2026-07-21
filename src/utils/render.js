@@ -69,7 +69,14 @@ export function render(template, data) {
           }, {})
         : {}),
       // Current year for copyright
-      year: new Date().getFullYear()
+      year: new Date().getFullYear(),
+      // Pre-rendered keywords array body. Building this in JS avoids the
+      // whitespace artifacts that a {% for %} loop inside JSON produces
+      // under trimBlocks (stray spaces / bracket on the wrong line).
+      keywordsBlock: ['metalsmith', 'metalsmith-plugin', ...(data.features || [])]
+        .filter((kw, index, arr) => arr.indexOf(kw) === index)
+        .map((kw) => `    "${kw}"`)
+        .join(',\n')
     };
 
     return env.renderString(template, enhancedData);

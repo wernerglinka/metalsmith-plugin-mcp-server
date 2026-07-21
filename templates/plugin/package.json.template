@@ -3,11 +3,7 @@
   "version": "0.1.0",
   "description": "{{ description }}",
   "keywords": [
-    "metalsmith",
-    "metalsmith-plugin"{% if features %}
-  {% for feature in features %},
-    "{{ feature }}"{% endfor %}
-{% endif %}
+{{ keywordsBlock }}
   ],
   "repository": {
     "type": "git",
@@ -40,7 +36,7 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "@biomejs/biome": "^2.4.12",
+    "@biomejs/biome": "^2.5.4",
     "auto-changelog": "^2.5.0",
     "depcheck": "^1.4.0",
     "metalsmith": "^2.5.0",

@@ -45,11 +45,15 @@ const deepMerge = (target, source) =>
 export function normalizeOptions(options) {
   const normalized = { ...options };
   
-  // Ensure pattern is an array (it's guaranteed to exist from defaults)
+  // Ensure pattern is an array. A user can override the default with an
+  // invalid value (e.g. `pattern: null`); reject it with a clear error
+  // rather than passing garbage to metalsmith.match() downstream.
   if (typeof normalized.pattern === 'string') {
     normalized.pattern = [normalized.pattern];
+  } else if (!Array.isArray(normalized.pattern)) {
+    throw new Error('{{pluginName}}: "pattern" option must be a string or an array of strings');
   }
-  
+
   // Ensure ignore is an array (it's guaranteed to exist from defaults)
   if (typeof normalized.ignore === 'string') {
     normalized.ignore = [normalized.ignore];
